@@ -2,8 +2,8 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-14 20:46:21
- * @FilePath: /EasyMocapRelease/Readmd.md
+ * @LastEditTime: 2021-01-14 21:22:36
+ * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
 **EasyMocap** is an open-source toolbox for **markerless human motion capture**.
@@ -11,11 +11,11 @@
 ## Results
 |:heavy_check_mark: Skeleton|:heavy_check_mark: SMPL|
 |----|----|
-|![repro](doc/feng/repro_512.gif)|![repro](doc/feng/smpl_512.gif)||
+|![repro](doc/feng/repro_512.gif)|![smpl](doc/feng/smpl_512.gif)|
 
 |:black_square_button: Whole Body|:black_square_button: [Detailed Mesh](https://zju3dv.github.io/neuralbody/)|
 |----|----|
-|<div align="center"><img src="doc/feng/total_512.gif" height="200" alt="3DPW" align=center /></div>|<div align="center"><img src="doc/feng/body_256.gif" height="200" width="200" alt="3DPW" align=center />
+|<div align="center"><img src="doc/feng/total_512.gif" height="200" alt="mesh" align=center /></div>|<div align="center"><img src="doc/feng/body_256.gif" height="200" width="200" alt="mesh" align=center />
 </div>|
 
 ## Installation
@@ -35,7 +35,7 @@ data
 To download the *SMPL-X* model go to [this project website](https://smpl-x.is.tue.mpg.de) and register to get access to the downloads section.  -->
 
 ## Quick Start
-We provide an example multiview dataset[OneDrive](). After downloading the dataset, you can run the following example scripts.
+We provide an example multiview dataset[[dropbox]()][[BaiduDisk]()]. After downloading the dataset, you can run the following example scripts.
 ```bash
 data=path/to/data
 out=path/to/output
