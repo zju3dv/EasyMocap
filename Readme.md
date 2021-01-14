@@ -16,7 +16,7 @@
 > The following codes are not released. We are now working hard on them. 
 - [ ] Whole body 3d keypoints estimation
 - [ ] SMPL-H/SMPLX support
-- [ ] Detailed mesh from sparse view. An alternative way to obtain detailed mesh is using [Neural Body](https://zju3dv.github.io/neuralbody/).
+- [ ] Detailed mesh from sparse view. An alternative way to obtain the detailed mesh is using [Neural Body](https://zju3dv.github.io/neuralbody/).
 
 |:black_square_button: Whole Body|:black_square_button: [Detailed Mesh](https://zju3dv.github.io/neuralbody/)|
 |----|----|
