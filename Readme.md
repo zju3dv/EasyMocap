@@ -13,10 +13,10 @@
 |----|----|
 |![repro](doc/feng/repro_512.gif)|![smpl](doc/feng/smpl_512.gif)|
 
-> The following codes are not released. We are now working hard on them. 
+> The following features are not released yet. We are now working hard on them. Please stay tuned!
 - [ ] Whole body 3d keypoints estimation
 - [ ] SMPL-H/SMPLX support
-- [ ] Detailed mesh from sparse view. An alternative way to obtain the detailed mesh is using [Neural Body](https://zju3dv.github.io/neuralbody/).
+- [ ] Dense reconstruction and view synthesis from sparse view: [Neural Body](https://zju3dv.github.io/neuralbody/).
 
 |:black_square_button: Whole Body|:black_square_button: [Detailed Mesh](https://zju3dv.github.io/neuralbody/)|
 |----|----|
@@ -132,19 +132,21 @@ The data in `smpl/000000.json` is also a list, each element represents the SMPL 
 We set the first 3 dimensions of `poses` to zero, and add a new parameter `Rh` to represents the global oritentation, the vertices of SMPL model V = RX(theta, beta) + T.
 
 ## Acknowledgements
-Here are some great resources we benefit:
+Here are the great works this project is built upon:
 
-- SMPL models and layer is borrowed from MPII [SMPL-X model](https://github.com/vchoutas/smplx).
+- SMPL models and layer are from MPII [SMPL-X model](https://github.com/vchoutas/smplx).
 - Some functions are borrowed from [SPIN](https://github.com/nkolot/SPIN), [VIBE](https://github.com/mkocabas/VIBE), [SMPLify-X](https://github.com/vchoutas/smplify-x)
-- Our project is similar with [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/)
+- The method for fitting 3D skeleton and SMPL model is similar with [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/), without using point cloud.
 
-We also would like to thank Wenduo Feng for the example data.
+We also would like to thank Wenduo Feng who is the performer in the sample data.
 
 ## Contact
 Please open an issue if you have any questions.
 
 ## Citation
-This project is the base of our other works: [iMocap](https://zju3dv.github.io/iMoCap/), [Neural Body](https://zju3dv.github.io/neuralbody/)
+This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/) and [Neural Body](https://zju3dv.github.io/neuralbody/)
+
+Please consider citing these works if you find this repo is useful for your projects. 
 
 ```bibtex
 @inproceedings{dong2020motion,
