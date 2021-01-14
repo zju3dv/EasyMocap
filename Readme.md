@@ -136,7 +136,7 @@ Here are the great works this project is built upon:
 
 - SMPL models and layer are from MPII [SMPL-X model](https://github.com/vchoutas/smplx).
 - Some functions are borrowed from [SPIN](https://github.com/nkolot/SPIN), [VIBE](https://github.com/mkocabas/VIBE), [SMPLify-X](https://github.com/vchoutas/smplify-x)
-- The method for fitting 3D skeleton and SMPL model is similar with [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/), without using point cloud.
+- The method for fitting 3D skeleton and SMPL model is similar to [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/), without using point cloud.
 
 We also would like to thank Wenduo Feng who is the performer in the sample data.
 
