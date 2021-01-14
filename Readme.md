@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-14 21:40:55
+ * @LastEditTime: 2021-01-14 21:43:44
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
@@ -44,7 +44,7 @@ Some of python libraries can be found in `requirements.txt`. You can test differ
 To download the *SMPL-X* model go to [this project website](https://smpl-x.is.tue.mpg.de) and register to get access to the downloads section.  -->
 
 ## Quick Start
-We provide an example multiview dataset[[dropbox]()][[BaiduDisk]()]. After downloading the dataset, you can run the following example scripts.
+We provide an example multiview dataset[[dropbox](https://www.dropbox.com/s/24mb7r921b1g9a7/zju-ls-feng.zip?dl=0)][[BaiduDisk]()]. After downloading the dataset, you can run the following example scripts.
 ```bash
 data=path/to/data
 out=path/to/output
