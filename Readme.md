@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-14 21:25:44
+ * @LastEditTime: 2021-01-14 21:31:39
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
@@ -65,15 +65,29 @@ Here `intri.yml` and `extri.yml` store the camera intrinsici and extrinsic param
 
 ### 1. Run [OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
 ```bash
+data=path/to/data
+out=path/to/output
 python3 scripts/preprocess/extract_video.py ${data} --openpose <openpose_path> 
 ```
 
 ### 2. Run the code
+```bash
+# 1. example for skeleton reconstruction
+python3 code/demo_mv1pmf_skel.py ${data} --out ${out} --vis_det --vis_repro --undis --sub_vis 1 7 13 19
+# 2. example for SMPL reconstruction
+python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --end 300 --vis_smpl --undis --sub_vis 1 7 13 19
+```
+- `--vis_det`: visualize the detection
+- `--vis_repro`: visualize the reprojection
+- `--undis`: use to undistort the images
+- `--sub_vis`: use to specify the views to visualize. If not set, the code will use all views
+- `--vis_smpl`: use to render the SMPL mesh to images.
+- `--start, --end`: control the begin and end number of frames.
 
 ### 3. Output
 The results are saved in `json` format.
 ```bash
-- <output_root>
+<output_root>
 ├── keypoints3d
 │   ├── 000000.json
 │   └── xxxxxx.json
