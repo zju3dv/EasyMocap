@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-14 21:22:36
+ * @LastEditTime: 2021-01-14 21:25:44
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
@@ -15,8 +15,7 @@
 
 |:black_square_button: Whole Body|:black_square_button: [Detailed Mesh](https://zju3dv.github.io/neuralbody/)|
 |----|----|
-|<div align="center"><img src="doc/feng/total_512.gif" height="200" alt="mesh" align=center /></div>|<div align="center"><img src="doc/feng/body_256.gif" height="200" width="200" alt="mesh" align=center />
-</div>|
+|<div align="center"><img src="doc/feng/total_512.gif" height="300" alt="mesh" align=center /></div>|<div align="center"><img src="doc/feng/body_256.gif" height="300" width="300" alt="mesh" align=center /></div>|
 
 ## Installation
 ### 1. Download SMPL models
