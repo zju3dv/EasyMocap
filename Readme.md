@@ -13,6 +13,11 @@
 |----|----|
 |![repro](doc/feng/repro_512.gif)|![smpl](doc/feng/smpl_512.gif)|
 
+> The following codes are not released. We are now working hard on them. 
+- [ ] Whole body 3d keypoints estimation
+- [ ] SMPL-H/SMPLX support
+- [ ] Detailed mesh from sparse view
+
 |:black_square_button: Whole Body|:black_square_button: [Detailed Mesh](https://zju3dv.github.io/neuralbody/)|
 |----|----|
 |<div align="center"><img src="doc/feng/total_512.gif" height="300" alt="mesh" align=center /></div>|<div align="center"><img src="doc/feng/body_256.gif" height="300" width="300" alt="mesh" align=center /></div>|
@@ -131,6 +136,7 @@ Here are some great resources we benefit:
 
 - SMPL models and layer is borrowed from MPII [SMPL-X model](https://github.com/vchoutas/smplx).
 - Some functions are borrowed from [SPIN](https://github.com/nkolot/SPIN), [VIBE](https://github.com/mkocabas/VIBE), [SMPLify-X](https://github.com/vchoutas/smplify-x)
+- Our project is similar with [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/)
 
 We also would like to thank Wenduo Feng for the example data.
 
@@ -148,6 +154,13 @@ This project is the base of our other works: [iMocap](https://zju3dv.github.io/i
   pages={210--227},
   year={2020},
   organization={Springer}
+}
+
+@article{peng2020neural,
+  title={Neural Body: Implicit Neural Representations with Structured Latent Codes for Novel View Synthesis of Dynamic Humans},
+  author={Sida Peng, Yuanqing Zhang, Yinghao Xu, Qianqian Wang, Qing Shuai, Hujun Bao, Xiaowei Zhou},
+  journal={arXiv preprint arXiv:2012.15838},
+  year={2020}
 }
 ```
 
