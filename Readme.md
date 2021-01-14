@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-14 21:31:39
+ * @LastEditTime: 2021-01-14 21:40:55
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
@@ -29,6 +29,16 @@ data
         ├── SMPL_MALE.pkl
         └── SMPL_NEUTRAL.pkl
 ```
+
+### 2. Requirements
+- torch==1.4.0
+- torchvision==0.5.0
+- opencv-python
+- pyrender: for visualization
+- chumpy: for loading SMPL model
+
+Some of python libraries can be found in `requirements.txt`. You can test different version of PyTorch.
+
 <!-- To download the *SMPL+H* model go to [this project website](http://mano.is.tue.mpg.de) and register to get access to the downloads section. 
 
 To download the *SMPL-X* model go to [this project website](https://smpl-x.is.tue.mpg.de) and register to get access to the downloads section.  -->
