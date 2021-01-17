@@ -2,21 +2,27 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-14 21:43:44
+ * @LastEditTime: 2021-01-17 21:07:07
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
-**EasyMocap** is an open-source toolbox for **markerless human motion capture**.
+**EasyMocap** is an open-source toolbox for **markerless human motion capture** from RGB videos.
 
-## Results
+## Features
+- [x] multi-view, single person => 3d body keypoints
+- [x] multi-view, single person => SMPL parameters
+
 |:heavy_check_mark: Skeleton|:heavy_check_mark: SMPL|
 |----|----|
 |![repro](doc/feng/repro_512.gif)|![smpl](doc/feng/smpl_512.gif)|
 
 > The following features are not released yet. We are now working hard on them. Please stay tuned!
-- [ ] Whole body 3d keypoints estimation
-- [ ] SMPL-H/SMPLX support
-- [ ] Dense reconstruction and view synthesis from sparse view: [Neural Body](https://zju3dv.github.io/neuralbody/).
+
+|Input|Output|
+|----|----|
+|multi-view, single person  | whole body 3d keypoints|
+|multi-view, single person  | SMPL-H/SMPLX/MANO parameters|
+|sparse view, single person |  dense reconstruction and view synthesis: [NeuralBody](https://zju3dv.github.io/neuralbody/).|
 
 |:black_square_button: Whole Body|:black_square_button: [Detailed Mesh](https://zju3dv.github.io/neuralbody/)|
 |----|----|
@@ -24,7 +30,7 @@
 
 ## Installation
 ### 1. Download SMPL models
-To download the *SMPL* model go to [this](http://smpl.is.tue.mpg.de) (male and female models) and [this](http://smplify.is.tue.mpg.de) (gender neutral model) project website and register to get access to the downloads section. **Place them as following:**
+To download the *SMPL* model go to [this](http://smpl.is.tue.mpg.de) (male and female models, version 1.0.0, 10 shape PCs) and [this](http://smplify.is.tue.mpg.de) (gender neutral model) project website and register to get access to the downloads section. Prepare the model as [smplx](https://github.com/vchoutas/smplx#model-loading). **Place them as following:**
 ```bash
 data
 └── smplx
@@ -39,7 +45,7 @@ data
 - torch==1.4.0
 - torchvision==0.5.0
 - opencv-python
-- pyrender: for visualization
+- [pyrender](https://pyrender.readthedocs.io/en/latest/install/index.html#python-installation): for visualization
 - chumpy: for loading SMPL model
 
 Some of python libraries can be found in `requirements.txt`. You can test different version of PyTorch.
@@ -131,6 +137,10 @@ The data in `smpl/000000.json` is also a list, each element represents the SMPL 
 ```
 We set the first 3 dimensions of `poses` to zero, and add a new parameter `Rh` to represents the global oritentation, the vertices of SMPL model V = RX(theta, beta) + T.
 
+## Evaluation
+
+We will add more quantitative reports in [doc/evaluation.md](doc/evaluation.md)
+
 ## Acknowledgements
 Here are the great works this project is built upon:
 
@@ -165,5 +175,3 @@ Please consider citing these works if you find this repo is useful for your proj
   year={2020}
 }
 ```
-
-<!-- ## License -->
