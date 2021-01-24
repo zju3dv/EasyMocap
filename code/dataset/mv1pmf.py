@@ -2,7 +2,7 @@
   @ Date: 2021-01-12 17:12:50
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-14 17:14:34
+  @ LastEditTime: 2021-01-21 14:51:45
   @ FilePath: /EasyMocap/code/dataset/mv1pmf.py
 '''
 import os
@@ -15,10 +15,10 @@ from .base import MVBase
 
 class MV1PMF(MVBase):
     def __init__(self, root, cams=[], pid=0, out=None, config={}, 
-        image_root='images', annot_root='annots', add_hand_face=True,
+        image_root='images', annot_root='annots', mode='body15',
         undis=True, no_img=False) -> None:
         super().__init__(root, cams, out, config, image_root, annot_root, 
-            add_hand_face, undis, no_img)
+            mode, undis, no_img)
         self.pid = pid
     
     def write_keypoints3d(self, keypoints3d, nf):
@@ -30,20 +30,21 @@ class MV1PMF(MVBase):
         result.update(params)
         self.writer.write_smpl([result], nf)
 
-    def vis_smpl(self, vertices, faces, images, nf, sub_vis):
+    def vis_smpl(self, vertices, faces, images, nf, sub_vis=[], 
+        mode='smpl', extra_data=[], add_back=True):
         render_data = {}
         if len(vertices.shape) == 3:
             vertices = vertices[0]
         pid = self.pid
         render_data[pid] = {'vertices': vertices, 'faces': faces, 
-            'vid': pid, 'name': '{}_{}'.format(nf, pid)}
+            'vid': pid, 'name': 'human_{}_{}'.format(nf, pid)}
         cameras = {'K': [], 'R':[], 'T':[]}
         if len(sub_vis) == 0:
             sub_vis = self.cams
         for key in cameras.keys():
             cameras[key] = [self.cameras[cam][key] for cam in sub_vis]
         images = [images[self.cams.index(cam)] for cam in sub_vis]
-        self.writer.vis_smpl(render_data, nf, images, cameras)
+        self.writer.vis_smpl(render_data, nf, images, cameras, mode, add_back=add_back)
     
     def vis_detections(self, images, annots, nf, to_img=True, sub_vis=[]):
         lDetections = []
@@ -87,7 +88,10 @@ class MV1PMF(MVBase):
                 keypoints = data['keypoints']
             else:
                 print('not found pid {} in {}, {}'.format(self.pid, index, nv))
-                keypoints = np.zeros((25, 3))
+                if self.add_hand_face:
+                    keypoints = np.zeros((137, 3))
+                else:
+                    keypoints = np.zeros((25, 3))
                 bbox = np.array([0, 0, 100., 100., 0.])
             annots['bbox'].append(bbox)
             annots['keypoints'].append(keypoints)

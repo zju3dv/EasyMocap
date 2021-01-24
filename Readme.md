@@ -2,43 +2,56 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-17 21:07:07
+ * @LastEditTime: 2021-01-24 22:11:37
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
 **EasyMocap** is an open-source toolbox for **markerless human motion capture** from RGB videos.
 
-## Features
-- [x] multi-view, single person => 3d body keypoints
-- [x] multi-view, single person => SMPL parameters
+In this project, we provide the basic code for fitting SMPL[1]/SMPL+H[2]/SMPLX[3] model to capture body+hand+face poses from multiple views.
 
-|:heavy_check_mark: Skeleton|:heavy_check_mark: SMPL|
-|----|----|
-|![repro](doc/feng/repro_512.gif)|![smpl](doc/feng/smpl_512.gif)|
+|Input|:heavy_check_mark: Skeleton|:heavy_check_mark: SMPL|
+|----|----|----|
+|![input](doc/feng/000400.jpg)|![repro](doc/feng/skel.gif)|![smpl](doc/feng/smplx.gif)|
 
-> The following features are not released yet. We are now working hard on them. Please stay tuned!
+> We plan to intergrate more interesting algorithms, please stay tuned!
 
-|Input|Output|
-|----|----|
-|multi-view, single person  | whole body 3d keypoints|
-|multi-view, single person  | SMPL-H/SMPLX/MANO parameters|
-|sparse view, single person |  dense reconstruction and view synthesis: [NeuralBody](https://zju3dv.github.io/neuralbody/).|
-
-|:black_square_button: Whole Body|:black_square_button: [Detailed Mesh](https://zju3dv.github.io/neuralbody/)|
-|----|----|
-|<div align="center"><img src="doc/feng/total_512.gif" height="300" alt="mesh" align=center /></div>|<div align="center"><img src="doc/feng/body_256.gif" height="300" width="300" alt="mesh" align=center /></div>|
+1. [Multi-Person from Multiple Views](https://github.com/zju3dv/mvpose)
+2. [Mocap from Multiple **Uncalibrated** and **Unsynchronized** Videos](https://arxiv.org/pdf/2008.07931.pdf)
+3. [Dense Reconstruction and View Synthesis from **Sparse Views**](https://zju3dv.github.io/neuralbody/)
 
 ## Installation
 ### 1. Download SMPL models
-To download the *SMPL* model go to [this](http://smpl.is.tue.mpg.de) (male and female models, version 1.0.0, 10 shape PCs) and [this](http://smplify.is.tue.mpg.de) (gender neutral model) project website and register to get access to the downloads section. Prepare the model as [smplx](https://github.com/vchoutas/smplx#model-loading). **Place them as following:**
+This step is the same as [smplx](https://github.com/vchoutas/smplx#model-loading).
+
+To download the *SMPL* model go to [this](http://smpl.is.tue.mpg.de) (male and female models, version 1.0.0, 10 shape PCs) and [this](http://smplify.is.tue.mpg.de) (gender neutral model) project website and register to get access to the downloads section. 
+
+To download the *SMPL+H* model go to [this project website](http://mano.is.tue.mpg.de) and register to get access to the downloads section. 
+
+To download the *SMPL-X* model go to [this project website](https://smpl-x.is.tue.mpg.de) and register to get access to the downloads section. 
+
+**Place them as following:**
 ```bash
 data
 └── smplx
     ├── J_regressor_body25.npy
-    └── smpl
-        ├── SMPL_FEMALE.pkl
-        ├── SMPL_MALE.pkl
-        └── SMPL_NEUTRAL.pkl
+    ├── J_regressor_body25_smplh.txt
+    ├── J_regressor_body25_smplx.txt
+    ├── smpl
+    │   ├── SMPL_FEMALE.pkl
+    │   ├── SMPL_MALE.pkl
+    │   └── SMPL_NEUTRAL.pkl
+    ├── smplh
+    │   ├── MANO_LEFT.pkl
+    │   ├── MANO_RIGHT.pkl
+    │   ├── SMPLH_female.pkl
+    │   ├── SMPLH_FEMALE.pkl
+    │   ├── SMPLH_male.pkl
+    │   └── SMPLH_MALE.pkl
+    └── smplx
+        ├── SMPLX_FEMALE.pkl
+        ├── SMPLX_MALE.pkl
+        └── SMPLX_NEUTRAL.pkl
 ```
 
 ### 2. Requirements
@@ -47,15 +60,13 @@ data
 - opencv-python
 - [pyrender](https://pyrender.readthedocs.io/en/latest/install/index.html#python-installation): for visualization
 - chumpy: for loading SMPL model
+- OpenPose[4]: for 2D pose
 
 Some of python libraries can be found in `requirements.txt`. You can test different version of PyTorch.
 
-<!-- To download the *SMPL+H* model go to [this project website](http://mano.is.tue.mpg.de) and register to get access to the downloads section. 
-
-To download the *SMPL-X* model go to [this project website](https://smpl-x.is.tue.mpg.de) and register to get access to the downloads section.  -->
 
 ## Quick Start
-We provide an example multiview dataset[[dropbox](https://www.dropbox.com/s/24mb7r921b1g9a7/zju-ls-feng.zip?dl=0)][[BaiduDisk](https://pan.baidu.com/s/1lvAopzYGCic3nauoQXjbPw)(vg1z)]. After downloading the dataset, you can run the following example scripts.
+We provide an example multiview dataset[[dropbox](https://www.dropbox.com/s/24mb7r921b1g9a7/zju-ls-feng.zip?dl=0)][[BaiduDisk](https://pan.baidu.com/s/1lvAopzYGCic3nauoQXjbPw)(vg1z)], which has 800 frames from 23 synchronized and calibrated cameras. After downloading the dataset, you can run the following example scripts.
 ```bash
 data=path/to/data
 out=path/to/output
@@ -64,15 +75,17 @@ python3 scripts/preprocess/extract_video.py ${data}
 # 1. example for skeleton reconstruction
 python3 code/demo_mv1pmf_skel.py ${data} --out ${out} --vis_det --vis_repro --undis --sub_vis 1 7 13 19
 # 2. example for SMPL reconstruction
-python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --end 300 --vis_smpl --undis --sub_vis 1 7 13 19
+python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --end 300 --vis_smpl --undis --sub_vis 1 7 13 19 --gender male
+# 2. example for SMPL-X reconstruction
+python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --undis --body bodyhandface --sub_vis 1 7 13 19 --start 400 --model smplx --vis_smpl --gender male
 ```
 
 ## Not Quick Start
 ### 0. Prepare Your Own Dataset
 ```bash
 zju-ls-feng
-├── extri.yml
 ├── intri.yml
+├── extri.yml
 └── videos
     ├── 1.mp4
     ├── 2.mp4
@@ -88,8 +101,10 @@ Here `intri.yml` and `extri.yml` store the camera intrinsici and extrinsic param
 ```bash
 data=path/to/data
 out=path/to/output
-python3 scripts/preprocess/extract_video.py ${data} --openpose <openpose_path> 
+python3 scripts/preprocess/extract_video.py ${data} --openpose <openpose_path> --handface
 ```
+- `--openpose`: specify the openpose path
+- `--handface`: detect hands and face keypoints
 
 ### 2. Run the code
 ```bash
@@ -98,12 +113,15 @@ python3 code/demo_mv1pmf_skel.py ${data} --out ${out} --vis_det --vis_repro --un
 # 2. example for SMPL reconstruction
 python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --end 300 --vis_smpl --undis --sub_vis 1 7 13 19
 ```
+The input flags:
+- `--undis`: use to undistort the images
+- `--start, --end`: control the begin and end number of frames.
+
+The output flags:
 - `--vis_det`: visualize the detection
 - `--vis_repro`: visualize the reprojection
-- `--undis`: use to undistort the images
 - `--sub_vis`: use to specify the views to visualize. If not set, the code will use all views
 - `--vis_smpl`: use to render the SMPL mesh to images.
-- `--start, --end`: control the begin and end number of frames.
 
 ### 3. Output
 The results are saved in `json` format.
@@ -131,13 +149,18 @@ The data in `smpl/000000.json` is also a list, each element represents the SMPL 
     "id": <id>,
     "Rh": <(1, 3)>,
     "Th": <(1, 3)>,
-    "poses": <(1, 72)>,
+    "poses": <(1, 72/78/87)>,
+    "expression": <(1, 10)>,
     "shapes": <(1, 10)>
 }
 ```
 We set the first 3 dimensions of `poses` to zero, and add a new parameter `Rh` to represents the global oritentation, the vertices of SMPL model V = RX(theta, beta) + T.
 
+If you use SMPL+H model, the poses contains `22x3+6+6`. We use `6` pca coefficients for each hand. `3(jaw, left eye, right eye)x3` poses of head are added for SMPL-X model.
+
 ## Evaluation
+
+In our code, we do not set the best weight parameters, you can adjust these according your data. If you find a set of good weights, feel free to tell me.
 
 We will add more quantitative reports in [doc/evaluation.md](doc/evaluation.md)
 
@@ -174,4 +197,13 @@ Please consider citing these works if you find this repo is useful for your proj
   journal={arXiv preprint arXiv:2012.15838},
   year={2020}
 }
+```
+
+## Reference
+```bash
+[1] Loper, Matthew, et al. "SMPL: A skinned multi-person linear model." ACM transactions on graphics (TOG) 34.6 (2015): 1-16.
+[2] Romero, Javier, Dimitrios Tzionas, and Michael J. Black. "Embodied hands: Modeling and capturing hands and bodies together." ACM Transactions on Graphics (ToG) 36.6 (2017): 1-17.
+[3] Pavlakos, Georgios, et al. "Expressive body capture: 3d hands, face, and body from a single image." Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2019.
+Bogo, Federica, et al. "Keep it SMPL: Automatic estimation of 3D human pose and shape from a single image." European conference on computer vision. Springer, Cham, 2016.
+[4] Cao, Z., Hidalgo, G., Simon, T., Wei, S.E., Sheikh, Y.: Openpose: real-time multi-person 2d pose estimation using part affinity fields. arXiv preprint arXiv:1812.08008 (2018)
 ```

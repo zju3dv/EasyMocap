@@ -228,3 +228,19 @@ def filterKeypoints(keypoints, thres = 0.1, min_width=40, \
         add_list.append(ik)
     keypoints = keypoints[add_list, :, :]
     return keypoints, add_list
+
+
+def get_fundamental_matrix(cameras, basenames):
+    skew_op = lambda x: np.array([[0, -x[2], x[1]], [x[2], 0, -x[0]], [-x[1], x[0], 0]])
+    fundamental_op = lambda K_0, R_0, T_0, K_1, R_1, T_1: np.linalg.inv(K_0).T @ (
+            R_0 @ R_1.T) @ K_1.T @ skew_op(K_1 @ R_1 @ R_0.T @ (T_0 - R_0 @ R_1.T @ T_1))
+    fundamental_RT_op = lambda K_0, RT_0, K_1, RT_1: fundamental_op (K_0, RT_0[:, :3], RT_0[:, 3], K_1,
+                                                                          RT_1[:, :3], RT_1[:, 3] )
+    F = np.zeros((len(basenames), len(basenames), 3, 3))  # N x N x 3 x 3 matrix
+    F = {(icam, jcam): np.zeros((3, 3)) for jcam in basenames for icam in basenames}
+    for icam in basenames:
+        for jcam in basenames:
+            F[(icam, jcam)] += fundamental_RT_op(cameras[icam]['K'], cameras[icam]['RT'], cameras[jcam]['K'], cameras[jcam]['RT'])
+            if F[(icam, jcam)].sum() == 0:
+                F[(icam, jcam)] += 1e-12  # to avoid nan
+    return F

@@ -2,8 +2,8 @@
   @ Date: 2020-11-19 10:49:26
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-14 20:19:34
-  @ FilePath: /EasyMocap/code/pyfitting/optimize_simple.py
+  @ LastEditTime: 2021-01-24 21:29:12
+  @ FilePath: /EasyMocapRelease/code/pyfitting/optimize_simple.py
 '''
 import numpy as np
 import torch
@@ -213,6 +213,7 @@ def optimizeShape(body_model, body_params, keypoints3d,
     limb_length = torch.Tensor(limb_length).to(device)
     limb_conf = torch.Tensor(limb_conf).to(device)
     body_params = {key:torch.Tensor(val).to(device) for key, val in body_params.items()}
+    body_params_init = {key:val.clone() for key, val in body_params.items()}
     opt_params = [body_params['shapes']]
     grad_require(opt_params, True)
     optimizer = LBFGS(
@@ -226,14 +227,16 @@ def optimizeShape(body_model, body_params, keypoints3d,
         dst = keypoints3d[:, kintree[:, 1], :3]
         direct_est = (dst - src).detach()
         direct_norm = torch.norm(direct_est, dim=2, keepdim=True)
-        direct_normalized = direct_est/direct_norm
+        direct_normalized = direct_est/(direct_norm + 1e-4)
         err = dst - src - direct_normalized * limb_length
         loss_dict = {
             's3d': torch.sum(err**2*limb_conf)/nFrames, 
-            'reg_shape': torch.sum(body_params['shapes']**2)}
+            'reg_shapes': torch.sum(body_params['shapes']**2)}
+        if 'init_shape' in weight_loss.keys():
+            loss_dict['init_shape'] = torch.sum((body_params['shapes'] - body_params_init['shapes'])**2)
         # fittingLog.step(loss_dict, weight_loss)
         if verbose:
-            print(' '.join([key + ' %f'%(loss_dict[key].item()*weight_loss[key]) 
+            print(' '.join([key + ' %.3f'%(loss_dict[key].item()*weight_loss[key]) 
                 for key in loss_dict.keys() if weight_loss[key]>0]))
         loss = sum([loss_dict[key]*weight_loss[key]
                     for key in loss_dict.keys()])
@@ -255,6 +258,9 @@ def optimizeShape(body_model, body_params, keypoints3d,
     body_params = {key:val.detach().cpu().numpy() for key, val in body_params.items()}
     return body_params
 
+N_BODY = 25
+N_HAND = 21
+
 def optimizePose(body_model, body_params, keypoints3d,
     weight_loss, kintree, cfg=None):
     """ simple function for optimizing model pose given 3d keypoints
@@ -268,22 +274,16 @@ def optimizePose(body_model, body_params, keypoints3d,
         cfg (Config): Config Node controling running mode
     """
     device = body_model.device
+    model_type = body_model.model_type
     # 计算不同的骨长
     kintree = np.array(kintree, dtype=np.int)
     nFrames = keypoints3d.shape[0]
-    # limb_length: nFrames, nLimbs, 1
-    limb = keypoints3d[:, kintree[:, 1], :3] - keypoints3d[:, kintree[:, 0], :3]
-    limb_length = np.linalg.norm(limb, axis=2, keepdims=True)
-    # conf: nFrames, nLimbs, 1
-    limb_conf = np.minimum(keypoints3d[:, kintree[:, 1], 3:], keypoints3d[:, kintree[:, 0], 3:])
-    limb_dir = limb/limb_length
-
+    nJoints = keypoints3d.shape[1]
     keypoints3d = torch.Tensor(keypoints3d).to(device)
-    limb_dir = torch.Tensor(limb_dir).to(device).unsqueeze(2)
-    limb_conf = torch.Tensor(limb_conf).to(device)
-    angle_prior = SMPLAngleLoss(keypoints3d)
+    angle_prior = SMPLAngleLoss(keypoints3d, body_model.model_type)
 
     body_params = {key:torch.Tensor(val).to(device) for key, val in body_params.items()}
+    body_params_init = {key:val.clone() for key, val in body_params.items()}
     if cfg is None:
         opt_params = [body_params['Rh'], body_params['Th'], body_params['poses']]
         verbose = False
@@ -297,35 +297,46 @@ def optimizePose(body_model, body_params, keypoints3d,
             opt_params.append(body_params['poses'])
         if cfg.OPT_SHAPE:
             opt_params.append(body_params['shapes'])
+        if cfg.OPT_EXPR and model_type == 'smplx':
+            opt_params.append(body_params['expression'])
         verbose = cfg.VERBOSE
     grad_require(opt_params, True)
     optimizer = LBFGS(
         opt_params, line_search_fn='strong_wolfe')
     zero_pose = torch.zeros((nFrames, 3), device=device)
+    if not cfg.OPT_HAND and model_type in ['smplh', 'smplx']:
+        zero_pose_hand = torch.zeros((nFrames, body_params['poses'].shape[1] - 66), device=device)
+        nJoints = N_BODY
+        keypoints3d = keypoints3d[:, :nJoints]
+    elif cfg.OPT_HAND and not cfg.OPT_EXPR and model_type == 'smplx':
+        zero_pose_face = torch.zeros((nFrames, body_params['poses'].shape[1] - 78), device=device)
+        nJoints = N_BODY + N_HAND * 2
+        keypoints3d = keypoints3d[:, :nJoints]
+    else:
+        nJoints = keypoints3d.shape[1]
     def closure(debug=False):
         optimizer.zero_grad()
         new_params = body_params.copy()
-        new_params['poses'] = torch.cat([zero_pose, body_params['poses'][:, 3:]], dim=1)
-        kpts_est = body_model(return_verts=False, return_tensor=True, **new_params)
-        diff_square = (kpts_est - keypoints3d[..., :3])**2
-        if False:
-            pass
+        if not cfg.OPT_HAND and cfg.MODEL in ['smplh', 'smplx']:
+            new_params['poses'] = torch.cat([zero_pose, body_params['poses'][:, 3:66], zero_pose_hand], dim=1)
         else:
-            conf = keypoints3d[..., 3:]
+            new_params['poses'] = torch.cat([zero_pose, body_params['poses'][:, 3:]], dim=1)
+        kpts_est = body_model(return_verts=False, return_tensor=True, **new_params)[:, :nJoints, :]
+        diff_square = (kpts_est[:, :nJoints, :3] - keypoints3d[..., :3])**2
+        # TODO:add robust loss
+        conf = keypoints3d[..., 3:]
         loss_3d = torch.sum(conf * diff_square)
-        if False:
-            src = keypoints3d[:, kintree[:, 0], :3].detach()
-            dst = keypoints3d[:, kintree[:, 1], :3]
-            direct_est = dst - src
-            direct_norm = torch.norm(direct_est, dim=2, keepdim=True)
-            direct_normalized = direct_est/direct_norm
-        
         loss_dict = {
             'k3d': loss_3d,
             'reg_poses_zero': angle_prior.loss(body_params['poses'])
         }
+        # regularize
+        loss_dict.update(RegularizationLoss(body_params, body_params_init, weight_loss))
         # smooth
-        loss_dict.update(SmoothLoss(body_params, ['poses', 'Th'], weight_loss))
+        smooth_conf = keypoints3d[1:, ..., -1:]**2
+        loss_dict['smooth_body'] = torch.sum(smooth_conf[:, :N_BODY] * torch.abs(kpts_est[:-1, :N_BODY] - kpts_est[1:, :N_BODY]))
+        if cfg.OPT_HAND and cfg.MODEL in ['smplh', 'smplx']:
+            loss_dict['smooth_hand'] = torch.sum(smooth_conf[:, N_BODY:N_BODY+N_HAND*2] * torch.abs(kpts_est[:-1, N_BODY:N_BODY+N_HAND*2] - kpts_est[1:, N_BODY:N_BODY+N_HAND*2]))
         for key in loss_dict.keys():
             loss_dict[key] = loss_dict[key]/nFrames
         # fittingLog.step(loss_dict, weight_loss)

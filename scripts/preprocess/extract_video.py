@@ -2,15 +2,17 @@
   @ Date: 2021-01-13 20:38:33
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-14 16:59:06
-  @ FilePath: /EasyMocapRelease/scripts/preprocess/extract_video.py
+  @ LastEditTime: 2021-01-22 20:45:37
+  @ FilePath: /EasyMocap/scripts/preprocess/extract_video.py
 '''
-import os
+import os, sys
 import cv2
 from os.path import join
 from tqdm import tqdm
 from glob import glob
 import numpy as np
+code_path = join(os.path.dirname(__file__), '..', '..', 'code')
+sys.path.append(code_path)
 
 mkdir = lambda x: os.makedirs(x, exist_ok=True)
 
@@ -18,12 +20,12 @@ def extract_video(videoname, path, start=0, end=10000, step=1):
     base = os.path.basename(videoname).replace('.mp4', '')
     if not os.path.exists(videoname):
         return base
-    video = cv2.VideoCapture(videoname)
     outpath = join(path, 'images', base)
     if os.path.exists(outpath) and len(os.listdir(outpath)) > 0:
         return base
     else:
         os.makedirs(outpath)
+    video = cv2.VideoCapture(videoname)
     totalFrames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
     for cnt in tqdm(range(totalFrames)):
         ret, frame = video.read()
@@ -36,6 +38,7 @@ def extract_video(videoname, path, start=0, end=10000, step=1):
 
 def extract_2d(openpose, image, keypoints, render):
     if not os.path.exists(keypoints):
+        os.makedirs(keypoints, exist_ok=True)
         cmd = './build/examples/openpose/openpose.bin --image_dir {} --write_json {} --display 0'.format(image, keypoints)
         if args.handface:
             cmd = cmd + ' --hand --face'
@@ -87,7 +90,7 @@ def bbox_from_openpose(keypoints, rescale=1.2, detection_thresh=0.01):
         center[1] - bbox_size[1]/2,
         center[0] + bbox_size[0]/2, 
         center[1] + bbox_size[1]/2,
-        keypoints[valid, :2].mean()
+        keypoints[valid, 2].mean()
     ]
     return bbox
 
@@ -129,10 +132,62 @@ def convert_from_openpose(src, dst):
         annot['annots'] = annots
         save_json(annotname, annot)
 
+def detect_frame(detector, img, pid=0):
+    lDetections = detector.detect([img])[0]
+    annots = []
+    for i in range(len(lDetections)):
+        annot = {
+            'bbox': [float(d) for d in lDetections[i]['bbox']],
+            'personID': pid + i,
+            'keypoints': lDetections[i]['keypoints'].tolist(),
+            'isKeyframe': True
+        }
+        annots.append(annot)
+    return annots
+    
+def extract_yolo_hrnet(image_root, annot_root):
+    imgnames = sorted(glob(join(image_root, '*.jpg')))
+    import torch
+    device = torch.device('cuda')
+    from estimator.detector import Detector
+    config = {
+        'yolov4': {
+              'ckpt_path': 'data/models/yolov4.weights',
+              'conf_thres': 0.3,
+              'box_nms_thres': 0.5 # 阈值=0.9，表示IOU 0.9的不会被筛掉
+        },
+        'hrnet':{
+            'nof_joints': 17,
+            'c': 48,
+            'checkpoint_path': 'data/models/pose_hrnet_w48_384x288.pth'
+        },
+        'detect':{
+            'MIN_PERSON_JOINTS': 10,
+            'MIN_BBOX_AREA': 5000,
+            'MIN_JOINTS_CONF': 0.3,
+            'MIN_BBOX_LEN': 150
+        }
+    }
+    detector = Detector('yolo', 'hrnet', device, config)
+    for nf, imgname in enumerate(tqdm(imgnames)):
+        annotname = join(annot_root, os.path.basename(imgname).replace('.jpg', '.json'))
+        annot = create_annot_file(annotname, imgname)
+        img0 = cv2.imread(imgname)
+        annot['annots'] = detect_frame(detector, img0, 0)
+        for i in range(len(annot['annots'])):
+            x = annot['annots'][i]
+            x['area'] = max(x['bbox'][2] - x['bbox'][0], x['bbox'][3] - x['bbox'][1])**2
+        annot['annots'].sort(key=lambda x:-x['area'])
+        # 重新赋值人的ID
+        for i in range(len(annot['annots'])):
+            annot['annots'][i]['personID'] = i
+        save_json(annotname, annot)
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=str, default=None)
+    parser.add_argument('--mode', type=str, default='openpose', choices=['openpose', 'yolo-hrnet'])
     parser.add_argument('--handface', action='store_true')
     parser.add_argument('--openpose', type=str, 
         default='/media/qing/Project/openpose')
@@ -140,24 +195,31 @@ if __name__ == "__main__":
     parser.add_argument('--no2d', action='store_true')
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
+    mode = args.mode
+    
     if os.path.isdir(args.path):
         videos = sorted(glob(join(args.path, 'videos', '*.mp4')))
         subs = []
         for video in videos:
             basename = extract_video(video, args.path)
             subs.append(basename)
+        print('cameras: ', ' '.join(subs))
         if not args.no2d:
-            os.makedirs(join(args.path, 'openpose'), exist_ok=True)
             for sub in subs:
+                image_root = join(args.path, 'images', sub)
                 annot_root = join(args.path, 'annots', sub)
                 if os.path.exists(annot_root):
+                    print('skip ', annot_root)
                     continue
-                extract_2d(args.openpose, join(args.path, 'images', sub), 
-                    join(args.path, 'openpose', sub), 
-                    join(args.path, 'openpose_render', sub))
-                convert_from_openpose(
-                    src=join(args.path, 'openpose', sub),
-                    dst=annot_root
-                )
+                if mode == 'openpose':
+                    extract_2d(args.openpose, image_root, 
+                        join(args.path, 'openpose', sub), 
+                        join(args.path, 'openpose_render', sub))
+                    convert_from_openpose(
+                        src=join(args.path, 'openpose', sub),
+                        dst=annot_root
+                    )
+                elif mode == 'yolo-hrnet':
+                    extract_yolo_hrnet(image_root, annot_root)
     else:
         print(args.path, ' not exists')

@@ -79,13 +79,14 @@ if render_flags['rgba']:
 
 class Renderer(object):
     def __init__(self, focal_length=1000, height=512, width=512, faces=None,
-        bg_color=[0.0, 0.0, 0.0, 0.0]   # render 配置
+        bg_color=[1.0, 1.0, 1.0, 0.0], down_scale=1   # render 配置
     ): 
         self.renderer = pyrender.OffscreenRenderer(height, width)
         self.faces = faces
         self.focal_length = focal_length
         self.bg_color = bg_color
-        self.ambient_light = (0.3, 0.3, 0.3)
+        self.ambient_light = (0.5, 0.5, 0.5)
+        self.down_scale = down_scale
 
     def add_light(self, scene):
         trans = [0, 0, 0]
@@ -101,7 +102,7 @@ class Renderer(object):
         scene.add(light, pose=light_pose)
 
     def render(self, render_data, cameras, images,
-        use_white=False,
+        use_white=False, add_back=True,
         ret_depth=False, ret_color=False):
         # Need to flip x-axis
         rot = trimesh.transformations.rotation_matrix(
@@ -112,7 +113,11 @@ class Renderer(object):
                 img = np.zeros_like(img_, dtype=np.uint8) + 255
             else:
                 img = img_.copy()
-            K, R, T = cameras['K'][nv], cameras['R'][nv], cameras['T'][nv]
+            K, R, T = cameras['K'][nv].copy(), cameras['R'][nv], cameras['T'][nv]
+            # down scale the image to speed up rendering
+            img = cv2.resize(img, None, fx=1/self.down_scale, fy=1/self.down_scale)
+            K[:2, :] /= self.down_scale
+
             self.renderer.viewport_height = img.shape[0]
             self.renderer.viewport_width = img.shape[1]
             scene = pyrender.Scene(bg_color=self.bg_color,
@@ -120,20 +125,31 @@ class Renderer(object):
             for trackId, data in render_data.items():
                 vert = data['vertices'].copy()
                 faces = data['faces']
-                # 如果使用了vid这个键，那么可视化的颜色使用vid的颜色
-                col = get_colors(data.get('vid', trackId))
                 vert = vert @ R.T + T.T
-                mesh = trimesh.Trimesh(vert, faces)
-                mesh.apply_transform(rot)
+                if 'colors' not in data.keys():
+                    # 如果使用了vid这个键，那么可视化的颜色使用vid的颜色
+                    col = get_colors(data.get('vid', trackId))
+                    mesh = trimesh.Trimesh(vert, faces)
+                    mesh.apply_transform(rot)
 
-                material = pyrender.MetallicRoughnessMaterial(
-                    metallicFactor=0.0,
-                    alphaMode='OPAQUE',
-                    baseColorFactor=col)
-                mesh = pyrender.Mesh.from_trimesh(
-                    mesh,
-                    material=material)
-                scene.add(mesh, 'mesh')
+                    material = pyrender.MetallicRoughnessMaterial(
+                        metallicFactor=0.0,
+                        alphaMode='OPAQUE',
+                        baseColorFactor=col)
+                    mesh = pyrender.Mesh.from_trimesh(
+                        mesh,
+                        material=material)
+                    scene.add(mesh, data['name'])
+                else:
+                    mesh = trimesh.Trimesh(vert, faces, vertex_colors=data['colors'], process=False)
+                    # mesh = trimesh.Trimesh(vert, faces, process=False)
+                    mesh.apply_transform(rot)
+                    material = pyrender.MetallicRoughnessMaterial(
+                        metallicFactor=0.0,
+                        alphaMode='OPAQUE',
+                        baseColorFactor=(1., 1., 1.))
+                    mesh = pyrender.Mesh.from_trimesh(mesh, material=material)
+                    scene.add(mesh, data['name'])
             camera_pose = np.eye(4)
             camera = pyrender.camera.IntrinsicsCamera(fx=K[0, 0], fy=K[1, 1], cx=K[0, 2], cy=K[1, 2])
             scene.add(camera, pose=camera_pose)
@@ -144,7 +160,12 @@ class Renderer(object):
             if rend_rgba.shape[2] == 3: # fail to generate transparent channel
                 valid_mask = (rend_depth > 0)[:, :, None]
                 rend_rgba = np.dstack((rend_rgba, (valid_mask*255).astype(np.uint8)))
-            rend_cat = cv2.addWeighted(cv2.bitwise_and(img, 255 - rend_rgba[:, :, 3:4].repeat(3, 2)), 1, rend_rgba[:, :, :3], 1, 0)
+            if add_back:
+                rend_cat = cv2.addWeighted(
+                    cv2.bitwise_and(img, 255 - rend_rgba[:, :, 3:4].repeat(3, 2)), 1, 
+                    cv2.bitwise_and(rend_rgba[:, :, :3], rend_rgba[:, :, 3:4].repeat(3, 2)), 1, 0)
+            else:
+                rend_cat = rend_rgba
             
             output_colors.append(rend_rgba)
             output_depths.append(rend_depth)

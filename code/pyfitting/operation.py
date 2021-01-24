@@ -2,7 +2,7 @@
   @ Date: 2020-11-19 11:39:45
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2020-11-19 11:50:20
+  @ LastEditTime: 2021-01-20 15:06:28
   @ FilePath: /EasyMocap/code/pyfitting/operation.py
 '''
 import torch
@@ -47,12 +47,18 @@ def projection(points3d, camera_intri, R=None, T=None, distance=None):
         points3d {Tensor} -- (bn, N, 3)
         camera_intri {Tensor} -- (bn, 3, 3)
         distance {Tensor} -- (bn, 1, 1)
+        R: bn, 3, 3
+        T: bn, 3, 1
     Returns:
         points2d -- (bn, N, 2)
     """
     if R is not None:
         Rt = torch.transpose(R, 1, 2)
-        points3d = torch.matmul(points3d, Rt) + T
+        if T.shape[-1] == 1:
+            Tt = torch.transpose(T, 1, 2)
+            points3d = torch.matmul(points3d, Rt) + Tt
+        else:
+            points3d = torch.matmul(points3d, Rt) + T
     
     if distance is None:
         img_points = torch.div(points3d[:, :, :2],

@@ -2,7 +2,7 @@
   @ Date: 2020-11-28 17:23:04
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-14 17:11:51
+  @ LastEditTime: 2021-01-21 15:16:52
   @ FilePath: /EasyMocap/code/mytools/vis_base.py
 '''
 import cv2
@@ -73,12 +73,13 @@ def plot_keypoints(img, points, pid, config, vis_conf=False, use_limb_color=True
             col = get_rgb(config['colors'][ii])
         else:
             col = get_rgb(pid)
-        if pt1[2] > 0.01 and pt2[2] > 0.01:
+        if pt1[-1] > 0.01 and pt2[-1] > 0.01:
             image = cv2.line(
                 img, (int(pt1[0]+0.5), int(pt1[1]+0.5)), (int(pt2[0]+0.5), int(pt2[1]+0.5)),
                 col, lw)
     for i in range(len(points)):
-        x, y, c = points[i]
+        x, y = points[i][0], points[i][1]
+        c = points[i][-1]
         if c > 0.01:
             col = get_rgb(pid)
             cv2.circle(img, (int(x+0.5), int(y+0.5)), lw*2, col, -1)
@@ -98,9 +99,11 @@ def merge(images, row=-1, col=-1, resize=False, ret_range=False):
         images = [images[i] for i in [0, 1, 2, 3, 7, 6, 5, 4]]
     if len(images) == 7:
         row, col = 3, 3
+    elif len(images) == 2:
+        row, col = 2, 1
     height = images[0].shape[0]
     width = images[0].shape[1]
-    ret_img = np.zeros((height * row, width * col, 3), dtype=np.uint8) + 255
+    ret_img = np.zeros((height * row, width * col, images[0].shape[2]), dtype=np.uint8) + 255
     ranges = []
     for i in range(row):
         for j in range(col):
