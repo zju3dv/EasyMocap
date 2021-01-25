@@ -2,8 +2,8 @@
   @ Date: 2021-01-13 16:53:55
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-24 22:27:01
-  @ FilePath: /EasyMocapRelease/code/dataset/base.py
+  @ LastEditTime: 2021-01-25 19:12:34
+  @ FilePath: /EasyMocap/code/dataset/base.py
 '''
 import os
 import json
@@ -351,6 +351,8 @@ class MVBase(Dataset):
         self.mode = mode
         self.undis = undis
         self.no_img = no_img
+        # use when debug
+        self.ret_crop = False
         self.config = config
         # results path
         # the results store keypoints3d
@@ -425,6 +427,18 @@ class MVBase(Dataset):
                 images.append(img)
             # TODO:这里直接取了0
             annot = read_annot(annname, self.mode)
+            if self.ret_crop:
+                for det in annot:
+                    bbox = det['bbox']
+                    l, t, r, b = det['bbox'][:4]
+                    l = max(0, int(l+0.5))
+                    t = max(0, int(t+0.5))
+                    r = min(img.shape[1], int(r+0.5))
+                    b = min(img.shape[0], int(b+0.5))
+                    det['bbox'][:4] = [l, t, r, b]
+                    crop_img = img[t:b, l:r, :]
+                    crop_img = cv2.resize(crop_img, (128, 256))
+                    det['crop'] = crop_img
             annots.append(annot)
         if self.undis:
             images = self.undistort(images)
@@ -464,6 +478,29 @@ class MVBase(Dataset):
             result.update(people.body_params)
             results.append(result)
         self.writer.write_smpl(results, nf)
+
+    def vis_smpl(self, peopleDict, faces, images, nf, sub_vis=[], 
+        mode='smpl', extra_data=[], add_back=True):
+        # render the smpl to each view
+        render_data = {}
+        for pid, data in peopleDict.items():
+            render_data[pid] = {
+                'vertices': data.vertices, 'faces': faces, 
+                'vid': pid, 'name': 'human_{}_{}'.format(nf, pid)}
+        for iid, extra in enumerate(extra_data):
+            render_data[10000+iid] = {
+                'vertices': extra['vertices'],
+                'faces': extra['faces'],
+                'colors': extra['colors'],
+                'name': extra['name']
+            }
+        cameras = {'K': [], 'R':[], 'T':[]}
+        if len(sub_vis) == 0:
+            sub_vis = self.cams
+        for key in cameras.keys():
+            cameras[key] = [self.cameras[cam][key] for cam in sub_vis]
+        images = [images[self.cams.index(cam)] for cam in sub_vis]
+        self.writer.vis_smpl(render_data, nf, images, cameras, mode, add_back=add_back)
 
     def read_skel(self, nf, mode='none'):
         if mode == 'a4d':

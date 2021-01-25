@@ -2,7 +2,7 @@
   @ Date: 2021-01-13 20:38:33
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-22 20:45:37
+  @ LastEditTime: 2021-01-25 14:41:56
   @ FilePath: /EasyMocap/scripts/preprocess/extract_video.py
 '''
 import os, sys
@@ -16,7 +16,7 @@ sys.path.append(code_path)
 
 mkdir = lambda x: os.makedirs(x, exist_ok=True)
 
-def extract_video(videoname, path, start=0, end=10000, step=1):
+def extract_video(videoname, path, start, end, step):
     base = os.path.basename(videoname).replace('.mp4', '')
     if not os.path.exists(videoname):
         return base
@@ -193,6 +193,12 @@ if __name__ == "__main__":
         default='/media/qing/Project/openpose')
     parser.add_argument('--render', action='store_true', help='use to render the openpose 2d')
     parser.add_argument('--no2d', action='store_true')
+    parser.add_argument('--start', type=int, default=0,
+        help='frame start')
+    parser.add_argument('--end', type=int, default=10000,
+        help='frame end')    
+    parser.add_argument('--step', type=int, default=1,
+        help='frame step')
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
     mode = args.mode
@@ -201,7 +207,7 @@ if __name__ == "__main__":
         videos = sorted(glob(join(args.path, 'videos', '*.mp4')))
         subs = []
         for video in videos:
-            basename = extract_video(video, args.path)
+            basename = extract_video(video, args.path, start=args.start, end=args.end, step=args.step)
             subs.append(basename)
         print('cameras: ', ' '.join(subs))
         if not args.no2d:

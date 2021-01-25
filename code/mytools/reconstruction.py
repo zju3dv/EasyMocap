@@ -2,8 +2,8 @@
  * @ Date: 2020-09-14 11:01:52
  * @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-24 22:28:09
-  @ FilePath: /EasyMocapRelease/code/mytools/reconstruction.py
+  @ LastEditTime: 2021-01-25 16:06:41
+  @ FilePath: /EasyMocap/code/mytools/reconstruction.py
 '''
 
 import numpy as np
@@ -72,14 +72,14 @@ def simple_recon_person(keypoints_use, Puse, config=None, ret_repro=False):
     # 计算重投影误差
     kpts_repro = projectN3(out, Puse)
     square_diff = (keypoints_use[:, :, :2] - kpts_repro[:, :, :2])**2 
-    # conf = (out[None, :, -1] > 0.01) * (keypoints_use[:, :, 2] > 0.01)
     conf = np.repeat(out[None, :, -1:], len(Puse), 0)
     kpts_repro = np.concatenate((kpts_repro, conf), axis=2)
     if conf.sum() < 3: # 至少得有3个有效的关节
         repro_error = 1e3
     else:
+        conf2d = conf *(keypoints_use[:, :, -1:] > 0.01)
         # (nViews, nJoints): reprojection error for each joint in each view
-        repro_error_joint = np.sqrt(square_diff.sum(axis=2, keepdims=True))*conf
+        repro_error_joint = np.sqrt(square_diff.sum(axis=2, keepdims=True))*conf2d
         # remove the not valid joints
         # remove the bad views
         repro_error = repro_error_joint.sum()/conf.sum()

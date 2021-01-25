@@ -2,7 +2,7 @@
   @ Date: 2021-01-12 17:08:25
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-24 22:26:09
+  @ LastEditTime: 2021-01-25 19:32:44
   @ FilePath: /EasyMocapRelease/code/demo_mv1pmf_smpl.py
 '''
 # show skeleton and reprojection
@@ -23,10 +23,7 @@ def load_weight_shape():
 def load_weight_pose(model):
     if model == 'smpl':
         weight = {
-            'k3d': 1., 'reg_poses_zero': 1e-2,
-            'reg_expression': 1e-1,
-            'smooth_joints': 1e-5
-            # 'smooth_Rh': 1e-1, 'smooth_Th': 1e-1, 'smooth_poses': 1e-1, 'smooth_hands': 1e-2
+            'k3d': 1., 'reg_poses_zero': 1e-2, 'smooth_body': 1e-2
         }
     elif model == 'smplh':
         weight = {
@@ -38,7 +35,6 @@ def load_weight_pose(model):
             'k3d': 1., 'reg_poses_zero': 1e-3,
             'reg_expression': 1e-2,
             'smooth_body': 1e-2, 'smooth_hand': 1e-2
-            # 'smooth_Rh': 1e-1, 'smooth_Th': 1e-1, 'smooth_poses': 1e-1, 'smooth_hands': 1e-2
         }
     else:
         raise NotImplementedError

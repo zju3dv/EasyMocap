@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-24 22:11:37
+ * @LastEditTime: 2021-01-25 19:35:14
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
@@ -74,10 +74,14 @@ out=path/to/output
 python3 scripts/preprocess/extract_video.py ${data}
 # 1. example for skeleton reconstruction
 python3 code/demo_mv1pmf_skel.py ${data} --out ${out} --vis_det --vis_repro --undis --sub_vis 1 7 13 19
-# 2. example for SMPL reconstruction
+# 2.1 example for SMPL reconstruction
 python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --end 300 --vis_smpl --undis --sub_vis 1 7 13 19 --gender male
-# 2. example for SMPL-X reconstruction
+# 2.2 example for SMPL-X reconstruction
 python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --undis --body bodyhandface --sub_vis 1 7 13 19 --start 400 --model smplx --vis_smpl --gender male
+# 3.1 example for rendering SMPLX to ${out}/smpl
+python3 code/vis_render.py ${data} --out ${out} --skel ${out}/smpl --model smplx --gender male --undis --start 400 --sub_vis 1
+# 3.2 example for rendering skeleton of SMPL to ${out}/smplskel
+python3 code/vis_render.py ${data} --out ${out} --skel ${out}/smpl --model smplx --gender male --undis --start 400 --sub_vis 1 --type smplskel --body bodyhandface
 ```
 
 ## Not Quick Start
