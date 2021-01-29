@@ -45,9 +45,7 @@ data
     ├── smplh
     │   ├── MANO_LEFT.pkl
     │   ├── MANO_RIGHT.pkl
-    │   ├── SMPLH_female.pkl
     │   ├── SMPLH_FEMALE.pkl
-    │   ├── SMPLH_male.pkl
     │   └── SMPLH_MALE.pkl
     └── smplx
         ├── SMPLX_FEMALE.pkl
