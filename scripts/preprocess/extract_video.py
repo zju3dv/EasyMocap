@@ -2,7 +2,7 @@
   @ Date: 2021-01-13 20:38:33
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-25 14:41:56
+  @ LastEditTime: 2021-01-27 10:41:48
   @ FilePath: /EasyMocap/scripts/preprocess/extract_video.py
 '''
 import os, sys
@@ -145,8 +145,8 @@ def detect_frame(detector, img, pid=0):
         annots.append(annot)
     return annots
     
-def extract_yolo_hrnet(image_root, annot_root):
-    imgnames = sorted(glob(join(image_root, '*.jpg')))
+def extract_yolo_hrnet(image_root, annot_root, ext='jpg'):
+    imgnames = sorted(glob(join(image_root, '*.{}'.format(ext))))
     import torch
     device = torch.device('cuda')
     from estimator.detector import Detector
@@ -170,7 +170,7 @@ def extract_yolo_hrnet(image_root, annot_root):
     }
     detector = Detector('yolo', 'hrnet', device, config)
     for nf, imgname in enumerate(tqdm(imgnames)):
-        annotname = join(annot_root, os.path.basename(imgname).replace('.jpg', '.json'))
+        annotname = join(annot_root, os.path.basename(imgname).replace('.{}'.format(ext), '.json'))
         annot = create_annot_file(annotname, imgname)
         img0 = cv2.imread(imgname)
         annot['annots'] = detect_frame(detector, img0, 0)
@@ -188,6 +188,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=str, default=None)
     parser.add_argument('--mode', type=str, default='openpose', choices=['openpose', 'yolo-hrnet'])
+    parser.add_argument('--ext', type=str, default='jpg', choices=['jpg', 'png'])
     parser.add_argument('--handface', action='store_true')
     parser.add_argument('--openpose', type=str, 
         default='/media/qing/Project/openpose')
@@ -226,6 +227,6 @@ if __name__ == "__main__":
                         dst=annot_root
                     )
                 elif mode == 'yolo-hrnet':
-                    extract_yolo_hrnet(image_root, annot_root)
+                    extract_yolo_hrnet(image_root, annot_root, args.ext)
     else:
         print(args.path, ' not exists')
