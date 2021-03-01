@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-03-01 17:58:00
+ * @LastEditTime: 2021-03-01 20:25:41
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
@@ -10,7 +10,7 @@
 
 In this project, we provide the basic code for fitting SMPL[1]/SMPL+H[2]/SMPLX[3] model to capture body+hand+face poses from multiple views.
 
-|Input|:heavy_check_mark: Skeleton|:heavy_check_mark: SMPL|
+|Input(23 views)|:heavy_check_mark: Skeleton|:heavy_check_mark: SMPL|
 |----|----|----|
 |![input](doc/feng/000400.jpg)|![repro](doc/feng/skel.gif)|![smpl](doc/feng/smplx.gif)|
 
@@ -21,6 +21,12 @@ In this project, we provide the basic code for fitting SMPL[1]/SMPL+H[2]/SMPLX[3
 ![](doc/imocap/frame_00036_036.jpg)
 3. [[CVPR21] Dense Reconstruction and View Synthesis from **Sparse Views**](https://zju3dv.github.io/neuralbody/)
 4. [[CVPR21] Reconstructing 3D Human Pose by Watching Humans in the **Mirror**](https://zju3dv.github.io/Mirrored-Human/)
+<table border="0">
+    <tr>
+        <td><img src="./doc/mirror/image.jpg" height = "150" alt="图片名称" align=center /></td>
+        <td><img src="./doc/mirror/scene_cover_green.png" height = "200" alt="图片名称" align=center /></td>
+    </tr>
+</table>
 
 ## Installation
 ### 1. Download SMPL models
