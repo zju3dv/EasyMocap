@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-01-29 19:50:10
+ * @LastEditTime: 2021-03-01 17:58:00
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 # EasyMocap
@@ -19,7 +19,8 @@ In this project, we provide the basic code for fitting SMPL[1]/SMPL+H[2]/SMPLX[3
 1. [[CVPR19] Multi-Person from Multiple Views](https://github.com/zju3dv/mvpose)
 2. [[ECCV20] Mocap from Multiple **Uncalibrated** and **Unsynchronized** Videos](https://arxiv.org/pdf/2008.07931.pdf)
 ![](doc/imocap/frame_00036_036.jpg)
-3. [Dense Reconstruction and View Synthesis from **Sparse Views**](https://zju3dv.github.io/neuralbody/)
+3. [[CVPR21] Dense Reconstruction and View Synthesis from **Sparse Views**](https://zju3dv.github.io/neuralbody/)
+4. [[CVPR21] Reconstructing 3D Human Pose by Watching Humans in the **Mirror**](https://zju3dv.github.io/Mirrored-Human/)
 
 ## Installation
 ### 1. Download SMPL models
