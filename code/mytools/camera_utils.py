@@ -6,7 +6,7 @@ import os
 class FileStorage(object):
     def __init__(self, filename, isWrite=False):
         version = cv2.__version__
-        self.version = int(version.split('.')[0])
+        self.version = '.'.join(version.split('.')[:2])
         if isWrite:
             self.fs = cv2.FileStorage(filename, cv2.FILE_STORAGE_WRITE)
         else:
@@ -19,7 +19,8 @@ class FileStorage(object):
         if dt == 'mat':
             cv2.FileStorage.write(self.fs, key, value)
         elif dt == 'list':
-            if self.version == 4: # 4.4
+            # import ipdb;ipdb.set_trace()
+            if self.version == '4.4': # 4.4
                 # self.fs.write(key, '[')
                 # for elem in value:
                 #     self.fs.write('none', elem)
@@ -67,38 +68,97 @@ def _FindChessboardCorners(img, patternSize = (9, 6)):
     corners = cv2.cornerSubPix(img, corners, (11, 11), (-1, -1), criteria)
     return True, corners
 
-def FindChessboardCorners(image_names, patternSize=(9, 6), gridSize=0.1, debug=False):
+def FindChessboardCorners(image_names, patternSize=(9, 6), gridSize=0.1, debug=False, remove=False, resize_rate = 1):
     # prepare object points, like (0,0,0), (1,0,0), (2,0,0) ....,(6,5,0)
     object_points = np.zeros((patternSize[1]*patternSize[0], 3), np.float32)
     object_points[:,:2] = np.mgrid[0:patternSize[0], 0:patternSize[1]].T.reshape(-1,2)
     object_points = object_points * gridSize
     # Arrays to store object points and image points from all the images.
-    objpoints = [] # 3d point in real world space
-    imgpoints = [] # 2d points in image plane.
-    images = []
-    for fname in tqdm(image_names):
+    infos = []
+    for fname in tqdm(image_names, desc='detecting chessboard'):
+        assert os.path.exists(fname), fname
+        tmpname = fname+'.corners.txt'
         img = cv2.imread(fname)
-        gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
-        # Find the chess board corners
-        ret, corners = _FindChessboardCorners(gray, patternSize)
+        img = cv2.resize(img, None, fx=resize_rate, fy=resize_rate)
+        if debug:
+            if img.shape[0] > 1000:
+                show = cv2.resize(img, None, fx=0.5, fy=0.5)
+            else:
+                show = img
+            cv2.imshow('img', show)
+            cv2.waitKey(10)
+            
 
-        # If found, add object points, image points (after refining them)
-        if ret:
-            objpoints.append(object_points)
-            imgpoints.append(corners)
-            # Draw and display the corners
-            images.append(img)
-            if debug:
-                img = cv2.drawChessboardCorners(img, patternSize, corners, ret)
-                cv2.imshow('img',img)
-                cv2.waitKey(10)
+        if os.path.exists(tmpname) and not debug:
+            ret = True
+            tmp = np.loadtxt(tmpname)
+            if len(tmp.shape) < 2:
+                ret = False
+            else:
+                corners = tmp.reshape((-1, 1, 2))
+                corners = np.ascontiguousarray(corners.astype(np.float32))
         else:
+            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            # Find the chess board corners
+            ret, corners = _FindChessboardCorners(gray, patternSize)
+            if not ret:
+                ret, corners = _FindChessboardCorners(gray, patternSize, False)
+                print('Not found in adaptive mode, but retry = {}'.format(ret))
+            # If found, add object points, image points (after refining them)
+            if ret:
+                np.savetxt(tmpname, corners[:, 0])
+            else:
+                np.savetxt(tmpname, np.empty((0, 2), dtype=np.float32))
+        if ret:
+            infos.append({
+                'point_object': object_points,
+                'point_image': corners,
+                'image': img,
+                'image_name': fname
+            })
+            if debug:
+                show = img.copy()
+                show = cv2.drawChessboardCorners(show, patternSize, corners, ret)
+                if show.shape[0] > 1000:
+                    show = cv2.resize(show, None, fx=0.5, fy=0.5)
+                cv2.imshow('img', show)
+                cv2.waitKey(10)
+        elif remove:
             os.remove(fname)
-    return imgpoints, objpoints, images
+            os.remove(tmpname)
+    return infos
+
 
 def safe_mkdir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+def read_intri(intri_name):
+    assert os.path.exists(intri_name), intri_name
+    intri = FileStorage(intri_name)
+    camnames = intri.read('names', dt='list')
+    from collections import OrderedDict
+    cameras = OrderedDict()
+    for key in camnames:
+        cam = {}
+        cam['K'] = intri.read('K_{}'.format(key))
+        cam['invK'] = np.linalg.inv(cam['K'])
+        cam['dist'] = intri.read('dist_{}'.format(key))
+        cameras[key] = cam
+    return cameras
+
+def write_extri(camera, path, base='extri.yml'):
+    extri_name = os.path.join(path, base)
+    extri = FileStorage(extri_name, True)
+    results = {}
+    camnames = [key_.split('.')[0] for key_ in camera.keys()]
+    extri.write('names', camnames, 'list')
+    for key_, val in camera.items():
+        key = key_.split('.')[0]
+        extri.write('R_{}'.format(key), val['Rvec'])
+        extri.write('Rot_{}'.format(key), val['R'])
+        extri.write('T_{}'.format(key), val['T'])
+    return 0
 
 def read_camera(intri_name, extri_name, cam_names=[0,1,2,3]):
     assert os.path.exists(intri_name), intri_name
