@@ -110,5 +110,3 @@ exp/coco*
 output
 data
 .DS*
-*.txt
-code/estimator/CenterNet
