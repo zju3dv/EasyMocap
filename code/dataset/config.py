@@ -2,12 +2,66 @@
  * @ Date: 2020-09-26 16:52:55
  * @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-01-24 20:21:50
-  @ FilePath: /EasyMocapRelease/code/dataset/config.py
+  @ LastEditTime: 2021-03-20 13:51:36
+  @ FilePath: /EasyMocap/code/dataset/config.py
 '''
 import numpy as np
 
 CONFIG = {}
+
+CONFIG['smpl'] = {'nJoints': 24, 'kintree': 
+    [
+        [ 0, 1 ],
+        [ 0, 2 ],
+        [ 0, 3 ],
+        [ 1, 4 ],
+        [ 2, 5 ],
+        [ 3, 6 ],
+        [ 4, 7 ],
+        [ 5, 8 ],
+        [ 6, 9 ],
+        [ 7, 10],
+        [ 8, 11],
+        [ 9, 12],
+        [ 9, 13],
+        [ 9, 14],
+        [12, 15],
+        [13, 16],
+        [14, 17],
+        [16, 18],
+        [17, 19],
+        [18, 20],
+        [19, 21],
+        [20, 22],
+        [21, 23],
+    ], 
+    'joint_names': [
+        'hips',            # 0
+        'leftUpLeg',       # 1
+        'rightUpLeg',      # 2
+        'spine',           # 3
+        'leftLeg',         # 4
+        'rightLeg',        # 5
+        'spine1',          # 6
+        'leftFoot',        # 7
+        'rightFoot',       # 8
+        'spine2',          # 9
+        'leftToeBase',     # 10
+        'rightToeBase',    # 11
+        'neck',            # 12
+        'leftShoulder',    # 13
+        'rightShoulder',   # 14
+        'head',            # 15
+        'leftArm',         # 16
+        'rightArm',        # 17
+        'leftForeArm',     # 18
+        'rightForeArm',    # 19
+        'leftHand',        # 20
+        'rightHand',       # 21
+        'leftHandIndex1',  # 22
+        'rightHandIndex1', # 23
+    ]
+}
 
 CONFIG['body25'] = {'nJoints': 25, 'kintree':
    [[ 1,  0],
@@ -34,7 +88,8 @@ CONFIG['body25'] = {'nJoints': 25, 'kintree':
     [22, 11],
     [23, 22],
     [24, 11]], 
-    'joint_names': ["Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow", "LWrist", "MidHip", "RHip","RKnee","RAnkle","LHip","LKnee","LAnkle","REye","LEye","REar","LEar","LBigToe","LSmallToe","LHeel","RBigToe","RSmallToe","RHeel"]}
+    'joint_names': [
+        "Nose", "Neck", "RShoulder", "RElbow", "RWrist", "LShoulder", "LElbow", "LWrist", "MidHip", "RHip","RKnee","RAnkle","LHip","LKnee","LAnkle","REye","LEye","REar","LEar","LBigToe","LSmallToe","LHeel","RBigToe","RSmallToe","RHeel"]}
 
 CONFIG['body25']['skeleton'] = \
 {
@@ -80,7 +135,7 @@ CONFIG['body15'] = {'nJoints': 15, 'kintree':
     [13, 12],
     [14, 13],]}
 CONFIG['body15']['joint_names'] = CONFIG['body25']['joint_names'][:15]
-CONFIG['body15']['skeleton'] = CONFIG['body25']['skeleton']
+CONFIG['body15']['skeleton'] = {key: val for key, val in CONFIG['body25']['skeleton'].items() if key[0] < 15 and key[1] < 15}
 
 CONFIG['hand'] = {'kintree':
       [[ 1,  0],
@@ -527,6 +582,32 @@ CONFIG['face'] = {'kintree':[ [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8
                 [48,49],[49,50],[50,51],[51,52],[52,53],[53,54],[54,55],[55,56],[56,57],[57,58],[58,59],[59,48], #Lip outline
                 [60,61],[61,62],[62,63],[63,64],[64,65],[65,66],[66,67],[67,60] #Lip inner line 
                 ]}
+
+CONFIG['h36m'] = {
+    'kintree': [[0, 1], [1, 2], [2, 3], [0, 4], [4, 5], [5, 6], [0, 7], [7, 8], [8, 9], [9, 10], [8, 11], [11, 12], [
+    12, 13], [8, 14], [14, 15], [15, 16]], 
+    'color': ['r', 'r', 'r', 'g', 'g', 'g', 'k', 'k', 'k', 'k', 'g', 'g', 'g', 'r', 'r', 'r'],
+    'joint_names': [
+        'hip',  # 0
+        'LHip',  # 1
+        'LKnee',  # 2
+        'LAnkle',  # 3
+        'RHip',  # 4
+        'RKnee',  # 5
+        'RAnkle',  # 6
+        'Spine (H36M)',  # 7
+        'Neck',  # 8
+        'Head (H36M)',  # 9
+        'headtop',  # 10
+        'LShoulder',  # 11
+        'LElbow',  # 12
+        'LWrist',  # 13
+        'RShoulder',  # 14
+        'RElbow',  # 15
+        'RWrist',  # 16
+    ],
+    'nJoints': 17}
+
 NJOINTS_BODY = 25
 NJOINTS_HAND = 21
 NJOINTS_FACE = 70
