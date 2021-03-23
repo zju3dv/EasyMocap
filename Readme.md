@@ -193,10 +193,10 @@ Please consider citing these works if you find this repo is useful for your proj
   year={2021}
 }
 
-@inproceedings{fang2020mirrored,
-  title={Mirrored-Human: Reconstructing 3D Human Pose by Watching Humans in the Mirror},
+@inproceedings{fang2021mirrored,
+  title={Reconstructing 3D Human Pose by Watching Humans in the Mirror},
   author={Fang, Qi and Shuai, Qing and Dong, Junting and Bao, Hujun and Zhou, Xiaowei},
-  journal={CVPR},
+  booktitle={CVPR},
   year={2021}
 }
 ```
