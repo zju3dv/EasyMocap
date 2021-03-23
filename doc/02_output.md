@@ -44,9 +44,16 @@ The data in `smpl/000000.json` is also a list, each element represents the SMPL 
     "shapes": <(1, 10)>
 }
 ```
-We set the first 3 dimensions of `poses` to zero, and add a new parameter `Rh` to represents the global oritentation, the vertices of SMPL model V = RX(theta, beta) + T.
-
 If you use SMPL+H model, the poses contains `22x3+6+6`. We use `6` pca coefficients for each hand. `3(jaw, left eye, right eye)x3` poses of head are added for SMPL-X model.
+
+### Attention (for SMPL/SMPL-X users)
+
+**This parameter is a little different from original SMPL/SMPL-X parameters.**
+
+We set the first 3 dimensions of `poses` to zero, and add a new parameter `Rh` to represents the global oritentation, the vertices of SMPL model V = RX(theta, beta) + T.
+Please note that the paramter `Rh` is not equal to `global_orient` in SMPL-X model. We take this representation because that changing paramters to new coordinate system in origin is difficult(see [this link](https://www.dropbox.com/scl/fi/zkatuv5shs8d4tlwr8ecc/Change-parameters-to-new-coordinate-system.paper?dl=0&rlkey=lotq1sh6wzkmyttisc05h0in0)).
+
+In our representation, you can just use `R'@(RX + T) + T'` to convert the model, and the new global rotaion and translation is simply written as `R'@R` and `R'@T + T'`
 
 To compute the joints locations from these parameters, please refer to `./code/vis_render.py`. The key steps are:
 ```python
