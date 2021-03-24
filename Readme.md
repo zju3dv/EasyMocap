@@ -186,7 +186,7 @@ Please consider citing these works if you find this repo is useful for your proj
   organization={Springer}
 }
 
-@inproceedings{peng2020neural,
+@inproceedings{peng2021neural,
   title={Neural Body: Implicit Neural Representations with Structured Latent Codes for Novel View Synthesis of Dynamic Humans},
   author={Peng, Sida and Zhang, Yuanqing and Xu, Yinghao and Wang, Qianqian and Shuai, Qing and Bao, Hujun and Zhou, Xiaowei},
   journal={CVPR},
