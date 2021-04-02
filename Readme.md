@@ -2,164 +2,88 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-03-13 21:52:17
+ * @LastEditTime: 2021-04-02 12:26:56
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
 # EasyMocap
 
-**EasyMocap** is an open-source toolbox for **markerless human motion capture** from RGB videos.
+**EasyMocap** is an open-source toolbox for **markerless human motion capture** from RGB videos. In this project, we provide a lot of motion capture demos in different settings.
 
-In this project, we provide the basic code for fitting SMPL[1]/SMPL+H[2]/SMPLX[3] model to capture body+hand+face poses from multiple views.
+![python](https://img.shields.io/github/languages/top/zju3dv/EasyMocap)
+![star](https://img.shields.io/github/stars/zju3dv/EasyMocap?style=social)
 
-|Input(23 views)|:heavy_check_mark: Skeleton|:heavy_check_mark: SMPL|
-|----|----|----|
-|![input](doc/feng/000400.jpg)|![repro](doc/feng/skel.gif)|![smpl](doc/feng/smplx.gif)|
+----
 
-> We plan to intergrate more interesting algorithms, please stay tuned!
+## Core features
 
-1. [[CVPR19] Multi-Person from Multiple Views](https://github.com/zju3dv/mvpose)
-2. [[ECCV20] Mocap from Multiple **Uncalibrated** and **Unsynchronized** Videos](https://arxiv.org/pdf/2008.07931.pdf)
-![](doc/imocap/frame_00036_036.jpg)
-3. [[CVPR21] Dense Reconstruction and View Synthesis from **Sparse Views**](https://zju3dv.github.io/neuralbody/)
-4. [[CVPR21] Reconstructing 3D Human Pose by Watching Humans in the **Mirror**](https://zju3dv.github.io/Mirrored-Human/)
-<table border="0">
-    <tr>
-        <td><img src="./doc/mirror/image.jpg" height = "150" alt="图片名称" align=center /></td>
-        <td><img src="./doc/mirror/scene_cover_green.png" height = "200" alt="图片名称" align=center /></td>
-    </tr>
-</table>
+### Multiple views of single person
+
+This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3] model to capture body+hand+face poses from multiple views. 
+
+<div align="center">
+    <img src="doc/feng/mv1pmf-smplx.gif" width="80%">
+    <br>
+    <sup>Videos are from ZJU-MoCap, with 23 calibrated and synchronized cameras.<sup/>
+</div>
+
+### Internet video with a mirror
+
+[![report](https://img.shields.io/badge/mirrored-link-red)](https://arxiv.org/pdf/2104.00340.pdf)
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/zju3dv/Mirrored-Human/main/doc/assets/smpl-avatar.gif" width="80%">
+    <br>
+    <sup>This video is from <a href="https://www.youtube.com/watch?v=KOCJJ27hhIE">Youtube<a/>.<sup/>
+</div>
+
+### Multiple Internet videos with a specific action (Coming soon)
+
+[![report](https://img.shields.io/badge/imocap-link-red)](https://arxiv.org/pdf/2008.07931.pdf)
+
+<div align="center">
+    <img src="doc/imocap/frame_00036_036.jpg" width="80%">
+</div>
+
+### Multiple views of multiple people (Comming soon)
+
+[![report](https://img.shields.io/badge/mvpose-link-red)](https://arxiv.org/pdf/1901.04111.pdf)
+
+
+### Others
+This project is used by many other projects:
+- [[CVPR21] Dense Reconstruction and View Synthesis from **Sparse Views**](https://zju3dv.github.io/neuralbody/)
+
+## Other features
+
+- [Camera calibration](./doc/todo.md)
+- [Pose guided synchronization](./doc/todo.md)
+- [Annotator](./doc/todo.md)
+- [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/todo.md)
+
+## Updates
+- 04/02/2021: We are now rebuilding our project for `v0.2`, please stay tuned. `v0.1` is available at [this link](https://github.com/zju3dv/EasyMocap/releases/tag/v0.1).
 
 ## Installation
 
-### 1. Download SMPL models
-
-This step is the same as [smplx](https://github.com/vchoutas/smplx#model-loading).
-
-To download the *SMPL* model go to [this](http://smpl.is.tue.mpg.de) (male and female models, version 1.0.0, 10 shape PCs) and [this](http://smplify.is.tue.mpg.de) (gender neutral model) project website and register to get access to the downloads section. 
-
-To download the *SMPL+H* model go to [this project website](http://mano.is.tue.mpg.de) and register to get access to the downloads section. 
-
-To download the *SMPL-X* model go to [this project website](https://smpl-x.is.tue.mpg.de) and register to get access to the downloads section. 
-
-**Place them as following:**
-
-```bash
-data
-└── smplx
-    ├── J_regressor_body25.npy
-    ├── J_regressor_body25_smplh.txt
-    ├── J_regressor_body25_smplx.txt
-    ├── smpl
-    │   ├── SMPL_FEMALE.pkl
-    │   ├── SMPL_MALE.pkl
-    │   └── SMPL_NEUTRAL.pkl
-    ├── smplh
-    │   ├── MANO_LEFT.pkl
-    │   ├── MANO_RIGHT.pkl
-    │   ├── SMPLH_FEMALE.pkl
-    │   └── SMPLH_MALE.pkl
-    └── smplx
-        ├── SMPLX_FEMALE.pkl
-        ├── SMPLX_MALE.pkl
-        └── SMPLX_NEUTRAL.pkl
-```
-
-### 2. Requirements
-
-- python>=3.6
-- torch==1.4.0
-- torchvision==0.5.0
-- opencv-python
-- [pyrender](https://pyrender.readthedocs.io/en/latest/install/index.html#python-installation): for visualization
-- chumpy: for loading SMPL model
-- OpenPose[4]: for 2D pose
-
-Some of python libraries can be found in `requirements.txt`. You can test different version of PyTorch.
+See [doc/install](./doc/install.md) for more instructions.
 
 ## Quick Start
 
-We provide an example multiview dataset[[dropbox](https://www.dropbox.com/s/24mb7r921b1g9a7/zju-ls-feng.zip?dl=0)][[BaiduDisk](https://pan.baidu.com/s/1lvAopzYGCic3nauoQXjbPw)(vg1z)], which has 800 frames from 23 synchronized and calibrated cameras. After downloading the dataset, you can run the following example scripts.
-
-```bash
-data=path/to/data
-out=path/to/output
-# 0. extract the video to images
-python3 scripts/preprocess/extract_video.py ${data}
-# 1. example for skeleton reconstruction
-python3 code/demo_mv1pmf_skel.py ${data} --out ${out} --vis_det --vis_repro --undis --sub_vis 1 7 13 19
-# 2.1 example for SMPL reconstruction
-python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --end 300 --vis_smpl --undis --sub_vis 1 7 13 19 --gender male
-# 2.2 example for SMPL-X reconstruction
-python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --undis --body bodyhandface --sub_vis 1 7 13 19 --start 400 --model smplx --vis_smpl --gender male
-# 3.1 example for rendering SMPLX to ${out}/smpl
-python3 code/vis_render.py ${data} --out ${out} --skel ${out}/smpl --model smplx --gender male --undis --start 400 --sub_vis 1
-# 3.2 example for rendering skeleton of SMPL to ${out}/smplskel
-python3 code/vis_render.py ${data} --out ${out} --skel ${out}/smpl --model smplx --gender male --undis --start 400 --sub_vis 1 --type smplskel --body bodyhandface
-```
+See [doc/quickstart](doc/quickstart.md) for more instructions.
 
 ## Not Quick Start
-### 0. Prepare Your Own Dataset
 
-```bash
-zju-ls-feng
-├── intri.yml
-├── extri.yml
-└── videos
-    ├── 1.mp4
-    ├── 2.mp4
-    ├── ...
-    ├── 8.mp4
-    └── 9.mp4
-```
-
-The input videos are placed in `videos/`.
-
-Here `intri.yml` and `extri.yml` store the camera intrinsici and extrinsic parameters. For example, if the name of a video is `1.mp4`, then there must exist `K_1`, `dist_1` in `intri.yml`, and `R_1((3, 1), rotation vector of camera)`, `T_1(3, 1)` in `extri.yml`. The file format is following [OpenCV format](https://docs.opencv.org/master/dd/d74/tutorial_file_input_output_with_xml_yml.html).
-
-### 1. Run [OpenPose](https://github.com/CMU-Perceptual-Computing-Lab/openpose)
-
-```bash
-data=path/to/data
-out=path/to/output
-python3 scripts/preprocess/extract_video.py ${data} --openpose <openpose_path> --handface
-```
-
-- `--openpose`: specify the openpose path
-- `--handface`: detect hands and face keypoints
-
-### 2. Run the code
-
-```bash
-# 1. example for skeleton reconstruction
-python3 code/demo_mv1pmf_skel.py ${data} --out ${out} --vis_det --vis_repro --undis --sub_vis 1 7 13 19
-# 2. example for SMPL reconstruction
-python3 code/demo_mv1pmf_smpl.py ${data} --out ${out} --end 300 --vis_smpl --undis --sub_vis 1 7 13 19
-```
-
-The input flags:
-
-- `--undis`: use to undistort the images
-- `--start, --end`: control the begin and end number of frames.
-
-The output flags:
-
-- `--vis_det`: visualize the detection
-- `--vis_repro`: visualize the reprojection
-- `--sub_vis`: use to specify the views to visualize. If not set, the code will use all views
-- `--vis_smpl`: use to render the SMPL mesh to images.
-
-### 3. Output
-
-Please refer to [output.md](doc/02_output.md)
+See [doc/notquickstart](doc/notquickstart.md) for more instructions.
 
 ## Evaluation
 
-In our code, we do not set the best weight parameters, you can adjust these according your data. If you find a set of good weights, feel free to tell me.
+The weight parameters can be set according your data.
 
-We will add more quantitative reports in [doc/evaluation.md](doc/evaluation.md)
+More quantitative reports will  be added in [doc/evaluation.md](doc/evaluation.md)
 
 ## Acknowledgements
+
 Here are the great works this project is built upon:
 
 - SMPL models and layer are from MPII [SMPL-X model](https://github.com/vchoutas/smplx).
@@ -169,12 +93,14 @@ Here are the great works this project is built upon:
 We also would like to thank Wenduo Feng who is the performer in the sample data.
 
 ## Contact
-Please open an issue if you have any questions.
+
+Please open an issue if you have any questions. We appreciate all contributions to improve our project.
 
 ## Citation
+
 This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/), [Mirrored-Human](https://zju3dv.github.io/Mirrored-Human/) and [Neural Body](https://zju3dv.github.io/neuralbody/)
 
-Please consider citing these works if you find this repo is useful for your projects. 
+Please consider citing these works if you find this repo is useful for your projects.
 
 ```bibtex
 @inproceedings{dong2020motion,
