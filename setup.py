@@ -2,8 +2,8 @@
   @ Date: 2021-03-02 16:53:55
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-14 15:17:28
-  @ FilePath: /EasyMocapRelease/setup.py
+  @ LastEditTime: 2021-04-14 16:20:10
+  @ FilePath: /EasyMocap/setup.py
 '''
 from setuptools import setup
 
@@ -20,7 +20,7 @@ setup(
         'easymocap.smplmodel',
         'easymocap.pyfitting',
         'easymocap.mytools', 
-        'easymocap.annotator'
+        'easymocap.annotator',
         'easymocap.estimator'
     ],
     install_requires=[],
