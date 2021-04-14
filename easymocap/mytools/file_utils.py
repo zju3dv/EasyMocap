@@ -1,0 +1,158 @@
+'''
+  @ Date: 2021-03-15 12:23:12
+  @ Author: Qing Shuai
+  @ LastEditors: Qing Shuai
+  @ LastEditTime: 2021-04-01 16:17:34
+  @ FilePath: /EasyMocap/easymocap/mytools/file_utils.py
+'''
+import os
+import json
+import numpy as np
+from os.path import join
+
+mkdir = lambda x:os.makedirs(x, exist_ok=True)
+mkout = lambda x:mkdir(os.path.dirname(x))
+
+def read_json(path):
+    assert os.path.exists(path), path
+    with open(path) as f:
+        data = json.load(f)
+    return data
+
+def save_json(file, data):
+    if not os.path.exists(os.path.dirname(file)):
+        os.makedirs(os.path.dirname(file))
+    with open(file, 'w') as f:
+        json.dump(data, f, indent=4)
+
+def getFileList(root, ext='.jpg'):
+    files = []
+    dirs = os.listdir(root)
+    while len(dirs) > 0:
+        path = dirs.pop()
+        fullname = join(root, path)
+        if os.path.isfile(fullname) and fullname.endswith(ext):
+            files.append(path)
+        elif os.path.isdir(fullname):
+            for s in os.listdir(fullname):
+                newDir = join(path, s)
+                dirs.append(newDir)
+    files = sorted(files)
+    return files
+
+def read_annot(annotname, mode='body25'):
+    data = read_json(annotname)
+    if not isinstance(data, list):
+        data = data['annots']
+    for i in range(len(data)):
+        if 'id' not in data[i].keys():
+            data[i]['id'] = data[i].pop('personID')
+        if 'keypoints2d' in data[i].keys() and 'keypoints' not in data[i].keys():
+            data[i]['keypoints'] = data[i].pop('keypoints2d')
+        for key in ['bbox', 'keypoints', 'handl2d', 'handr2d', 'face2d']:
+            if key not in data[i].keys():continue
+            data[i][key] = np.array(data[i][key])
+            if key == 'face2d':
+                # TODO: Make parameters, 17 is the offset for the eye brows,
+                # etc. 51 is the total number of FLAME compatible landmarks
+                data[i][key] = data[i][key][17:17+51, :]
+        data[i]['bbox'] = data[i]['bbox'][:5]
+        if data[i]['bbox'][-1] < 0.001:
+            # print('{}/{} bbox conf = 0, may be error'.format(annotname, i))
+            data[i]['bbox'][-1] = 1
+        if mode == 'body25':
+            data[i]['keypoints'] = data[i]['keypoints']
+        elif mode == 'body15':
+            data[i]['keypoints'] = data[i]['keypoints'][:15, :]
+        elif mode == 'total':
+            data[i]['keypoints'] = np.vstack([data[i][key] for key in ['keypoints', 'handl2d', 'handr2d', 'face2d']])
+        elif mode == 'bodyhand':
+            data[i]['keypoints'] = np.vstack([data[i][key] for key in ['keypoints', 'handl2d', 'handr2d']])
+        elif mode == 'bodyhandface':
+            data[i]['keypoints'] = np.vstack([data[i][key] for key in ['keypoints', 'handl2d', 'handr2d', 'face2d']])
+        conf = data[i]['keypoints'][..., -1]
+        conf[conf<0] = 0
+    data.sort(key=lambda x:x['id'])
+    return data
+
+def write_common_results(dumpname, results, keys, fmt='%.3f'):
+    mkout(dumpname)
+    format_out = {'float_kind':lambda x: fmt % x}
+    with open(dumpname, 'w') as f:
+        f.write('[\n')
+        for idata, data in enumerate(results):
+            f.write('    {\n')
+            output = {}
+            output['id'] = data['id']
+            for key in keys:
+                if key not in data.keys():continue
+                output[key] = np.array2string(data[key], max_line_width=1000, separator=', ', formatter=format_out)
+            for key in output.keys():
+                f.write('        \"{}\": {}'.format(key, output[key]))
+                if key != keys[-1]:
+                    f.write(',\n')
+                else:
+                    f.write('\n')
+            f.write('    }')
+            if idata != len(results) - 1:
+                f.write(',\n')
+            else:
+                f.write('\n')
+        f.write(']\n')
+
+def write_keypoints3d(dumpname, results):
+    # TODO:rewrite it
+    keys = ['keypoints3d']
+    write_common_results(dumpname, results, keys, fmt='%.3f')
+
+def write_smpl(dumpname, results):
+    keys = ['Rh', 'Th', 'poses', 'expression', 'shapes']
+    write_common_results(dumpname, results, keys)
+
+
+def get_bbox_from_pose(pose_2d, img, rate = 0.1):
+    # this function returns bounding box from the 2D pose
+    # here use pose_2d[:, -1] instead of pose_2d[:, 2]
+    # because when vis reprojection, the result will be (x, y, depth, conf)
+    validIdx = pose_2d[:, -1] > 0
+    if validIdx.sum() == 0:
+        return [0, 0, 100, 100, 0]
+    y_min = int(min(pose_2d[validIdx, 1]))
+    y_max = int(max(pose_2d[validIdx, 1]))
+    x_min = int(min(pose_2d[validIdx, 0]))
+    x_max = int(max(pose_2d[validIdx, 0]))
+    dx = (x_max - x_min)*rate
+    dy = (y_max - y_min)*rate
+    # 后面加上类别这些
+    bbox = [x_min-dx, y_min-dy, x_max+dx, y_max+dy, 1]
+    correct_bbox(img, bbox)
+    return bbox
+
+def correct_bbox(img, bbox):
+    # this function corrects the bbox, which is out of image
+    w = img.shape[0]
+    h = img.shape[1]
+    if bbox[2] <= 0 or bbox[0] >= h or bbox[1] >= w or bbox[3] <= 0:
+        bbox[4] = 0
+    return bbox
+
+def merge_params(param_list, share_shape=True):
+    output = {}
+    for key in ['poses', 'shapes', 'Rh', 'Th', 'expression']:
+        if key in param_list[0].keys():
+            output[key] = np.vstack([v[key] for v in param_list])
+    if share_shape:
+        output['shapes'] = output['shapes'].mean(axis=0, keepdims=True)
+    return output
+
+def select_nf(params_all, nf):
+    output = {}
+    for key in ['poses', 'Rh', 'Th']:
+        output[key] = params_all[key][nf:nf+1, :]
+    if 'expression' in params_all.keys():
+        output['expression'] = params_all['expression'][nf:nf+1, :]
+    if params_all['shapes'].shape[0] == 1:
+        output['shapes'] = params_all['shapes']
+    else:
+        output['shapes'] = params_all['shapes'][nf:nf+1, :]
+    return output

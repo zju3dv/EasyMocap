@@ -110,3 +110,5 @@ exp/coco*
 output
 data
 .DS*
+code_deprecate
+code

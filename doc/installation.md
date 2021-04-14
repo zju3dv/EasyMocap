@@ -2,12 +2,14 @@
  * @Date: 2021-04-02 11:52:33
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-04-02 11:52:59
+ * @LastEditTime: 2021-04-13 17:15:49
  * @FilePath: /EasyMocapRelease/doc/installation.md
 -->
 # EasyMocap - Installation
 
-### 1. Download SMPL models
+## 0. Download models
+
+## 0.1 SMPL models
 
 This step is the same as [smplx](https://github.com/vchoutas/smplx#model-loading).
 
@@ -40,7 +42,31 @@ data
         └── SMPLX_NEUTRAL.pkl
 ```
 
-### 2. Requirements
+## 0.2 (Optional) SPIN model
+This part is used in `1v1p*.py`. You can skip this step if you only use the multiple views dataset.
+
+Download pretrained SPIN model [here](http://visiondata.cis.upenn.edu/spin/model_checkpoint.pt) and place it to `data/models/spin_checkpoints.pt`.
+
+Fetch the extra data [here](http://visiondata.cis.upenn.edu/spin/dataset_extras.tar.gz) and place the `smpl_mean_params.npz` to `data/models/smpl_mean_params.npz`.
+
+## 0.3 (Optional) 2D model
+
+You can skip this step if you use openpose as your human keypoints detector.
+
+Download [yolov4.weights]() and place it into `data/models/yolov4.weights`.
+
+Download pretrained HRNet [weight]() and place it into `data/models/pose_hrnet_w48_384x288.pth`.
+
+```bash
+data
+└── models
+    ├── smpl_mean_params.npz
+    ├── spin_checkpoint.pt
+    ├── pose_hrnet_w48_384x288.pth
+    └── yolov4.weights 
+```
+
+## 2. Requirements
 
 - python>=3.6
 - torch==1.4.0
@@ -51,3 +77,9 @@ data
 - OpenPose[4]: for 2D pose
 
 Some of python libraries can be found in `requirements.txt`. You can test different version of PyTorch.
+
+## 3. Install
+
+```bash
+python3 setup.py develop --user
+```
