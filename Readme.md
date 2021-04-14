@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-04-13 17:42:17
+ * @LastEditTime: 2021-04-14 16:00:04
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -36,16 +36,31 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3] model to capture 
 <div align="center">
     <img src="https://raw.githubusercontent.com/zju3dv/Mirrored-Human/main/doc/assets/smpl-avatar.gif" width="80%">
     <br>
-    <sup>This video is from <a href="https://www.youtube.com/watch?v=KOCJJ27hhIE">Youtube<a/>.<sup/>
+    <sup>The raw video is from <a href="https://www.youtube.com/watch?v=KOCJJ27hhIE">Youtube<a/>.<sup/>
+</div>
+
+<div align="center">
+    <img src="doc/imocap/mv1p-mirror.gif" width="80%"><br/>
+    <sup>Captured with 6 cameras and a mirror<sup/>
 </div>
 
 ### Multiple Internet videos with a specific action (Coming soon)
 
 [![report](https://img.shields.io/badge/ECCV20-imocap-red)](https://arxiv.org/pdf/2008.07931.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/todo.md)
 
+<div align="center">
+    <img src="doc/imocap/imocap.gif" width="80%"><br/>
+    <sup>Internet videos of Roger Federer's serving<sup/>
+</div>
+
 ### Multiple views of multiple people (Coming soon)
 
 [![report](https://img.shields.io/badge/CVPR20-mvpose-red)](https://arxiv.org/pdf/1901.04111.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/todo.md)
+
+<div align="center">
+    <img src="doc/imocap/mvpose.gif" width="80%"><br/>
+    <sup>Captured with 4 consumer cameras<sup/>
+</div>
 
 ### Others
 
