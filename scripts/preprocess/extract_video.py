@@ -44,7 +44,10 @@ def extract_2d(openpose, image, keypoints, render, args):
             skip = True
     if not skip:
         os.makedirs(keypoints, exist_ok=True)
-        cmd = './build/examples/openpose/openpose.bin --image_dir {} --write_json {} --display 0'.format(image, keypoints)
+        if os.name != 'nt':
+            cmd = './build/examples/openpose/openpose.bin --image_dir {} --write_json {} --display 0'.format(image, keypoints)
+        else:
+            cmd = 'bin\\OpenPoseDemo.exe --image_dir {} --write_json {} --display 0'.format(join(os.getcwd(),image), join(os.getcwd(),keypoints))
         if args.highres!=1:
             cmd = cmd + ' --net_resolution -1x{}'.format(int(16*((368*args.highres)//16)))
         if args.handface:
@@ -124,8 +127,9 @@ def load_openpose(opname):
         out.append(annot)
     return out
     
-def convert_from_openpose(src, dst, annotdir):
+def convert_from_openpose(path_orig, src, dst, annotdir):
     # convert the 2d pose from openpose
+    os.chdir(path_orig)
     inputlist = sorted(os.listdir(src))
     for inp in tqdm(inputlist, desc='{:10s}'.format(os.path.basename(dst))):
         annots = load_openpose(join(src, inp))
@@ -235,6 +239,7 @@ if __name__ == "__main__":
     parser.add_argument('--gtbbox', action='store_true',
         help='use the ground-truth bounding box, and hrnet to estimate human pose')
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--path_origin', default=os.getcwd())
     args = parser.parse_args()
     mode = args.mode
 
@@ -266,6 +271,7 @@ if __name__ == "__main__":
                         join(args.path, 'openpose', sub), 
                         join(args.path, 'openpose_render', sub), args)
                     convert_from_openpose(
+                        path_orig=args.path_origin,
                         src=join(args.path, 'openpose', sub),
                         dst=annot_root,
                         annotdir=args.annot
