@@ -53,11 +53,16 @@ def extract_2d(openpose, image, keypoints, render, args):
         if args.handface:
             cmd = cmd + ' --hand --face'
         if args.render:
-            cmd = cmd + ' --write_images {}'.format(render)
+            if os.path.exists(join(os.getcwd(),render)):
+                cmd = cmd + ' --write_images {}'.format(join(os.getcwd(),render))
+            else:
+                os.makedirs(join(os.getcwd(),render), exist_ok=True)
+                cmd = cmd + ' --write_images {}'.format(join(os.getcwd(),render))
         else:
             cmd = cmd + ' --render_pose 0'
         os.chdir(openpose)
         os.system(cmd)
+
 
 import json
 def read_json(path):
@@ -216,7 +221,7 @@ def extract_yolo_hrnet(image_root, annot_root, ext='jpg', use_low=False):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('path', type=str, default=None, help="the path of data")
+    parser.add_argument('path', type=str, help="the path of data")
     parser.add_argument('--mode', type=str, default='openpose', choices=['openpose', 'yolo-hrnet'], help="model to extract joints from image")
     parser.add_argument('--ext', type=str, default='jpg', choices=['jpg', 'png'], help="image file extension")
     parser.add_argument('--annot', type=str, default='annots', help="sub directory name to store the generated annotation files, default to be annots")
