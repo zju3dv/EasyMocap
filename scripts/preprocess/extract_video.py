@@ -27,7 +27,7 @@ def extract_video(videoname, path, start, end, step):
         os.makedirs(outpath, exist_ok=True)
     video = cv2.VideoCapture(videoname)
     totalFrames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
-    for cnt in tqdm(range(totalFrames), desc='{:-10s}'.format(os.path.basename(videoname))):
+    for cnt in tqdm(range(totalFrames), desc='{:10s}'.format(os.path.basename(videoname))):
         ret, frame = video.read()
         if cnt < start:continue
         if cnt >= end:break
@@ -127,7 +127,7 @@ def load_openpose(opname):
 def convert_from_openpose(src, dst, annotdir):
     # convert the 2d pose from openpose
     inputlist = sorted(os.listdir(src))
-    for inp in tqdm(inputlist, desc='{:-10s}'.format(os.path.basename(dst))):
+    for inp in tqdm(inputlist, desc='{:10s}'.format(os.path.basename(dst))):
         annots = load_openpose(join(src, inp))
         base = inp.replace('_keypoints.json', '')
         annotname = join(dst, base+'.json')
