@@ -27,6 +27,8 @@ def extract_video(videoname, path, start, end, step):
         os.makedirs(outpath, exist_ok=True)
     video = cv2.VideoCapture(videoname)
     totalFrames = int(video.get(cv2.CAP_PROP_FRAME_COUNT))
+#    for cnt in tqdm(range(totalFrames)):
+#    for cnt in tqdm(range(totalFrames), desc='{:-10s}'.format(os.path.basename(videoname))):
     for cnt in tqdm(range(totalFrames), desc='{:10s}'.format(os.path.basename(videoname))):
         ret, frame = video.read()
         if cnt < start:continue
@@ -44,7 +46,10 @@ def extract_2d(openpose, image, keypoints, render, args):
             skip = True
     if not skip:
         os.makedirs(keypoints, exist_ok=True)
-        cmd = './build/examples/openpose/openpose.bin --image_dir {} --write_json {} --display 0'.format(image, keypoints)
+        if os.name != 'nt':
+            cmd = './build/examples/openpose/openpose.bin --image_dir {} --write_json {} --display 0'.format(image, keypoints)
+        else:
+            cmd = 'bin\\OpenPoseDemo.exe --image_dir {} --write_json {} --display 0'.format(join(os.getcwd(),image), join(os.getcwd(),keypoints))
         if args.highres!=1:
             cmd = cmd + ' --net_resolution -1x{}'.format(int(16*((368*args.highres)//16)))
         if args.handface:
@@ -124,8 +129,9 @@ def load_openpose(opname):
         out.append(annot)
     return out
     
-def convert_from_openpose(src, dst, annotdir):
+def convert_from_openpose(path_orig, src, dst, annotdir):
     # convert the 2d pose from openpose
+    os.chdir(path_orig)
     inputlist = sorted(os.listdir(src))
     for inp in tqdm(inputlist, desc='{:10s}'.format(os.path.basename(dst))):
         annots = load_openpose(join(src, inp))
@@ -212,7 +218,7 @@ def extract_yolo_hrnet(image_root, annot_root, ext='jpg', use_low=False):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('path', type=str, default=None, help="the path of data")
+    parser.add_argument('path', type=str, help="the path of data")
     parser.add_argument('--mode', type=str, default='openpose', choices=['openpose', 'yolo-hrnet'], help="model to extract joints from image")
     parser.add_argument('--ext', type=str, default='jpg', choices=['jpg', 'png'], help="image file extension")
     parser.add_argument('--annot', type=str, default='annots', help="sub directory name to store the generated annotation files, default to be annots")
@@ -235,6 +241,7 @@ if __name__ == "__main__":
     parser.add_argument('--gtbbox', action='store_true',
         help='use the ground-truth bounding box, and hrnet to estimate human pose')
     parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--path_origin', default=os.getcwd())
     args = parser.parse_args()
     mode = args.mode
 
@@ -266,6 +273,7 @@ if __name__ == "__main__":
                         join(args.path, 'openpose', sub), 
                         join(args.path, 'openpose_render', sub), args)
                     convert_from_openpose(
+                        path_orig=args.path_origin,
                         src=join(args.path, 'openpose', sub),
                         dst=annot_root,
                         annotdir=args.annot
