@@ -2,8 +2,8 @@
   @ Date: 2020-11-18 14:04:10
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-03-15 22:04:32
-  @ FilePath: /EasyMocap/code/smplmodel/body_model.py
+  @ LastEditTime: 2021-05-11 15:09:44
+  @ FilePath: /EasyMocap/easymocap/smplmodel/body_model.py
 '''
 import torch
 import torch.nn as nn
@@ -40,6 +40,7 @@ def load_regressor(regressor_path):
     return X_regressor
 
 NUM_POSES = {'smpl': 72, 'smplh': 78, 'smplx': 66 + 12 + 9}
+NUM_SHAPES = 10
 NUM_EXPR = 10
 class SMPLlayer(nn.Module):
     def __init__(self, model_path, model_type='smpl', gender='neutral', device=None,
@@ -82,6 +83,8 @@ class SMPLlayer(nn.Module):
             self.num_expression_coeffs = 10
             self.num_shapes = 10
             self.shapedirs = self.shapedirs[:, :, :self.num_shapes+self.num_expression_coeffs]
+        elif self.model_type in ['smpl', 'smplh']:
+            self.shapedirs = self.shapedirs[:, :, :NUM_SHAPES]
         # joints regressor
         if regressor_path is not None:
             X_regressor = load_regressor(regressor_path)
@@ -222,8 +225,10 @@ class SMPLlayer(nn.Module):
             dtype, device = self.dtype, self.device
             poses = to_tensor(poses, dtype, device)
             shapes = to_tensor(shapes, dtype, device)
-            Rh = to_tensor(Rh, dtype, device)
-            Th = to_tensor(Th, dtype, device)
+            if Rh is not None:
+                Rh = to_tensor(Rh, dtype, device)
+            if Th is not None:
+                Th = to_tensor(Th, dtype, device)
             if expression is not None:
                 expression = to_tensor(expression, dtype, device)
 
@@ -231,6 +236,9 @@ class SMPLlayer(nn.Module):
         # process Rh, Th
         if Rh is None:
             Rh = torch.zeros(bn, 3, device=poses.device)
+        if Th is None:
+            Th = torch.zeros(bn, 3, device=poses.device)
+        
         if len(Rh.shape) == 2: # angle-axis
             rot = batch_rodrigues(Rh)
         else:
