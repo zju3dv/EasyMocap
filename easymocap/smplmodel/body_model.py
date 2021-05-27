@@ -2,8 +2,8 @@
   @ Date: 2020-11-18 14:04:10
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-11 15:09:44
-  @ FilePath: /EasyMocap/easymocap/smplmodel/body_model.py
+  @ LastEditTime: 2021-05-27 20:35:10
+  @ FilePath: /EasyMocapRelease/easymocap/smplmodel/body_model.py
 '''
 import torch
 import torch.nn as nn
@@ -39,7 +39,7 @@ def load_regressor(regressor_path):
         import ipdb; ipdb.set_trace()
     return X_regressor
 
-NUM_POSES = {'smpl': 72, 'smplh': 78, 'smplx': 66 + 12 + 9}
+NUM_POSES = {'smpl': 72, 'smplh': 78, 'smplx': 66 + 12 + 9, 'mano': 9}
 NUM_SHAPES = 10
 NUM_EXPR = 10
 class SMPLlayer(nn.Module):
@@ -120,6 +120,19 @@ class SMPLlayer(nn.Module):
                 self.register_buffer('mHandsComponents'+key[0], val)
             self.use_pca = True
             self.use_flat_mean = True
+        elif self.model_type == 'mano':
+            # TODO:write this into config file
+            self.num_pca_comps = 12
+            self.use_pca = True
+            if self.use_pca:
+                NUM_POSES['mano'] = self.num_pca_comps + 3
+            else:
+                NUM_POSES['mano'] = 45 + 3
+            self.use_flat_mean = True
+            val = to_tensor(to_np(data['hands_mean'].reshape(1, -1)), dtype=dtype)
+            self.register_buffer('mHandsMean', val)
+            val = to_tensor(to_np(data['hands_components'][:self.num_pca_comps, :]), dtype=dtype)
+            self.register_buffer('mHandsComponents', val)
         elif self.model_type == 'smplx':
             # hand pose
             self.num_pca_comps = 6
@@ -131,15 +144,29 @@ class SMPLlayer(nn.Module):
                 self.register_buffer('mHandsComponents'+key[0], val)
             self.use_pca = True
             self.use_flat_mean = True
-            
+    
+    @staticmethod
+    def extend_hand(poses, use_pca, use_flat_mean, coeffs, mean):
+        if use_pca:
+            poses = poses @ coeffs
+        if use_flat_mean:
+            poses = poses + mean
+        return poses
+
     def extend_pose(self, poses):
-        if self.model_type not in ['smplh', 'smplx']:
+        if self.model_type not in ['smplh', 'smplx', 'mano']:
             return poses
         elif self.model_type == 'smplh' and poses.shape[-1] == 156:
             return poses
         elif self.model_type == 'smplx' and poses.shape[-1] == 165:
             return poses
-        
+        elif self.model_type == 'mano' and poses.shape[-1] == 48:
+            return poses
+        if self.model_type == 'mano':
+            poses_hand = self.extend_hand(poses[..., 3:], self.use_pca, self.use_flat_mean,
+                self.mHandsComponents, self.mHandsMean)
+            poses = torch.cat([poses[..., :3], poses_hand], dim=-1)
+            return poses
         NUM_BODYJOINTS = 22 * 3
         if self.use_pca:
             NUM_HANDJOINTS = self.num_pca_comps
@@ -210,6 +237,13 @@ class SMPLlayer(nn.Module):
             Th=Tnew.detach().cpu().numpy()
             )
         return res
+    
+    def full_poses(self, poses):
+        if 'torch' not in str(type(poses)):
+            dtype, device = self.dtype, self.device
+            poses = to_tensor(poses, dtype, device)
+        poses = self.extend_pose(poses)
+        return poses.detach().cpu().numpy()
 
     def forward(self, poses, shapes, Rh=None, Th=None, expression=None, return_verts=True, return_tensor=True, only_shape=False, **kwargs):
         """ Forward pass for SMPL model
@@ -250,8 +284,7 @@ class SMPLlayer(nn.Module):
         if expression is not None and self.model_type == 'smplx':
             shapes = torch.cat([shapes, expression], dim=1)
         # process poses
-        if self.model_type == 'smplh' or self.model_type == 'smplx':
-            poses = self.extend_pose(poses)
+        poses = self.extend_pose(poses)
         if return_verts:
             vertices, joints = lbs(shapes, poses, self.v_template,
                                 self.shapedirs, self.posedirs,
@@ -268,6 +301,17 @@ class SMPLlayer(nn.Module):
             vertices = vertices.detach().cpu().numpy()
         return vertices
     
+    def init_params(self, nFrames):
+        params = {
+            'poses': np.zeros((nFrames, NUM_POSES[self.model_type])),
+            'shapes': np.zeros((1, NUM_SHAPES)),
+            'Rh': np.zeros((nFrames, 3)),
+            'Th': np.zeros((nFrames, 3)),
+        }
+        if self.model_type == 'smplx':
+            params['expression'] = np.zeros((nFrames, NUM_EXPR))
+        return params
+
     def check_params(self, body_params):
         model_type = self.model_type
         nFrames = body_params['poses'].shape[0]

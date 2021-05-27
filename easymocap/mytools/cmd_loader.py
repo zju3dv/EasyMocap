@@ -2,7 +2,7 @@
   @ Date: 2021-01-15 12:09:27
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-13 19:45:18
+  @ LastEditTime: 2021-05-27 20:36:42
   @ FilePath: /EasyMocapRelease/easymocap/mytools/cmd_loader.py
 '''
 import os
@@ -12,9 +12,11 @@ def load_parser():
     parser = argparse.ArgumentParser('EasyMocap commond line tools')
     parser.add_argument('path', type=str)
     parser.add_argument('--out', type=str, default=None)
+    parser.add_argument('--camera', type=str, default=None)
     parser.add_argument('--annot', type=str, default='annots', help="sub directory name to store the generated annotation files, default to be annots")
     parser.add_argument('--sub', type=str, nargs='+', default=[],
         help='the sub folder lists when in video mode')
+    parser.add_argument('--from_file', type=str, default=None)
     parser.add_argument('--pid', type=int, nargs='+', default=[0],
         help='the person IDs')
     parser.add_argument('--max_person', type=int, default=-1,
@@ -28,8 +30,8 @@ def load_parser():
     # 
     # keypoints and body model
     # 
-    parser.add_argument('--body', type=str, default='body25', choices=['body15', 'body25', 'h36m', 'bodyhand', 'bodyhandface', 'total'])
-    parser.add_argument('--model', type=str, default='smpl', choices=['smpl', 'smplh', 'smplx', 'mano'])
+    parser.add_argument('--body', type=str, default='body25', choices=['body15', 'body25', 'h36m', 'bodyhand', 'bodyhandface', 'handl', 'handr', 'total'])
+    parser.add_argument('--model', type=str, default='smpl', choices=['smpl', 'smplh', 'smplx', 'manol', 'manor'])
     parser.add_argument('--gender', type=str, default='neutral', 
         choices=['neutral', 'male', 'female'])
     # Input control
@@ -50,17 +52,22 @@ def load_parser():
     # 
     # visualization part
     # 
-    parser.add_argument('--vis_det', action='store_true')
-    parser.add_argument('--vis_repro', action='store_true')
-    parser.add_argument('--vis_smpl', action='store_true')
-    parser.add_argument('--undis', action='store_true')
-    parser.add_argument('--sub_vis', type=str, nargs='+', default=[],
+    output = parser.add_argument_group('Output control')
+    output.add_argument('--vis_det', action='store_true')
+    output.add_argument('--vis_repro', action='store_true')
+    output.add_argument('--vis_smpl', action='store_true')
+    output.add_argument('--write_smpl_full', action='store_true')
+    output.add_argument('--vis_mask', action='store_true')
+    output.add_argument('--undis', action='store_true')
+    output.add_argument('--sub_vis', type=str, nargs='+', default=[],
         help='the sub folder lists for visualization')
     # 
     # debug
     # 
     parser.add_argument('--verbose', action='store_true')
     parser.add_argument('--save_origin', action='store_true')
+    parser.add_argument('--restart', action='store_true')
+    parser.add_argument('--no_opt', action='store_true')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--opts',
                         help="Modify config options using the command-line",
@@ -82,6 +89,21 @@ def parse_parser(parser):
         print(' - [Warning] Please specify the output path `--out ${out}`')
         print(' - [Warning] Default to {}/output'.format(args.path))
         args.out = join(args.path, 'output')
+    if args.from_file is not None:
+        assert os.path.exists(args.from_file), args.from_file
+        with open(args.from_file) as f:
+            datas = f.readlines()
+            subs = [d for d in datas if not d.startswith('#')]
+            subs = [d.rstrip().replace('https://www.youtube.com/watch?v=', '') for d in subs]
+        newsubs = sorted(os.listdir(join(args.path, 'images')))
+        clips = []
+        for newsub in newsubs:
+            if newsub.split('+')[0] in subs:
+                clips.append(newsub)
+        for sub in subs:
+            if os.path.exists(join(args.path, 'images', sub)):
+                clips.append(sub)
+        args.sub = clips
     if len(args.sub) == 0 and os.path.exists(join(args.path, 'images')):
         args.sub = sorted(os.listdir(join(args.path, 'images')))
         if args.sub[0].isdigit():

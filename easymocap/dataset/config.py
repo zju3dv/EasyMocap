@@ -2,7 +2,7 @@
  * @ Date: 2020-09-26 16:52:55
  * @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-03 18:30:13
+  @ LastEditTime: 2021-05-27 14:33:03
   @ FilePath: /EasyMocap/easymocap/dataset/config.py
 '''
 import numpy as np
@@ -196,6 +196,9 @@ CONFIG['hand'] = {'kintree':
         'g', 'g', 'g', 'g', 'b', 'b', 'b', 'b', 
         'y', 'y', 'y', 'y']
 }
+
+CONFIG['handl'] = CONFIG['hand']
+CONFIG['handr'] = CONFIG['hand']
 
 CONFIG['bodyhand'] = {'kintree':
    [[ 1,  0],
@@ -672,6 +675,8 @@ CONFIG['total']['kintree'] = getKintree('total')
 CONFIG['total']['nJoints'] = 137
 
 COCO17_IN_BODY25 = [0,16,15,18,17,5,2,6,3,7,4,12,9,13,10,14,11]
+
+CONFIG['bodyhandface']['joint_names'] = CONFIG['body25']['joint_names']
 
 def coco17tobody25(points2d):
     dim = 3

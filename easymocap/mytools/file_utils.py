@@ -2,8 +2,8 @@
   @ Date: 2021-03-15 12:23:12
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-01 16:17:34
-  @ FilePath: /EasyMocap/easymocap/mytools/file_utils.py
+  @ LastEditTime: 2021-05-27 20:50:43
+  @ FilePath: /EasyMocapRelease/easymocap/mytools/file_utils.py
 '''
 import os
 import json
@@ -64,6 +64,13 @@ def read_annot(annotname, mode='body25'):
             data[i]['keypoints'] = data[i]['keypoints']
         elif mode == 'body15':
             data[i]['keypoints'] = data[i]['keypoints'][:15, :]
+        elif mode in ['handl', 'handr']:
+            data[i]['keypoints'] = np.array(data[i][mode+'2d']).astype(np.float32)
+            key = 'bbox_'+mode+'2d'
+            if key not in data[i].keys():
+                data[i]['bbox'] = np.array(get_bbox_from_pose(data[i]['keypoints'])).astype(np.float32)
+            else:
+                data[i]['bbox'] = data[i]['bbox_'+mode+'2d'][:5]
         elif mode == 'total':
             data[i]['keypoints'] = np.vstack([data[i][key] for key in ['keypoints', 'handl2d', 'handr2d', 'face2d']])
         elif mode == 'bodyhand':
@@ -75,42 +82,70 @@ def read_annot(annotname, mode='body25'):
     data.sort(key=lambda x:x['id'])
     return data
 
-def write_common_results(dumpname, results, keys, fmt='%.3f'):
-    mkout(dumpname)
+def array2raw(array, separator=' ', fmt='%.3f'):
+    assert len(array.shape) == 2, 'Only support MxN matrix, {}'.format(array.shape)
+    res = []
+    for data in array:
+        res.append(separator.join([fmt%(d) for d in data]))
+    
+    
+def myarray2string(array, separator=', ', fmt='%.3f'):
+    assert len(array.shape) == 2, 'Only support MxN matrix, {}'.format(array.shape)
+    res = ['[']
+    for i in range(array.shape[0]):
+        res.append('            [{}]'.format(separator.join([fmt%(d) for d in array[i]])))
+        if i != array.shape[0] -1:
+            res[-1] += ', '
+    res.append('        ]')
+    return '\r\n'.join(res)
+
+def write_common_results(dumpname=None, results=[], keys=[], fmt='%2.3f'):
     format_out = {'float_kind':lambda x: fmt % x}
-    with open(dumpname, 'w') as f:
-        f.write('[\n')
-        for idata, data in enumerate(results):
-            f.write('    {\n')
-            output = {}
-            output['id'] = data['id']
-            for key in keys:
-                if key not in data.keys():continue
-                output[key] = np.array2string(data[key], max_line_width=1000, separator=', ', formatter=format_out)
-            for key in output.keys():
-                f.write('        \"{}\": {}'.format(key, output[key]))
-                if key != keys[-1]:
-                    f.write(',\n')
-                else:
-                    f.write('\n')
-            f.write('    }')
-            if idata != len(results) - 1:
-                f.write(',\n')
+    out_text = []
+    out_text.append('[\n')
+    for idata, data in enumerate(results):
+        out_text.append('    {\n')
+        output = {}
+        output['id'] = data['id']
+        for key in keys:
+            if key not in data.keys():continue
+            # BUG: This function will failed if the rows of the data[key] is too large
+            # output[key] = np.array2string(data[key], max_line_width=1000, separator=', ', formatter=format_out)
+            output[key] = myarray2string(data[key], separator=', ', fmt=fmt)
+        for key in output.keys():
+            out_text.append('        \"{}\": {}'.format(key, output[key]))
+            if key != keys[-1]:
+                out_text.append(',\n')
             else:
-                f.write('\n')
-        f.write(']\n')
+                out_text.append('\n')
+        out_text.append('    }')
+        if idata != len(results) - 1:
+            out_text.append(',\n')
+        else:
+            out_text.append('\n')
+    out_text.append(']\n')
+    if dumpname is not None:
+        mkout(dumpname)
+        with open(dumpname, 'w') as f:
+            f.writelines(out_text)
+    else:
+        return ''.join(out_text)
 
 def write_keypoints3d(dumpname, results):
     # TODO:rewrite it
     keys = ['keypoints3d']
-    write_common_results(dumpname, results, keys, fmt='%.3f')
+    write_common_results(dumpname, results, keys, fmt='%6.3f')
+
+def write_vertices(dumpname, results):
+    keys = ['vertices']
+    write_common_results(dumpname, results, keys, fmt='%6.3f')
 
 def write_smpl(dumpname, results):
     keys = ['Rh', 'Th', 'poses', 'expression', 'shapes']
     write_common_results(dumpname, results, keys)
 
 
-def get_bbox_from_pose(pose_2d, img, rate = 0.1):
+def get_bbox_from_pose(pose_2d, img=None, rate = 0.1):
     # this function returns bounding box from the 2D pose
     # here use pose_2d[:, -1] instead of pose_2d[:, 2]
     # because when vis reprojection, the result will be (x, y, depth, conf)
@@ -125,7 +160,8 @@ def get_bbox_from_pose(pose_2d, img, rate = 0.1):
     dy = (y_max - y_min)*rate
     # 后面加上类别这些
     bbox = [x_min-dx, y_min-dy, x_max+dx, y_max+dy, 1]
-    correct_bbox(img, bbox)
+    if img is not None:
+        correct_bbox(img, bbox)
     return bbox
 
 def correct_bbox(img, bbox):

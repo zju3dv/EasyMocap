@@ -2,8 +2,8 @@
   @ Date: 2020-11-20 13:34:54
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-13 20:31:49
-  @ FilePath: /EasyMocapRelease/easymocap/smplmodel/body_param.py
+  @ LastEditTime: 2021-05-25 19:21:12
+  @ FilePath: /EasyMocap/easymocap/smplmodel/body_param.py
 '''
 import numpy as np
 from os.path import join
@@ -28,28 +28,6 @@ def select_nf(params_all, nf):
     else:
         output['shapes'] = params_all['shapes'][nf:nf+1, :]
     return output
-
-NUM_POSES = {'smpl': 72, 'smplh': 78, 'smplx': 66 + 12 + 9}
-NUM_EXPR = 10
-
-def init_params(nFrames=1, model_type='smpl'):
-    params = {
-        'poses': np.zeros((nFrames, NUM_POSES[model_type])),
-        'shapes': np.zeros((1, 10)),
-        'Rh': np.zeros((nFrames, 3)),
-        'Th': np.zeros((nFrames, 3)),
-    }
-    if model_type == 'smplx':
-        params['expression'] = np.zeros((nFrames, NUM_EXPR))
-    return params
-
-def check_params(body_params, model_type):
-    nFrames = body_params['poses'].shape[0]
-    if body_params['poses'].shape[1] != NUM_POSES[model_type]:
-        body_params['poses'] = np.hstack((body_params['poses'], np.zeros((nFrames, NUM_POSES[model_type] - body_params['poses'].shape[1]))))
-    if model_type == 'smplx' and 'expression' not in body_params.keys():
-        body_params['expression'] = np.zeros((nFrames, NUM_EXPR))
-    return body_params
 
 def load_model(gender='neutral', use_cuda=True, model_type='smpl', skel_type='body25', device=None, model_path='data/smplx'):
     # prepare SMPL model
@@ -76,6 +54,10 @@ def load_model(gender='neutral', use_cuda=True, model_type='smpl', skel_type='bo
     elif model_type == 'smplx':
         body_model = SMPLlayer(join(model_path, 'smplx/SMPLX_{}.pkl'.format(gender.upper())), model_type='smplx', gender=gender, device=device,
             regressor_path=join(model_path, 'J_regressor_body25_smplx.txt'))
+    elif model_type == 'manol' or model_type == 'manor':
+        lr = {'manol': 'LEFT', 'manor': 'RIGHT'}
+        body_model = SMPLlayer(join(model_path, 'smplh/MANO_{}.pkl'.format(lr[model_type])), model_type='mano', gender=gender, device=device,
+            regressor_path=join(model_path, 'J_regressor_mano_{}.txt'.format(lr[model_type])))
     else:
         body_model = None
     body_model.to(device)

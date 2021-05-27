@@ -2,8 +2,8 @@
   @ Date: 2020-11-19 10:49:26
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-13 22:52:28
-  @ FilePath: /EasyMocapRelease/easymocap/pyfitting/optimize_simple.py
+  @ LastEditTime: 2021-05-25 19:51:12
+  @ FilePath: /EasyMocap/easymocap/pyfitting/optimize_simple.py
 '''
 import numpy as np
 import torch
@@ -279,8 +279,9 @@ def optimizePose3D(body_model, params, keypoints3d, weight, cfg):
         'smooth_poses': LossSmoothPoses(1, nFrames, cfg).poses,
         'reg_poses': LossRegPoses(cfg).reg_body,
         'init_poses': LossInit(params, cfg).init_poses,
-        'reg_poses_zero': LossRegPosesZero(keypoints3d, cfg).__call__,
     }
+    if body_model.model_type != 'mano':
+        loss_funcs['reg_poses_zero'] = LossRegPosesZero(keypoints3d, cfg).__call__
     if cfg.OPT_HAND:
         loss_funcs['k3d_hand'] = LossKeypoints3D(keypoints3d, cfg, norm='l1').hand
         loss_funcs['reg_hand'] = LossRegPoses(cfg).reg_hand
@@ -327,9 +328,12 @@ def optimizePose2D(body_model, params, bboxes, keypoints2d, Pall, weight, cfg):
         'smooth_body': LossSmoothBodyMean(cfg).body,
         'init_poses': LossInit(params, cfg).init_poses,
         'smooth_poses': LossSmoothPoses(nViews, nFrames, cfg).poses,
-        # 'reg_poses': LossRegPoses(cfg).reg_body,
-        'reg_poses_zero': LossRegPosesZero(keypoints2d, cfg).__call__,
+        'reg_poses': LossRegPoses(cfg).reg_body,
     }
+    if body_model.model_type != 'mano':
+        loss_funcs['reg_poses_zero'] = LossRegPosesZero(keypoints2d, cfg).__call__
+    if cfg.OPT_SHAPE:
+        loss_funcs['init_shapes'] = LossInit(params, cfg).init_shapes
     if cfg.OPT_HAND:
         loss_funcs['reg_hand'] = LossRegPoses(cfg).reg_hand
         # loss_funcs['smooth_hand'] = LossSmoothPoses(1, nFrames, cfg).hands

@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from tqdm import tqdm
 import os
 
 class FileStorage(object):
@@ -52,10 +51,6 @@ class FileStorage(object):
 
     def close(self):
         self.__del__(self)
-
-def safe_mkdir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
 
 def read_intri(intri_name):
     assert os.path.exists(intri_name), intri_name
@@ -145,6 +140,14 @@ def write_camera(camera, path):
         extri.write('Rot_{}'.format(key), val['R'])
         extri.write('T_{}'.format(key), val['T'])
 
+def camera_from_img(img):
+    height, width = img.shape[0], img.shape[1]
+    # focal = 1.2*max(height, width) # as colmap
+    focal = 1.2*min(height, width) # as colmap
+    K = np.array([focal, 0., width/2, 0., focal, height/2, 0. ,0., 1.]).reshape(3, 3)
+    camera = {'K':K ,'R': np.eye(3), 'T': np.zeros((3, 1)), 'dist': np.zeros((1, 5))}
+    return camera
+
 class Undistort:
     @staticmethod
     def image(frame, K, dist):
@@ -169,84 +172,8 @@ class Undistort:
 
 def undistort(camera, frame=None, keypoints=None, output=None, bbox=None):
     # bbox: 1, 7
-    mtx = camera['K']
-    dist = camera['dist']
-    if frame is not None:
-        frame = cv2.undistort(frame, mtx, dist, None)
-    if output is not None:
-        output = cv2.undistort(output, mtx, dist, None)
-    if keypoints is not None:
-        for nP in range(keypoints.shape[0]):
-            kpts = keypoints[nP][:, None, :2]
-            kpts = np.ascontiguousarray(kpts)
-            kpts = cv2.undistortPoints(kpts, mtx, dist, P=mtx)
-            keypoints[nP, :, :2] = kpts[:, 0]
-    if bbox is not None:
-        kpts = np.zeros((2, 1, 2))
-        kpts[0, 0, 0] = bbox[0]
-        kpts[0, 0, 1] = bbox[1]
-        kpts[1, 0, 0] = bbox[2]
-        kpts[1, 0, 1] = bbox[3]
-        kpts = cv2.undistortPoints(kpts, mtx, dist, P=mtx)
-        bbox[0] = kpts[0, 0, 0]
-        bbox[1] = kpts[0, 0, 1]
-        bbox[2] = kpts[1, 0, 0]
-        bbox[3] = kpts[1, 0, 1]
-        return bbox
-    return frame, keypoints, output
-
-def get_bbox(points_set, H, W, thres=0.1, scale=1.2):
-    bboxes = np.zeros((points_set.shape[0], 6))
-    for iv in range(points_set.shape[0]):
-        pose = points_set[iv, :, :]
-        use_idx = pose[:,2] > thres
-        if np.sum(use_idx) < 1:
-            continue
-        ll, rr = np.min(pose[use_idx, 0]), np.max(pose[use_idx, 0])
-        bb, tt = np.min(pose[use_idx, 1]), np.max(pose[use_idx, 1])
-        center = (int((ll + rr) / 2), int((bb + tt) / 2))
-        length = [int(scale*(rr-ll)/2), int(scale*(tt-bb)/2)]
-        l = max(0, center[0] - length[0])
-        r = min(W, center[0] + length[0]) # img.shape[1]
-        b = max(0, center[1] - length[1])
-        t = min(H, center[1] + length[1]) # img.shape[0]
-        conf = pose[:, 2].mean()
-        cls_conf = pose[use_idx, 2].mean()
-        bboxes[iv, 0] = l
-        bboxes[iv, 1] = r
-        bboxes[iv, 2] = b
-        bboxes[iv, 3] = t
-        bboxes[iv, 4] = conf
-        bboxes[iv, 5] = cls_conf
-    return bboxes
-
-def filterKeypoints(keypoints, thres = 0.1, min_width=40, \
-    min_height=40, min_area= 50000, min_count=6):
-    add_list = []
-    # TODO:并行化
-    for ik in range(keypoints.shape[0]):
-        pose = keypoints[ik]
-        vis_count = np.sum(pose[:15, 2] > thres)  #TODO:
-        if vis_count < min_count:
-            continue
-        ll, rr = np.min(pose[pose[:,2]>thres,0]), np.max(pose[pose[:,2]>thres,0])
-        bb, tt = np.min(pose[pose[:,2]>thres,1]), np.max(pose[pose[:,2]>thres,1])
-        center = (int((ll+rr)/2), int((bb+tt)/2))
-        length = [int(1.2*(rr-ll)/2), int(1.2*(tt-bb)/2)]
-        l = center[0] - length[0]
-        r = center[0] + length[0]
-        b = center[1] - length[1]
-        t = center[1] + length[1]
-        if (r - l) < min_width:
-            continue
-        if (t - b) < min_height:
-            continue
-        if (r - l)*(t - b) < min_area:
-            continue
-        add_list.append(ik)
-    keypoints = keypoints[add_list, :, :]
-    return keypoints, add_list
-
+    print('This function is deprecated')
+    raise NotImplementedError
 
 def get_fundamental_matrix(cameras, basenames):
     skew_op = lambda x: np.array([[0, -x[2], x[1]], [x[2], 0, -x[0]], [-x[1], x[0], 0]])

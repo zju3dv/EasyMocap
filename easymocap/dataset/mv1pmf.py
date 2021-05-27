@@ -2,7 +2,7 @@
   @ Date: 2021-01-12 17:12:50
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-13 10:59:22
+  @ LastEditTime: 2021-05-27 20:25:24
   @ FilePath: /EasyMocap/easymocap/dataset/mv1pmf.py
 '''
 from ..mytools.file_utils import get_bbox_from_pose
@@ -25,10 +25,10 @@ class MV1PMF(MVBase):
         results = [{'id': self.pid, 'keypoints3d': keypoints3d}]
         super().write_keypoints3d(results, nf)
 
-    def write_smpl(self, params, nf):
+    def write_smpl(self, params, nf, mode='smpl'):
         result = {'id': 0}
         result.update(params)
-        super().write_smpl([result], nf)
+        super().write_smpl([result], nf, mode)
 
     def vis_smpl(self, vertices, faces, images, nf, sub_vis=[], 
         mode='smpl', extra_data=[], add_back=True):
@@ -42,7 +42,7 @@ class MV1PMF(MVBase):
         if len(sub_vis) == 0:
             sub_vis = self.cams
         for key in cameras.keys():
-            cameras[key] = [self.cameras[cam][key] for cam in sub_vis]
+            cameras[key] = np.stack([self.cameras[cam][key] for cam in sub_vis])
         images = [images[self.cams.index(cam)] for cam in sub_vis]
         self.writer.vis_smpl(render_data, images, cameras, outname, add_back=add_back)
     
@@ -57,7 +57,7 @@ class MV1PMF(MVBase):
             lDetections.append([det])
         return super().vis_detections(images, lDetections, nf, sub_vis=sub_vis)
 
-    def vis_repro(self, images, kpts_repro, nf, to_img=True, sub_vis=[]):
+    def vis_repro(self, images, kpts_repro, nf, to_img=True, sub_vis=[], mode='repro'):
         lDetections = []
         for nv in range(len(images)):
             det = {
@@ -66,7 +66,7 @@ class MV1PMF(MVBase):
                 'bbox': get_bbox_from_pose(kpts_repro[nv], images[nv])
             }
             lDetections.append([det])
-        return super().vis_detections(images, lDetections, nf, mode='repro', sub_vis=sub_vis)
+        return super().vis_detections(images, lDetections, nf, mode=mode, sub_vis=sub_vis)
 
     def __getitem__(self, index: int):
         images, annots_all = super().__getitem__(index)

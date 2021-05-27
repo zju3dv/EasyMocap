@@ -2,11 +2,10 @@
   @ Date: 2021-01-13 16:53:55
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-13 15:59:35
-  @ FilePath: /EasyMocap/easymocap/dataset/base.py
+  @ LastEditTime: 2021-05-27 20:37:55
+  @ FilePath: /EasyMocapRelease/easymocap/dataset/base.py
 '''
 import os
-import json
 from os.path import join
 from glob import glob
 import cv2
@@ -14,13 +13,13 @@ import os, sys
 import numpy as np
 
 from ..mytools.camera_utils import read_camera, get_fundamental_matrix, Undistort
-from ..mytools import FileWriter, read_annot, getFileList
-from ..mytools.reader import read_keypoints3d, read_json
+from ..mytools import FileWriter, read_annot, getFileList, save_json
+from ..mytools.reader import read_keypoints3d, read_json, read_smpl
 # from ..mytools.writer import FileWriter
 # from ..mytools.camera_utils import read_camera, undistort, write_camera, get_fundamental_matrix
 # from ..mytools.vis_base import merge, plot_bbox, plot_keypoints
 # from ..mytools.file_utils import read_json, save_json, read_annot, read_smpl, write_smpl, get_bbox_from_pose
-# from ..mytools.file_utils import merge_params, select_nf, getFileList
+from ..mytools.file_utils import merge_params, select_nf
 
 def crop_image(img, annot, vis_2d=False, config={}, crop_square=True):
     for det in annot:
@@ -74,8 +73,6 @@ class ImageFolder:
                 self.imagelist.extend(images)
                 annots = sorted([join(sub, i) for i in os.listdir(join(self.annot_root, sub))])
                 self.annotlist.extend(annots)
-        # output
-        assert out is not None
         self.out = out
         self.writer = FileWriter(self.out, config=config)
         self.gtK, self.gtRT = False, False
@@ -132,6 +129,10 @@ class ImageFolder:
     def write_keypoints3d(self, results, nf):
         outname = join(self.out, 'keypoints3d', '{}.json'.format(self.basename(nf)))
         self.writer.write_keypoints3d(results, outname)
+    
+    def write_vertices(self, results, nf):
+        outname = join(self.out, 'vertices', '{}.json'.format(self.basename(nf)))
+        self.writer.write_vertices(results, outname)
         
     def write_smpl(self, results, nf):
         outname = join(self.out, 'smpl', '{}.json'.format(self.basename(nf)))
@@ -144,20 +145,21 @@ class ImageFolder:
             camera[key] = camera[key][None, :, :]
         self.writer.vis_smpl(render_data, images, camera, outname, add_back=True)
 
-class VideoFolder(ImageFolder):
-    "一段视频的图片的文件夹"
-    def __init__(self, root, name, out=None, 
-        image_root='images', annot_root='annots', 
-        kpts_type='body15', config={}, no_img=False) -> None:
-        self.root = root
-        self.image_root = join(root, image_root, name)
-        self.annot_root = join(root, annot_root, name)
-        self.name = name
-        self.kpts_type = kpts_type
-        self.no_img = no_img
-        self.imagelist = sorted(os.listdir(self.image_root))
-        self.annotlist = sorted(os.listdir(self.annot_root))
-        self.ret_crop = False
+# class VideoFolder(ImageFolder):
+#     "一段视频的图片的文件夹"
+#     def __init__(self, root, name, out=None, 
+#         image_root='images', annot_root='annots', 
+#         kpts_type='body15', config={}, no_img=False) -> None:
+#         self.root = root
+#         self.image_root = join(root, image_root, name)
+#         self.annot_root = join(root, annot_root, name)
+#         self.name = name
+#         self.kpts_type = kpts_type
+#         self.no_img = no_img
+#         self.imagelist = sorted(os.listdir(self.image_root))
+#         self.annotlist = sorted(os.listdir(self.annot_root))
+#         self.ret_crop = False
+#         self.gtK, self.gtRT = False, False
 
     def load_annot_all(self, path):
         # 这个不使用personID，只是单纯的罗列一下
@@ -363,7 +365,10 @@ def load_cameras(path):
         print('\n\n!!!there is no camera parameters, maybe bug: \n', intri_name, extri_name, '\n')
         cameras = None
     return cameras
-    
+
+def numpy_to_list(array, precision=3):
+    return np.round(array, precision).tolist()
+
 class MVBase:
     """ Dataset for multiview data
     """
@@ -498,24 +503,33 @@ class MVBase:
             images = [images[i] for i in valid_idx]
             lDetections = [lDetections[i] for i in valid_idx]
         return self.writer.vis_keypoints2d_mv(images, lDetections, outname=outname, vis_id=False)
-
-    def vis_match(self, images, lDetections, nf, to_img=True, sub_vis=[]):
-        if len(sub_vis) != 0:
-            valid_idx = [self.cams.index(i) for i in sub_vis]
-            images = [images[i] for i in valid_idx]
-            lDetections = [lDetections[i] for i in valid_idx]
-        return self.writer.vis_detections(images, lDetections, nf, 
-            key='match', to_img=to_img, vis_id=True)
     
     def basename(self, nf):
         return '{:06d}'.format(nf)
+
+    def write_keypoints2d(self, lDetections, nf):
+        for nv in range(len(lDetections)):
+            cam = self.cams[nv]
+            annname = join(self.annot_root, cam, self.annotlist[cam][nf])
+            outname = join(self.out, 'keypoints2d', cam, self.annotlist[cam][nf])
+            annot_origin = read_json(annname)
+            annots = lDetections[nv]
+            results = []
+            for annot in annots:
+                results.append({
+                    'personID': annot['id'],
+                    'bbox': numpy_to_list(annot['bbox'], 2),
+                    'keypoints': numpy_to_list(annot['keypoints'], 2)
+                })
+            annot_origin['annots'] = results
+            save_json(outname, annot_origin)
 
     def write_keypoints3d(self, results, nf):
         outname = join(self.out, 'keypoints3d', self.basename(nf)+'.json')
         self.writer.write_keypoints3d(results, outname)
 
-    def write_smpl(self, results, nf):
-        outname = join(self.out, 'smpl', self.basename(nf)+'.json')
+    def write_smpl(self, results, nf, mode='smpl'):
+        outname = join(self.out, mode, self.basename(nf)+'.json')
         self.writer.write_smpl(results, outname)
 
     def vis_smpl(self, peopleDict, faces, images, nf, sub_vis=[], 

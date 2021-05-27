@@ -2,11 +2,10 @@
   @ Date: 2021-04-13 20:43:16
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-14 13:38:34
-  @ FilePath: /EasyMocapRelease/easymocap/pipeline/basic.py
+  @ LastEditTime: 2021-05-27 15:35:22
+  @ FilePath: /EasyMocap/easymocap/pipeline/basic.py
 '''
 from ..pyfitting import optimizeShape, optimizePose2D, optimizePose3D
-from ..smplmodel import init_params
 from ..mytools import Timer
 from ..dataset import CONFIG
 from .weight import load_weight_pose, load_weight_shape
@@ -37,10 +36,26 @@ def multi_stage_optimize(body_model, params, kp3ds, kp2ds=None, bboxes=None, Pal
             params = optimizePose2D(body_model, params, bboxes, kp2ds, Pall, weight=weight, cfg=cfg)
     return params
 
+def multi_stage_optimize2d(body_model, params, kp2ds, bboxes, Pall, weight={}, args=None):
+    cfg = Config(args)
+    cfg.device = body_model.device
+    cfg.device = body_model.device
+    cfg.model = body_model.model_type
+    with Timer('Optimize global RT'):
+        cfg.OPT_R = True
+        cfg.OPT_T = True
+        params = optimizePose2D(body_model, params, bboxes, kp2ds, Pall, weight=weight, cfg=cfg)
+    with Timer('Optimize 2D Pose/{} frames'.format(kp2ds.shape[0])):
+        cfg.OPT_POSE = True
+        cfg.OPT_SHAPE = True
+        # bboxes => (nFrames, nViews, 5), keypoints2d => (nFrames, nViews, nJoints, 3)
+        params = optimizePose2D(body_model, params, bboxes, kp2ds, Pall, weight=weight, cfg=cfg)
+    return params
+
 def smpl_from_keypoints3d2d(body_model, kp3ds, kp2ds, bboxes, Pall, config, args,
     weight_shape=None, weight_pose=None):
     model_type = body_model.model_type
-    params_init = init_params(nFrames=1, model_type=model_type)
+    params_init = body_model.init_params(nFrames=1)
     if weight_shape is None:
         weight_shape = load_weight_shape(args.opts)
     if model_type in ['smpl', 'smplh', 'smplx']:
@@ -54,7 +69,7 @@ def smpl_from_keypoints3d2d(body_model, kp3ds, kp2ds, bboxes, Pall, config, args
     # optimize 3D pose
     cfg = Config(args)
     cfg.device = body_model.device
-    params = init_params(nFrames=kp3ds.shape[0], model_type=model_type)
+    params = body_model.init_params(nFrames=kp3ds.shape[0])
     params['shapes'] = params_shape['shapes'].copy()
     if weight_pose is None:
         weight_pose = load_weight_pose(model_type, args.opts)
@@ -65,7 +80,7 @@ def smpl_from_keypoints3d2d(body_model, kp3ds, kp2ds, bboxes, Pall, config, args
 def smpl_from_keypoints3d(body_model, kp3ds, config, args, 
     weight_shape=None, weight_pose=None):
     model_type = body_model.model_type
-    params_init = init_params(nFrames=1, model_type=model_type)
+    params_init = body_model.init_params(nFrames=1)
     if weight_shape is None:
         weight_shape = load_weight_shape(args.opts)
     if model_type in ['smpl', 'smplh', 'smplx']:
@@ -80,7 +95,7 @@ def smpl_from_keypoints3d(body_model, kp3ds, config, args,
     cfg = Config(args)
     cfg.device = body_model.device
     cfg.model_type = model_type
-    params = init_params(nFrames=kp3ds.shape[0], model_type=model_type)
+    params = body_model.init_params(nFrames=kp3ds.shape[0])
     params['shapes'] = params_shape['shapes'].copy()
     if weight_pose is None:
         weight_pose = load_weight_pose(model_type, args.opts)
