@@ -2,8 +2,8 @@
   @ Date: 2021-01-15 11:12:00
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-03-08 21:07:48
-  @ FilePath: /EasyMocap/code/mytools/utils.py
+  @ LastEditTime: 2021-05-27 14:55:40
+  @ FilePath: /EasyMocap/easymocap/mytools/utils.py
 '''
 import time
 import tabulate
@@ -30,4 +30,10 @@ class Timer:
         end = time.time()
         Timer.records[self.name].append((end-self.start)*1000)
         if not self.silent:
-            print('-> [{:20s}]: {:5.1f}ms'.format(self.name, (end-self.start)*1000))
+            t = (end - self.start)*1000
+            if t > 10000:
+                print('-> [{:20s}]: {:5.1f}s'.format(self.name, t/1000))
+            elif t > 1e3*60*60:
+                print('-> [{:20s}]: {:5.1f}min'.format(self.name, t/1e3/60))
+            else:
+                print('-> [{:20s}]: {:5.1f}ms'.format(self.name, (end-self.start)*1000))

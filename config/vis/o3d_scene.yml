@@ -1,0 +1,39 @@
+host: 'auto'
+port: 9999
+
+width: 1920
+height: 1080
+
+max_human: 5
+track: True
+block: True # block visualization or not, True for visualize each frame, False in realtime applications
+debug: False
+write: False
+out: 'none'
+
+body_model:
+  module: "easymocap.visualize.skelmodel.SkelModel"
+  args:
+    body_type: "body25"
+    joint_radius: 0.02
+    gender: "neutral"
+    model_type: "smpl"
+
+scene:
+  "easymocap.visualize.o3dwrapper.create_coord":
+    camera: [0, 0, 0]
+    radius: 1
+  "easymocap.visualize.o3dwrapper.create_bbox":
+    min_bound: [-3, -3, 0]
+    max_bound: [3, 3, 2]
+    flip: False
+  "easymocap.visualize.o3dwrapper.create_ground":
+    center: [0, 0, 0]
+    xdir: [1, 0, 0]
+    ydir: [0, 1, 0]
+    step: 1
+    xrange: 3
+    yrange: 3
+    white: [1., 1., 1.]
+    black: [0.,0.,0.]
+    two_sides: True

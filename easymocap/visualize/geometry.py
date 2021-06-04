@@ -2,12 +2,13 @@
   @ Date: 2021-01-17 22:44:34
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-03 20:00:02
-  @ FilePath: /EasyMocap/code/visualize/geometry.py
+  @ LastEditTime: 2021-05-25 14:01:24
+  @ FilePath: /EasyMocap/easymocap/visualize/geometry.py
 '''
 import numpy as np
 import cv2
 import numpy as np
+from tqdm import tqdm
 
 def create_ground(
     center=[0, 0, 0], xdir=[1, 0, 0], ydir=[0, 1, 0], # 位置
@@ -19,15 +20,15 @@ def create_ground(
         center = np.array(center)
         xdir = np.array(xdir)
         ydir = np.array(ydir)
-    print(center, xdir, ydir)
+    print('[Vis Info] {}, x: {}, y: {}'.format(center, xdir, ydir))
     xdir = xdir * step
     ydir = ydir * step
     vertls, trils, colls = [],[],[]
     cnt = 0
     min_x = -xrange if two_sides else 0
     min_y = -yrange if two_sides else 0
-    for i in range(min_x, xrange+1):
-        for j in range(min_y, yrange+1):
+    for i in range(min_x, xrange):
+        for j in range(min_y, yrange):
             point0 = center + i*xdir + j*ydir
             point1 = center + (i+1)*xdir + j*ydir
             point2 = center + (i+1)*xdir + (j+1)*ydir
@@ -107,3 +108,46 @@ def create_cameras(cameras):
             'vertices': vertices, 'faces': triangles, 'name': 'camera_{}'.format(nv), 'vid': nv
         })
     return meshes
+
+import os
+current_dir = os.path.dirname(os.path.realpath(__file__))
+
+def create_cameras_texture(cameras, imgnames, scale=5e-3):
+    import trimesh
+    import pyrender
+    from PIL import Image
+    from os.path import join
+    cam_path = join(current_dir, 'objs', 'background.obj')
+    meshes = []
+    for nv, (key, camera) in enumerate(tqdm(cameras.items(), desc='loading images')):
+        cam_trimesh = trimesh.load(cam_path, process=False)
+        vert = np.asarray(cam_trimesh.vertices)
+        K, R, T = camera['K'], camera['R'], camera['T']
+        img = Image.open(imgnames[nv])
+        height, width = img.height, img.width
+        vert[:, 0] *= width
+        vert[:, 1] *= height
+        vert[:, 2] *= 0
+        vert[:, 0] -= vert[:, 0]*0.5
+        vert[:, 1] -= vert[:, 1]*0.5
+        vert[:, 1] = - vert[:, 1]
+        vert[:, :2] *= scale
+        # vert[:, 2] = 1
+        cam_trimesh.vertices = (vert - T.T) @ R
+        cam_trimesh.visual.material.image = img
+        cam_mesh = pyrender.Mesh.from_trimesh(cam_trimesh, smooth=True)
+        meshes.append(cam_mesh)
+    return meshes
+
+def create_mesh_pyrender(vert, faces, col):
+    import trimesh
+    import pyrender
+    mesh = trimesh.Trimesh(vert, faces, process=False)
+    material = pyrender.MetallicRoughnessMaterial(
+        metallicFactor=0.0,
+        alphaMode='OPAQUE',
+        baseColorFactor=col)
+    mesh = pyrender.Mesh.from_trimesh(
+        mesh,
+        material=material)
+    return mesh

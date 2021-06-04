@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-04-14 16:00:04
+ * @LastEditTime: 2021-06-04 17:12:01
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -74,9 +74,11 @@ This project is used by many other projects:
 - [Pose guided synchronization](./doc/todo.md) (comming soon)
 - [Annotator](apps/calibration/Readme.md): a simple GUI annotator based on OpenCV
 - [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
+- [Real-time visualization](./doc/realtime_visualization.md)
 
 ## Updates
 
+- 06/04/2021: The **real-time 3D visualization** part is released!
 - 04/12/2021: Mirrored-Human part is released. We also release the calibration tool and the annotator.
 
 ## Installation

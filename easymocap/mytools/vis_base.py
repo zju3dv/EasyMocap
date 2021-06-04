@@ -2,7 +2,7 @@
   @ Date: 2020-11-28 17:23:04
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-03-28 22:19:34
+  @ LastEditTime: 2021-06-03 22:31:31
   @ FilePath: /EasyMocap/easymocap/mytools/vis_base.py
 '''
 import cv2
@@ -57,17 +57,26 @@ def get_rgb(index):
         col = tuple([int(c*255) for c in col[::-1]])
     return col
 
-def plot_point(img, x, y, r, col, pid=-1):
-    cv2.circle(img, (int(x+0.5), int(y+0.5)), r, col, -1)
+def get_rgb_01(index):
+    col = get_rgb(index)
+    return [i*1./255 for i in col[:3]]
+
+def plot_point(img, x, y, r, col, pid=-1, font_scale=-1, circle_type=-1):
+    cv2.circle(img, (int(x+0.5), int(y+0.5)), r, col, circle_type)
+    if font_scale == -1:
+        font_scale = img.shape[0]/4000
     if pid != -1:
-        cv2.putText(img, '{}'.format(pid), (int(x+0.5), int(y+0.5)), cv2.FONT_HERSHEY_SIMPLEX, 1, col, 2)
+        cv2.putText(img, '{}'.format(pid), (int(x+0.5), int(y+0.5)), cv2.FONT_HERSHEY_SIMPLEX, font_scale, col, 1)
 
 
 def plot_line(img, pt1, pt2, lw, col):
     cv2.line(img, (int(pt1[0]+0.5), int(pt1[1]+0.5)), (int(pt2[0]+0.5), int(pt2[1]+0.5)),
         col, lw)
 
-def plot_cross(img, x, y, col, width=10, lw=2):
+def plot_cross(img, x, y, col, width=-1, lw=-1):
+    if lw == -1:
+        lw = int(round(img.shape[0]/1000))
+        width = lw * 5
     cv2.line(img, (int(x-width), int(y)), (int(x+width), int(y)), col, lw)
     cv2.line(img, (int(x), int(y-width)), (int(x), int(y+width)), col, lw)
     
@@ -82,7 +91,8 @@ def plot_bbox(img, bbox, pid, vis_id=True):
     lw = max(img.shape[0]//300, 2)
     cv2.rectangle(img, (x1, y1), (x2, y2), color, lw)
     if vis_id:
-        cv2.putText(img, '{}'.format(pid), (x1, y1+20), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2)
+        font_scale = img.shape[0]/1000
+        cv2.putText(img, '{}'.format(pid), (x1, y1+int(25*font_scale)), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, 2)
 
 def plot_keypoints(img, points, pid, config, vis_conf=False, use_limb_color=True, lw=2):
     for ii, (i, j) in enumerate(config['kintree']):
@@ -108,33 +118,44 @@ def plot_keypoints(img, points, pid, config, vis_conf=False, use_limb_color=True
 
 def plot_points2d(img, points2d, lines, lw=4, col=(0, 255, 0), putText=True):
     # 将2d点画上去
+    if points2d.shape[1] == 2:
+        points2d = np.hstack([points2d, np.ones((points2d.shape[0], 1))])
     for i, (x, y, v) in enumerate(points2d):
         if v < 0.01:
             continue
         c = col
         plot_cross(img, x, y, width=10, col=c, lw=lw)
         if putText:
-            cv2.putText(img, '{}'.format(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, c, 2)
+            font_scale = img.shape[0]/2000
+            cv2.putText(img, '{}'.format(i), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, font_scale, c, 2)
     for i, j in lines:
         if points2d[i][2] < 0.01 or points2d[j][2] < 0.01:
             continue
-        plot_line(img, points2d[i], points2d[j], 2, (255, 255, 255))
+        plot_line(img, points2d[i], points2d[j], 2, col)
 
-def merge(images, row=-1, col=-1, resize=False, ret_range=False):
-    if row == -1 and col == -1:
+row_col_ = {
+    2: (2, 1),
+    7: (2, 4),
+    8: (2, 4),
+    9: (3, 3),
+    26: (4, 7)
+}
+def get_row_col(l):
+    if l in row_col_.keys():
+        return row_col_[l]
+    else:
         from math import sqrt
-        row = int(sqrt(len(images)) + 0.5)
-        col = int(len(images)/ row + 0.5)
+        row = int(sqrt(l) + 0.5)
+        col = int(l/ row + 0.5)
+        if row*col<l:
+            col = col + 1
         if row > col:
             row, col = col, row
-        if len(images) == 8:
-            # basketball 场景
-            row, col = 2, 4
-            images = [images[i] for i in [0, 1, 2, 3, 7, 6, 5, 4]]
-        if len(images) == 7:
-            row, col = 3, 3
-        elif len(images) == 2:
-            row, col = 2, 1
+        return row, col
+
+def merge(images, row=-1, col=-1, resize=False, ret_range=False, **kwargs):
+    if row == -1 and col == -1:
+        row, col = get_row_col(len(images))
     height = images[0].shape[0]
     width = images[0].shape[1]
     ret_img = np.zeros((height * row, width * col, images[0].shape[2]), dtype=np.uint8) + 255
@@ -149,8 +170,9 @@ def merge(images, row=-1, col=-1, resize=False, ret_range=False):
             ret_img[height * i: height * (i+1), width * j: width * (j+1)] = img
             ranges.append((width*j, height*i, width*(j+1), height*(i+1)))
     if resize:
-        scale = min(1000/ret_img.shape[0], 1800/ret_img.shape[1])
-        while ret_img.shape[0] > 2000:
+        min_height = 3000
+        if ret_img.shape[0] > min_height:
+            scale = min_height/ret_img.shape[0]
             ret_img = cv2.resize(ret_img, None, fx=scale, fy=scale)
     if ret_range:
         return ret_img, ranges
