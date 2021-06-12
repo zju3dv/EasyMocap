@@ -2,8 +2,8 @@
   @ Date: 2021-01-15 12:09:27
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-27 20:36:42
-  @ FilePath: /EasyMocapRelease/easymocap/mytools/cmd_loader.py
+  @ LastEditTime: 2021-06-09 19:52:41
+  @ FilePath: /EasyMocap/easymocap/mytools/cmd_loader.py
 '''
 import os
 import argparse
@@ -12,6 +12,7 @@ def load_parser():
     parser = argparse.ArgumentParser('EasyMocap commond line tools')
     parser.add_argument('path', type=str)
     parser.add_argument('--out', type=str, default=None)
+    parser.add_argument('--cfg', type=str, default=None)
     parser.add_argument('--camera', type=str, default=None)
     parser.add_argument('--annot', type=str, default='annots', help="sub directory name to store the generated annotation files, default to be annots")
     parser.add_argument('--sub', type=str, nargs='+', default=[],

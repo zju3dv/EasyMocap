@@ -1,4 +1,4 @@
-host: 'auto'
+host: '127.0.0.1'
 port: 9999
 
 width: 1920
@@ -37,3 +37,9 @@ scene:
     white: [1., 1., 1.]
     black: [0.,0.,0.]
     two_sides: True
+
+range:
+  minr: [-100, -100, -100]
+  maxr: [ 100,  100,  100]
+  rate_inlier: 0.8
+  min_conf: 0.1

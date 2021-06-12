@@ -2,7 +2,7 @@
  * @Date: 2021-06-04 15:56:55
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-04 17:11:48
+ * @LastEditTime: 2021-06-12 15:29:23
  * @FilePath: /EasyMocapRelease/doc/realtime_visualization.md
 -->
 # EasyMoCap -> Real-time Visualization
@@ -21,7 +21,10 @@ python3 -m pip install open3d==0.9.0
 Before any visualization, you should run a server:
 
 ```bash
-python3 apps/vis/vis_server.py --cfg config/vis/o3d_scene.yml host <your_ip_address> port <set_a_port>
+# quick start:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml
+# If you want to specify the host and port:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml host <your_ip_address> port <set_a_port>
 ```
 
 This step will open the visualization window:

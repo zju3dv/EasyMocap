@@ -2,7 +2,7 @@
   @ Date: 2021-05-25 11:15:53
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-04 17:06:17
+  @ LastEditTime: 2021-06-12 14:54:43
   @ FilePath: /EasyMocapRelease/easymocap/socket/o3d.py
 '''
 import open3d as o3d
@@ -15,6 +15,7 @@ import json
 import numpy as np
 from os.path import join
 import os
+from ..assignment.criterion import CritRange
 
 class VisOpen3DSocket(BaseSocket):
     def __init__(self, host, port, cfg) -> None:
@@ -53,6 +54,9 @@ class VisOpen3DSocket(BaseSocket):
             self.add_human(zero_params)
 
         self.count = 0
+        self.previous = {}
+        self.critrange = CritRange(**cfg.range)
+        self.new_frames  = cfg.new_frames
     
     def add_human(self, zero_params):
         vertices = self.body_model(zero_params)[0]
@@ -69,15 +73,31 @@ class VisOpen3DSocket(BaseSocket):
         init_param.extrinsic = np.array(camera_pose)
         ctr.convert_from_pinhole_camera_parameters(init_param) 
 
+    def filter_human(self, datas):
+        datas_new = []
+        for data in datas:
+            kpts3d = np.array(data['keypoints3d'])
+            data['keypoints3d'] = kpts3d
+            pid = data['id']
+            if pid not in self.previous.keys():
+                if not self.critrange(kpts3d):
+                    continue
+                self.previous[pid] = 0
+            self.previous[pid] += 1
+            if self.previous[pid] > self.new_frames:
+                datas_new.append(data)
+        return datas_new
+
     def main(self, datas):
         if self.debug:log('[Info] Load data {}'.format(self.count))
         datas = json.loads(datas)
+        datas = self.filter_human(datas)
         with Timer('forward'):
             for i, data in enumerate(datas):
                 if i >= len(self.meshes):
                     print('[Error] the number of human exceeds!')
                     self.add_human(np.array(data['keypoints3d']))
-                vertices = self.body_model(np.array(data['keypoints3d']))
+                vertices = self.body_model(data['keypoints3d'])
                 self.vertices[i] = Vector3dVector(vertices[0])
             for i in range(len(datas), len(self.meshes)):
                 self.vertices[i] = self.zero_vertices
@@ -90,6 +110,8 @@ class VisOpen3DSocket(BaseSocket):
                     self.meshes[i].paint_uniform_color(col)
 
     def update(self):
+        if self.disconnect and not self.block:
+            self.previous.clear()
         if not self.queue.empty():
             if self.debug:log('Update' + str(self.queue.qsize()))
             datas = self.queue.get()

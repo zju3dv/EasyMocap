@@ -2,8 +2,8 @@
   @ Date: 2021-05-30 11:17:18
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-04 15:44:56
-  @ FilePath: /EasyMocap/easymocap/config/vis_socket.py
+  @ LastEditTime: 2021-06-12 14:56:00
+  @ FilePath: /EasyMocapRelease/easymocap/config/vis_socket.py
 '''
 from .baseconfig import CN
 from .baseconfig import Config as BaseConfig
@@ -19,7 +19,6 @@ class Config(BaseConfig):
         cfg.width = 1920
         cfg.height = 1080
         
-        cfg.body = 'body25'
         cfg.max_human = 5
         cfg.track = True
         cfg.block = True # block visualization or not, True for visualize each frame, False in realtime applications
@@ -30,6 +29,9 @@ class Config(BaseConfig):
         cfg.scene_module = "easymocap.visualize.o3dwrapper"
         cfg.scene = CN()
         cfg.extra = CN()
+        cfg.range = CN()
+        cfg.new_frames = 0
+
         # skel
         cfg.skel = CN()
         cfg.skel.joint_radius = 0.02
@@ -42,6 +44,12 @@ class Config(BaseConfig):
         cfg.camera.cz = 6.
         cfg.camera.set_camera = False
         cfg.camera.camera_pose = []
+        # range
+        cfg.range = CN()
+        cfg.range.minr = [-100, -100, -10]
+        cfg.range.maxr = [ 100,  100,  10]
+        cfg.range.rate_inlier = 0.8
+        cfg.range.min_conf = 0.1
         return cfg
     
     @staticmethod

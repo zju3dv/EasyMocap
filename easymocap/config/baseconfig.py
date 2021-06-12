@@ -47,7 +47,6 @@ class Config:
 import importlib
 def load_object(module_name, module_args):
     module_path = '.'.join(module_name.split('.')[:-1])
-    # scene_module = importlib.import_module(cfg.scene_module)
     module = importlib.import_module(module_path)
     name = module_name.split('.')[-1]
     obj = getattr(module, name)(**module_args)

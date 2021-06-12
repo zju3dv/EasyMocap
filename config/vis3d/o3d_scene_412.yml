@@ -1,0 +1,30 @@
+parent: "config/vis3d/o3d_scene.yml"
+
+scene:
+  "easymocap.visualize.o3dwrapper.create_bbox":
+    min_bound: [-3, -3, 0]
+    max_bound: [3, 3, 2]
+    flip: False
+  "easymocap.visualize.o3dwrapper.create_ground":
+    center: [0, 0, 0]
+    xdir: [1, 0, 0]
+    ydir: [0, 1, 0]
+    step: 1
+    xrange: 3
+    yrange: 3
+    white: [1., 1., 1.]
+    black: [0.,0.,0.]
+    two_sides: True
+
+camera:
+  cy: 0.6
+  cz: 4.
+  theta: -30
+
+range:
+  minr: [-2, -1,   0]
+  maxr: [ 2,  2, 2.5]
+  rate_inlier: 0.8
+  min_conf: 0.1
+
+new_frames: 10

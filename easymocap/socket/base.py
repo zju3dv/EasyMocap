@@ -2,7 +2,7 @@
   @ Date: 2021-05-25 11:14:48
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-02 13:00:35
+  @ LastEditTime: 2021-06-05 19:32:56
   @ FilePath: /EasyMocap/easymocap/socket/base.py
 '''
 import socket
@@ -24,9 +24,9 @@ class BaseSocket:
         serversocket.bind((host, port))
         serversocket.listen(1)
         self.serversocket = serversocket
+        self.queue = Queue()
         self.t = Thread(target=self.run)
         self.t.start()
-        self.queue = Queue()
         self.debug = debug
         self.disconnect = False
     
@@ -55,10 +55,12 @@ class BaseSocket:
         while True:
             clientsocket, addr = self.serversocket.accept()
             print("[Info] Connect: %s" % str(addr))
+            self.disconnect = False
             while True:
                 flag, l = self.recvLine(clientsocket)
                 if not flag:
                     print("[Info] Disonnect: %s" % str(addr))
+                    self.disconnect = True
                     break
                 data = self.recvAll(clientsocket, l)
                 if self.debug:log('[Info] Recv data')
