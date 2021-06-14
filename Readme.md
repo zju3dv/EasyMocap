@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-04 17:12:01
+ * @LastEditTime: 2021-06-14 16:41:00
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -21,12 +21,18 @@
 
 [![report](https://img.shields.io/badge/quickstart-green)](./doc/quickstart.md)
 
-This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3] model to capture body+hand+face poses from multiple views.
+This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to capture body+hand+face poses from multiple views.
 
 <div align="center">
     <img src="doc/feng/mv1pmf-smplx.gif" width="80%">
     <br>
     <sup>Videos are from ZJU-MoCap, with 23 calibrated and synchronized cameras.<sup/>
+</div>
+
+<div align="center">
+    <img src="doc/feng/mano.gif" width="80%">
+    <br>
+    <sup>Captured with 8 cameras.<sup/>
 </div>
 
 ### Internet video with a mirror
@@ -62,11 +68,15 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3] model to capture 
     <sup>Captured with 4 consumer cameras<sup/>
 </div>
 
-### Others
+### Novel view synthesis from sparse views
+[![report](https://img.shields.io/badge/CVPR21-neuralbody-red)](https://arxiv.org/pdf/2012.15838.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](https://github.com/zju3dv/neuralbody)
 
-This project is used by many other projects:
+<div align="center">
+    <img src="doc/neuralbody/sida-frame0.jpg" width="80%"><br/>
+    <img src="doc/neuralbody/sida.gif" width="80%"><br/>
+    <sup>Captured with 8 consumer cameras<sup/>
+</div>
 
-- [[CVPR21] Dense Reconstruction and View Synthesis from **Sparse Views**](https://zju3dv.github.io/neuralbody/)
 
 ## Other features
 
@@ -78,8 +88,9 @@ This project is used by many other projects:
 
 ## Updates
 
-- 06/04/2021: The **real-time 3D visualization** part is released!
-- 04/12/2021: Mirrored-Human part is released. We also release the calibration tool and the annotator.
+- 06/10/2021: The **real-time 3D visualization** part is released!
+- 04/11/2021: The calibration tool and the annotator are released.
+- 04/11/2021: **Mirrored-Human** part is released.
 
 ## Installation
 
@@ -103,7 +114,7 @@ Here are the great works this project is built upon:
   - `easymocap/estimator/YOLOv4`: an object detector[6](Coming soon)
   - `easymocap/estimator/HRNet` : a 2D human pose estimator[7](Coming soon)
 
-We also would like to thank Wenduo Feng who is the performer in the sample data.
+We also would like to thank Wenduo Feng, Di Huang, Yuji Chen, Hao Xu, Qing Shuai, Qi Fang, Ting Xie, Junting Dong, Sida Peng and Xiaopeng Ji who are the performers in the sample data.
 
 ## Contact
 
