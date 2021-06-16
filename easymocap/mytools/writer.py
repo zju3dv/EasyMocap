@@ -69,7 +69,7 @@ class FileWriter:
     
     def vis_smpl(self, render_data, images, cameras, outname, add_back):
         mkout(outname)
-        from ..visualize import Renderer
+        from ..visualize.renderer import Renderer
         render = Renderer(height=1024, width=1024, faces=None)
         render_results = render.render(render_data, cameras, images, add_back=add_back)
         image_vis = merge(render_results, resize=not self.save_origin)
