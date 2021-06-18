@@ -2,7 +2,7 @@
   @ Date: 2021-03-15 12:23:12
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-27 20:50:43
+  @ LastEditTime: 2021-06-14 22:25:58
   @ FilePath: /EasyMocapRelease/easymocap/mytools/file_utils.py
 '''
 import os
@@ -24,6 +24,8 @@ def save_json(file, data):
         os.makedirs(os.path.dirname(file))
     with open(file, 'w') as f:
         json.dump(data, f, indent=4)
+
+save_annot = save_json
 
 def getFileList(root, ext='.jpg'):
     files = []
@@ -89,14 +91,15 @@ def array2raw(array, separator=' ', fmt='%.3f'):
         res.append(separator.join([fmt%(d) for d in data]))
     
     
-def myarray2string(array, separator=', ', fmt='%.3f'):
+def myarray2string(array, separator=', ', fmt='%.3f', indent=8):
     assert len(array.shape) == 2, 'Only support MxN matrix, {}'.format(array.shape)
+    blank = ' ' * indent
     res = ['[']
     for i in range(array.shape[0]):
-        res.append('            [{}]'.format(separator.join([fmt%(d) for d in array[i]])))
+        res.append(blank + '  ' + '[{}]'.format(separator.join([fmt%(d) for d in array[i]])))
         if i != array.shape[0] -1:
             res[-1] += ', '
-    res.append('        ]')
+    res.append(blank + ']')
     return '\r\n'.join(res)
 
 def write_common_results(dumpname=None, results=[], keys=[], fmt='%2.3f'):
@@ -144,6 +147,24 @@ def write_smpl(dumpname, results):
     keys = ['Rh', 'Th', 'poses', 'expression', 'shapes']
     write_common_results(dumpname, results, keys)
 
+def batch_bbox_from_pose(keypoints2d, height, width, rate=0.1):
+    # TODO:write this in batch
+    bboxes = np.zeros((keypoints2d.shape[0], 5), dtype=np.float32)
+    border = 20
+    for bn in range(keypoints2d.shape[0]):
+        valid = keypoints2d[bn, :, -1] > 0
+        if valid.sum() == 0:
+            continue
+        p2d = keypoints2d[bn, valid, :2]
+        x_min, y_min = p2d.min(axis=0)
+        x_max, y_max = p2d.max(axis=0)
+        x_mean, y_mean = p2d.mean(axis=0)
+        if x_mean < -border or y_mean < -border or x_mean > width + border or y_mean > height + border:
+            continue
+        dx = (x_max - x_min)*rate
+        dy = (y_max - y_min)*rate
+        bboxes[bn] = [x_min-dx, y_min-dy, x_max+dx, y_max+dy, 1]
+    return bboxes
 
 def get_bbox_from_pose(pose_2d, img=None, rate = 0.1):
     # this function returns bounding box from the 2D pose

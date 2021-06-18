@@ -2,13 +2,24 @@
   @ Date: 2021-01-15 11:12:00
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-27 14:55:40
+  @ LastEditTime: 2021-06-16 14:05:39
   @ FilePath: /EasyMocap/easymocap/mytools/utils.py
 '''
 import time
 import tabulate
 class Timer:
     records = {}
+    tmp = None
+
+    @classmethod
+    def tic(cls):
+        cls.tmp = time.time()
+    @classmethod
+    def toc(cls):
+        res = (time.time() - cls.tmp) * 1000
+        cls.tmp = None
+        return res
+    
     @classmethod
     def report(cls):
         header = ['', 'Time(ms)']
@@ -16,7 +27,7 @@ class Timer:
         for key, val in cls.records.items():
             contents.append(['{:20s}'.format(key), '{:.2f}'.format(sum(val)/len(val))])
         print(tabulate.tabulate(contents, header, tablefmt='fancy_grid'))
-
+    
     def __init__(self, name, silent=False):
         self.name = name
         self.silent = silent

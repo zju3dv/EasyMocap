@@ -1,3 +1,10 @@
+'''
+  @ Date: 2021-04-21 15:19:21
+  @ Author: Qing Shuai
+  @ LastEditors: Qing Shuai
+  @ LastEditTime: 2021-06-15 11:30:00
+  @ FilePath: /EasyMocap/easymocap/mytools/reader.py
+'''
 # function to read data
 """
     This class provides:
@@ -7,10 +14,13 @@
     - smpl        |    x    |  o
 """
 import numpy as np
-from .file_utils import read_json
+import os
+from os.path import join
+from glob import glob
+from .file_utils import read_json, read_annot
 
-def read_keypoints2d(filename):
-    pass
+def read_keypoints2d(filename, mode):
+    return read_annot(filename, mode)
 
 def read_keypoints3d(filename):
     data = read_json(filename)
@@ -57,3 +67,24 @@ def read_keypoints3d_a4d(outname):
             pose3d = pose3d[[4, 1, 5, 9, 13, 6, 10, 14, 0, 2, 7, 11, 3, 8, 12], :]
             res_.append({'id':trackId, 'keypoints3d':np.array(pose3d)})
     return res_
+
+def read_keypoints3d_all(path, key='keypoints3d', pids=[]):
+    assert os.path.exists(path), '{} not exists!'.format(path)
+    results = {}
+    filenames = sorted(glob(join(path, '*.json')))
+    for filename in filenames:
+        nf = int(os.path.basename(filename).replace('.json', ''))
+        datas = read_keypoints3d(filename)
+        for data in datas:
+            pid = data['id']
+            if len(pids) > 0 and pid not in pids:
+                continue
+            # 注意 这里没有考虑从哪开始的
+            if pid not in results.keys():
+                results[pid] = {key: [], 'frames': []}
+            results[pid][key].append(data[key])
+            results[pid]['frames'].append(nf)
+    if key == 'keypoints3d':
+        for pid, result in results.items():
+            result[key] = np.stack(result[key])
+    return results, filenames

@@ -2,7 +2,7 @@
   @ Date: 2021-01-15 12:09:27
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-09 19:52:41
+  @ LastEditTime: 2021-06-15 11:09:36
   @ FilePath: /EasyMocap/easymocap/mytools/cmd_loader.py
 '''
 import os
@@ -31,6 +31,7 @@ def load_parser():
     # 
     # keypoints and body model
     # 
+    parser.add_argument('--cfg_model', type=str, default=None)
     parser.add_argument('--body', type=str, default='body25', choices=['body15', 'body25', 'h36m', 'bodyhand', 'bodyhandface', 'handl', 'handr', 'total'])
     parser.add_argument('--model', type=str, default='smpl', choices=['smpl', 'smplh', 'smplx', 'manol', 'manor'])
     parser.add_argument('--gender', type=str, default='neutral', 
@@ -58,6 +59,7 @@ def load_parser():
     output.add_argument('--vis_repro', action='store_true')
     output.add_argument('--vis_smpl', action='store_true')
     output.add_argument('--write_smpl_full', action='store_true')
+    parser.add_argument('--write_vertices', action='store_true')
     output.add_argument('--vis_mask', action='store_true')
     output.add_argument('--undis', action='store_true')
     output.add_argument('--sub_vis', type=str, nargs='+', default=[],
@@ -73,7 +75,11 @@ def load_parser():
     parser.add_argument('--opts',
                         help="Modify config options using the command-line",
                         default=[],
-                        nargs=argparse.REMAINDER)
+                        nargs='+')
+    parser.add_argument('--cfg_opts',
+                        help="Modify config options using the command-line",
+                        default=[],
+                        nargs='+')
     return parser
 
 from os.path import join
