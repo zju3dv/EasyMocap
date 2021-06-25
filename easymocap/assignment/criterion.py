@@ -2,8 +2,8 @@
   @ Date: 2021-05-28 16:36:45
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-30 12:21:15
-  @ FilePath: /EasyMocap/easymocap/assignment/criterion.py
+  @ LastEditTime: 2021-06-25 11:48:57
+  @ FilePath: /EasyMocapRelease/easymocap/assignment/criterion.py
 '''
 import numpy as np
 
@@ -81,3 +81,31 @@ class CritMinMax(BaseCrit):
         length = max(np.abs(maxk - mink))
         self.log = '{}: {:.3f}'.format(self.name, length)
         return length < self.max_human_length
+
+class CritLimbLength(BaseCrit):
+    def __init__(self, body_type, max_rate, min_conf) -> None:
+        super().__init__(min_conf)
+        self.body_type = body_type
+        self.max_rate= max_rate
+        from ..dataset.config import CONFIG
+        config = CONFIG[body_type]
+        self.skeleton = config['skeleton']
+    
+    def __call__(self, keypoints3d, **kwargs):
+        valid = True
+        for (i, j), info in self.skeleton.items():
+            if keypoints3d[i, 3] < self.min_conf or keypoints3d[j, 3] < self.min_conf:
+                continue
+            l_mean = info['mean']
+            l_est = np.linalg.norm(keypoints3d[i, :3] - keypoints3d[j, :3])
+            if l_mean > 0.15: # 超过十五厘米的 用均值判断
+                l_std = info['std']
+                rate = abs(l_est - l_mean)/l_mean
+                if rate > self.max_rate:
+                    valid = False
+                    break
+            else:
+                if l_est > 0.3:
+                    valid = False
+                    break
+        return valid

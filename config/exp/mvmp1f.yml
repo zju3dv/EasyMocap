@@ -1,0 +1,50 @@
+height: -1
+width: -1
+
+dataset:
+  log: False
+  min_conf: 0.3
+  filter:
+    CritWithTorso:
+      torso_idx: [1, 8, 2, 5, 9, 12]
+      min_conf: 0.3
+    CritMinJoints:
+      min_joints: 12
+
+affinity:
+  svt_py: True
+  aff_funcs:
+    "easymocap.affinity.ray.Affinity":
+      MAX_DIST: 0.1
+  svt_args:
+    maxIter: 20
+    w_sparse: 0.1
+    w_rank: 50
+
+associate:
+  min_views: 3
+  criterions:
+    "easymocap.assignment.criterion.BaseCrit":
+      min_conf: 0.1
+      min_joints: 10
+    "easymocap.assignment.criterion.CritLenTorso":
+      src: 1
+      dst: 8
+      min_torso_length: 0.1
+      max_torso_length: 0.8
+      min_conf: 0.3
+    "easymocap.assignment.criterion.CritMinMax":
+      max_human_length: 2.2
+      min_conf: 0.001
+    "easymocap.assignment.criterion.CritRange":
+      minr: [-10, -10, -0.2]
+      maxr: [10, 10, 2.5]
+      rate_inlier: 0.8
+      min_conf: 0.001
+    "easymocap.assignment.criterion.CritWithTorso":
+      torso_idx: [1, 8, 2, 5, 9, 12]
+      min_conf: 0.3
+    "easymocap.assignment.criterion.CritLimbLength":
+      max_rate: 0.5
+      body_type: "body25"
+      min_conf: 0.1

@@ -2,7 +2,7 @@
   @ Date: 2021-01-13 16:53:55
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-27 20:37:55
+  @ LastEditTime: 2021-06-25 15:53:12
   @ FilePath: /EasyMocapRelease/easymocap/dataset/base.py
 '''
 import os
@@ -15,11 +15,7 @@ import numpy as np
 from ..mytools.camera_utils import read_camera, get_fundamental_matrix, Undistort
 from ..mytools import FileWriter, read_annot, getFileList, save_json
 from ..mytools.reader import read_keypoints3d, read_json, read_smpl
-# from ..mytools.writer import FileWriter
-# from ..mytools.camera_utils import read_camera, undistort, write_camera, get_fundamental_matrix
-# from ..mytools.vis_base import merge, plot_bbox, plot_keypoints
-# from ..mytools.file_utils import read_json, save_json, read_annot, read_smpl, write_smpl, get_bbox_from_pose
-from ..mytools.file_utils import merge_params, select_nf
+from ..mytools.file_utils import merge_params, select_nf, save_annot
 
 def crop_image(img, annot, vis_2d=False, config={}, crop_square=True):
     for det in annot:
@@ -41,6 +37,7 @@ def crop_image(img, annot, vis_2d=False, config={}, crop_square=True):
         det['bbox'][:4] = [l, t, r, b]
         if vis_2d:
             crop_img = img.copy()
+            from easymocap.mytools import plot_keypoints
             plot_keypoints(crop_img, det['keypoints'], pid=det['id'], 
                 config=config, use_limb_color=True, lw=2)
         else:
@@ -70,8 +67,11 @@ class ImageFolder:
             self.imagelist, self.annotlist = [], []
             for sub in subs:
                 images = sorted([join(sub, i) for i in os.listdir(join(self.image_root, sub))])
-                self.imagelist.extend(images)
                 annots = sorted([join(sub, i) for i in os.listdir(join(self.annot_root, sub))])
+                if len(annots) < len(images):
+                    print('[WARN] length of annots != lenght of images')
+                    images = images[:len(annots)]
+                self.imagelist.extend(images)
                 self.annotlist.extend(annots)
         self.out = out
         self.writer = FileWriter(self.out, config=config)
@@ -375,7 +375,7 @@ class MVBase:
     def __init__(self, root, cams=[], out=None, config={}, 
         image_root='images', annot_root='annots', 
         kpts_type='body15',
-        undis=True, no_img=False) -> None:
+        undis=True, no_img=False, filter2d=None) -> None:
         self.root = root
         self.image_root = join(root, image_root)
         self.annot_root = join(root, annot_root)
@@ -407,7 +407,11 @@ class MVBase:
         self.nFrames = nFrames
         self.nViews = len(cams)
         self.read_camera(self.root)
-    
+        self.filter2d = filter2d
+        if filter2d is not None:
+            from .filter import make_filter
+            self.filter2d = make_filter(filter2d)
+
     def read_camera(self, path):
         # 读入相机参数
         intri_name = join(path, 'intri.yml')
@@ -484,7 +488,13 @@ class MVBase:
             else:
                 img = None
                 images.append(None)
-            # TODO:这里直接取了0
+            if self.filter2d is not None:
+                annot_valid = []
+                for ann in annot:
+                    if self.filter2d(**ann):
+                        annot_valid.append(ann)
+                annot = annot_valid
+                annot = self.filter2d.nms(annot)
             if self.ret_crop:
                 crop_image(img, annot, True, self.config)
             annots.append(annot)
@@ -502,7 +512,7 @@ class MVBase:
             valid_idx = [self.cams.index(i) for i in sub_vis]
             images = [images[i] for i in valid_idx]
             lDetections = [lDetections[i] for i in valid_idx]
-        return self.writer.vis_keypoints2d_mv(images, lDetections, outname=outname, vis_id=False)
+        return self.writer.vis_keypoints2d_mv(images, lDetections, outname=outname, vis_id=True)
     
     def basename(self, nf):
         return '{:06d}'.format(nf)
@@ -522,11 +532,15 @@ class MVBase:
                     'keypoints': numpy_to_list(annot['keypoints'], 2)
                 })
             annot_origin['annots'] = results
-            save_json(outname, annot_origin)
+            save_annot(outname, annot_origin)
 
     def write_keypoints3d(self, results, nf):
         outname = join(self.out, 'keypoints3d', self.basename(nf)+'.json')
         self.writer.write_keypoints3d(results, outname)
+
+    def write_vertices(self, results, nf):
+        outname = join(self.out, 'vertices', '{}.json'.format(self.basename(nf)))
+        self.writer.write_vertices(results, outname)
 
     def write_smpl(self, results, nf, mode='smpl'):
         outname = join(self.out, mode, self.basename(nf)+'.json')

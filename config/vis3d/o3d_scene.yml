@@ -6,6 +6,7 @@ height: 1080
 
 max_human: 5
 track: True
+filter: True
 block: True # block visualization or not, True for visualize each frame, False in realtime applications
 debug: False
 write: False
@@ -16,13 +17,12 @@ body_model:
   args:
     body_type: "body25"
     joint_radius: 0.02
-    gender: "neutral"
-    model_type: "smpl"
 
 scene:
   "easymocap.visualize.o3dwrapper.create_coord":
     camera: [0, 0, 0]
-    radius: 1
+    radius: 1.
+    scale: 1.
   "easymocap.visualize.o3dwrapper.create_bbox":
     min_bound: [-3, -3, 0]
     max_bound: [3, 3, 2]
