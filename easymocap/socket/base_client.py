@@ -2,11 +2,11 @@
   @ Date: 2021-05-25 13:39:07
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-04 16:43:39
-  @ FilePath: /EasyMocapRelease/easymocap/socket/base_client.py
+  @ LastEditTime: 2021-06-16 14:42:35
+  @ FilePath: /EasyMocap/easymocap/socket/base_client.py
 '''
 import socket
-from .utils import encode_detect
+from .utils import encode_detect, encode_smpl
 
 class BaseSocketClient:
     def __init__(self, host, port) -> None:
@@ -18,6 +18,11 @@ class BaseSocketClient:
     
     def send(self, data):
         val = encode_detect(data)
+        self.s.send(bytes('{}\n'.format(len(val)), 'ascii'))
+        self.s.sendall(val)
+    
+    def send_smpl(self, data):
+        val = encode_smpl(data)
         self.s.send(bytes('{}\n'.format(len(val)), 'ascii'))
         self.s.sendall(val)
     

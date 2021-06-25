@@ -1,0 +1,11 @@
+parent: "config/vis3d/o3d_scene.yml"
+
+body_model:
+  module: "easymocap.smplmodel.body_model.SMPLlayer"
+  args:
+    _no_merge_: True
+    model_path: "data/smplx/smpl"
+    model_type: "smpl"
+    gender: "neutral"
+    device: "cuda"
+    regressor_path: "data/smplx/J_regressor_body25.npy"

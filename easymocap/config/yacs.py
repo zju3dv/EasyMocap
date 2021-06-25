@@ -382,6 +382,9 @@ def _merge_a_into_b(a, b, root, key_list):
         isinstance(b, CfgNode),
         "`b` (cur type {}) must be an instance of {}".format(type(b), CfgNode),
     )
+    if '_no_merge_' in a.keys() and a['_no_merge_']:
+        b.clear()
+        a.pop('_no_merge_')
 
     for k, v_ in a.items():
         full_key = ".".join(key_list + [k])

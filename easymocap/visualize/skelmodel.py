@@ -2,7 +2,7 @@
   @ Date: 2021-01-17 21:38:19
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-04 15:52:49
+  @ LastEditTime: 2021-06-18 18:48:37
   @ FilePath: /EasyMocap/easymocap/visualize/skelmodel.py
 '''
 import numpy as np
@@ -24,9 +24,12 @@ def calTransformation(v_i, v_j, r, adaptr=False, ratio=10):
     length = np.linalg.norm(direc)
     direc = direc/length
     rotdir = np.cross(xaxis, direc)
-    rotdir = rotdir/np.linalg.norm(rotdir)
-    rotdir = rotdir * np.arccos(np.dot(direc, xaxis))
-    rotmat, _ = cv2.Rodrigues(rotdir)
+    if np.linalg.norm(rotdir) > 1e-3:
+        rotdir = rotdir/np.linalg.norm(rotdir)
+        rotdir = rotdir * np.arccos(np.dot(direc, xaxis))
+        rotmat, _ = cv2.Rodrigues(rotdir)
+    else:
+        rotmat = np.eye(3)
     # set the minimal radius for the finger and face
     shrink = min(max(length/ratio, 0.005), 0.05)
     eigval = np.array([[length/2/r, 0, 0], [0, shrink, 0], [0, 0, shrink]])
@@ -44,6 +47,7 @@ class SkelModel:
             config = CONFIG[body_type]
             self.nJoints = config['nJoints']
             self.kintree = config['kintree']
+        self.device = 'none'
         cur_dir = os.path.dirname(__file__)
         faces = np.loadtxt(join(cur_dir, 'sphere_faces_20.txt'), dtype=np.int)
         self.vertices = np.loadtxt(join(cur_dir, 'sphere_vertices_20.txt'))
@@ -54,34 +58,54 @@ class SkelModel:
         for nk in range(len(self.kintree)):
             faces_all.append(faces + self.nJoints*self.vertices.shape[0] + nk*self.vertices.shape[0])
         self.faces = np.vstack(faces_all)
+        self.color = None
         self.nVertices = self.vertices.shape[0] * self.nJoints + self.vertices.shape[0] * len(self.kintree)
         self.joint_radius = joint_radius
 
     def __call__(self, keypoints3d, id=0, return_verts=True, return_tensor=False, **kwargs):
-        vertices_all = []
+        if len(keypoints3d.shape) == 2:
+            keypoints3d = keypoints3d[None]
+        if not return_verts:
+            return keypoints3d
+        if keypoints3d.shape[-1] == 3: # add confidence
+            keypoints3d = np.hstack((keypoints3d, np.ones((keypoints3d.shape[0], 1))))
         r = self.joint_radius
         # joints 
-        for nj in range(self.nJoints):
-            if keypoints3d[nj, -1] < 0.01:
-                vertices_all.append(self.vertices*0.001)
-                continue
-            vertices_all.append(self.vertices*r + keypoints3d[nj:nj+1, :3])
-        # limb
-        for nk, (i, j) in enumerate(self.kintree):
-            if keypoints3d[i][-1] < 0.1 or keypoints3d[j][-1] < 0.1:
-                vertices_all.append(self.vertices*0.001)
-                continue
-            T, _, length = calTransformation(keypoints3d[i, :3], keypoints3d[j, :3], r=1)
-            if length > 2: # 超过两米的
-                vertices_all.append(self.vertices*0.001)
-                continue
-            vertices = self.vertices @ T[:3, :3].T + T[:3, 3:].T
-            vertices_all.append(vertices)
-        vertices = np.vstack(vertices_all)
-        return vertices[None, :, :]
+        min_conf = 0.1
+        verts_final = []
+        for nper in range(keypoints3d.shape[0]):
+            vertices_all = []
+            kpts3d = keypoints3d[nper]
+            for nj in range(self.nJoints):
+                if kpts3d[nj, -1] < min_conf:
+                    vertices_all.append(self.vertices*0.001)
+                    continue
+                vertices_all.append(self.vertices*r + kpts3d[nj:nj+1, :3])
+            # limb
+            for nk, (i, j) in enumerate(self.kintree):
+                if kpts3d[i][-1] < min_conf or kpts3d[j][-1] < min_conf:
+                    vertices_all.append(self.vertices*0.001)
+                    continue
+                T, _, length = calTransformation(kpts3d[i, :3], kpts3d[j, :3], r=1)
+                if length > 2: # 超过两米的
+                    vertices_all.append(self.vertices*0.001)
+                    continue
+                vertices = self.vertices @ T[:3, :3].T + T[:3, 3:].T
+                vertices_all.append(vertices)
+            vertices = np.vstack(vertices_all)
+            verts_final.append(vertices)
+        verts_final = np.stack(verts_final)
+        return verts_final
     
+    def to(self, none):
+        pass
+    
+    def merge_params(self, params, share_shape=False):
+        keypoints = np.stack([param['keypoints3d'] for param in params])
+        return {'keypoints3d': keypoints, 'id': [0]}
+
     def init_params(self, nFrames):
-        return np.zeros((self.nJoints, 4))
+        return {'keypoints3d': np.zeros((self.nJoints, 4))}
 
 class SMPLSKEL:
     def __init__(self, model_type, gender, body_type) -> None:

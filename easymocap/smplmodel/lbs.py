@@ -140,7 +140,8 @@ def vertices2landmarks(vertices, faces, lmk_faces_idx, lmk_bary_coords):
 
 
 def lbs(betas, pose, v_template, shapedirs, posedirs, J_regressor, parents,
-        lbs_weights, pose2rot=True, dtype=torch.float32, only_shape=False):
+        lbs_weights, pose2rot=True, dtype=torch.float32, only_shape=False,
+        use_shape_blending=True, use_pose_blending=True, J_shaped=None):
     ''' Performs Linear Blend Skinning with the given shape and pose parameters
 
         Parameters
@@ -183,32 +184,34 @@ def lbs(betas, pose, v_template, shapedirs, posedirs, J_regressor, parents,
     device = betas.device
 
     # Add shape contribution
-    v_shaped = v_template + blend_shapes(betas, shapedirs)
+    if use_shape_blending:
+        v_shaped = v_template + blend_shapes(betas, shapedirs)
+        # Get the joints
+        # NxJx3 array
+        J = vertices2joints(J_regressor, v_shaped)
+    else:
+        v_shaped = v_template.unsqueeze(0).expand(batch_size, -1, -1)
+        assert J_shaped is not None
+        J = J_shaped[None].expand(batch_size, -1, -1)
 
-    # Get the joints
-    # NxJx3 array
-    J = vertices2joints(J_regressor, v_shaped)
     if only_shape:
         return v_shaped, J
     # 3. Add pose blend shapes
     # N x J x 3 x 3
-    ident = torch.eye(3, dtype=dtype, device=device)
     if pose2rot:
         rot_mats = batch_rodrigues(
             pose.view(-1, 3), dtype=dtype).view([batch_size, -1, 3, 3])
-
-        pose_feature = (rot_mats[:, 1:, :, :] - ident).view([batch_size, -1])
-        # (N x P) x (P, V * 3) -> N x V x 3
-        pose_offsets = torch.matmul(pose_feature, posedirs) \
-            .view(batch_size, -1, 3)
     else:
-        pose_feature = pose[:, 1:].view(batch_size, -1, 3, 3) - ident
         rot_mats = pose.view(batch_size, -1, 3, 3)
 
-        pose_offsets = torch.matmul(pose_feature.view(batch_size, -1),
-                                    posedirs).view(batch_size, -1, 3)
-
-    v_posed = pose_offsets + v_shaped
+    if use_pose_blending:
+        ident = torch.eye(3, dtype=dtype, device=device)
+        pose_feature = (rot_mats[:, 1:, :, :] - ident).view([batch_size, -1])
+        pose_offsets = torch.matmul(pose_feature, posedirs) \
+            .view(batch_size, -1, 3)
+        v_posed = pose_offsets + v_shaped
+    else:
+        v_posed = v_shaped
     # 4. Get the global joint location
     J_transformed, A = batch_rigid_transform(rot_mats, J, parents, dtype=dtype)
 

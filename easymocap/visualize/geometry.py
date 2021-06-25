@@ -2,13 +2,65 @@
   @ Date: 2021-01-17 22:44:34
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-25 14:01:24
+  @ LastEditTime: 2021-06-20 17:24:12
   @ FilePath: /EasyMocap/easymocap/visualize/geometry.py
 '''
 import numpy as np
 import cv2
 import numpy as np
 from tqdm import tqdm
+from os.path import join
+
+def load_sphere():
+    cur_dir = os.path.dirname(__file__)
+    faces = np.loadtxt(join(cur_dir, 'sphere_faces_20.txt'), dtype=np.int)
+    vertices = np.loadtxt(join(cur_dir, 'sphere_vertices_20.txt'))
+    return vertices, faces
+
+def load_cylinder():
+    cur_dir = os.path.dirname(__file__)
+    faces = np.loadtxt(join(cur_dir, 'cylinder_faces_20.txt'), dtype=np.int)
+    vertices = np.loadtxt(join(cur_dir, 'cylinder_vertices_20.txt'))
+    return vertices, faces
+
+def create_point(points, r=0.01):
+    """ create sphere
+
+    Args:
+        points (array): (N, 3)/(N, 4)
+        r (float, optional): radius. Defaults to 0.01.
+    """
+    nPoints = points.shape[0]
+    vert, face = load_sphere()
+    nVerts = vert.shape[0]
+    vert = vert[None, :, :].repeat(points.shape[0], 0)
+    vert = vert + points[:, None, :]
+    verts = np.vstack(vert)
+    face = face[None, :, :].repeat(points.shape[0], 0)
+    face = face + nVerts * np.arange(nPoints).reshape(nPoints, 1, 1)
+    faces = np.vstack(face)
+    return {'vertices': verts, 'faces': faces, 'name': 'points'}
+
+def calRot(axis, direc):
+    direc = direc/np.linalg.norm(direc)
+    axis = axis/np.linalg.norm(axis)
+    rotdir = np.cross(axis, direc)
+    rotdir = rotdir/np.linalg.norm(rotdir)
+    rotdir = rotdir * np.arccos(np.dot(direc, axis))
+    rotmat, _ = cv2.Rodrigues(rotdir)
+    return rotmat
+
+def create_line(start, end, r=0.01, col=None):
+    length = np.linalg.norm(end[:3] - start[:3])
+    vertices, faces = load_cylinder()
+    vertices[:, :2] *= r
+    vertices[:, 2] *= length/2    
+    rotmat = calRot(np.array([0, 0, 1]), end - start)
+    vertices = vertices @ rotmat.T + (start + end)/2
+    ret = {'vertices': vertices, 'faces': faces, 'name': 'line'}
+    if col is not None:
+        ret['colors'] = col.reshape(-1, 3).repeat(vertices.shape[0], 0)
+    return ret
 
 def create_ground(
     center=[0, 0, 0], xdir=[1, 0, 0], ydir=[0, 1, 0], # 位置

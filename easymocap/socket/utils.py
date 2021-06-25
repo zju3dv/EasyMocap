@@ -2,8 +2,8 @@
   @ Date: 2021-05-24 20:07:34
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-04 16:29:35
-  @ FilePath: /EasyMocapRelease/media/qing/Project/mirror/EasyMocap/easymocap/socket/utils.py
+  @ LastEditTime: 2021-06-16 14:42:23
+  @ FilePath: /EasyMocap/easymocap/socket/utils.py
 '''
 import cv2
 import numpy as np
@@ -11,6 +11,11 @@ from ..mytools.file_utils import write_common_results
 
 def encode_detect(data):
     res = write_common_results(None, data, ['keypoints3d'])
+    res = res.replace('\r', '').replace('\n', '').replace(' ', '')
+    return res.encode('ascii')
+
+def encode_smpl(data):
+    res = write_common_results(None, data, ['poses', 'shapes', 'Rh', 'Th'])
     res = res.replace('\r', '').replace('\n', '').replace(' ', '')
     return res.encode('ascii')
 

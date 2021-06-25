@@ -2,8 +2,8 @@
   @ Date: 2021-05-30 11:17:18
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-12 14:56:00
-  @ FilePath: /EasyMocapRelease/easymocap/config/vis_socket.py
+  @ LastEditTime: 2021-06-22 10:35:26
+  @ FilePath: /EasyMocap/easymocap/config/vis_socket.py
 '''
 from .baseconfig import CN
 from .baseconfig import Config as BaseConfig
@@ -35,6 +35,7 @@ class Config(BaseConfig):
         # skel
         cfg.skel = CN()
         cfg.skel.joint_radius = 0.02
+        cfg.body_model_template = "none"
         # camera
         cfg.camera = CN()
         cfg.camera.phi = 0
