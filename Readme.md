@@ -96,7 +96,7 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 ### Other
 - [Camera calibration](apps/calibration/Readme.md): a simple calibration tool based on OpenCV
 - [Pose guided synchronization](./doc/todo.md) (comming soon)
-- [Annotator](apps/calibration/Readme.md): a simple GUI annotator based on OpenCV
+- [Annotator](apps/annotation/Readme.md): a simple GUI annotator based on OpenCV
 - [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
 
 ## Updates
