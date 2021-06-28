@@ -2,8 +2,8 @@
   @ Date: 2020-11-18 14:04:10
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-22 13:44:10
-  @ FilePath: /EasyMocap/easymocap/smplmodel/body_model.py
+  @ LastEditTime: 2021-06-28 11:55:00
+  @ FilePath: /EasyMocapRelease/easymocap/smplmodel/body_model.py
 '''
 import torch
 import torch.nn as nn
@@ -39,9 +39,9 @@ def load_regressor(regressor_path):
         import ipdb; ipdb.set_trace()
     return X_regressor
 
-def load_bodydata(model_path, gender):
+def load_bodydata(model_type, model_path, gender):
     if osp.isdir(model_path):
-        model_fn = 'SMPL_{}.{ext}'.format(gender.upper(), ext='pkl')
+        model_fn = '{}_{}.{ext}'.format(model_type.upper(), gender.upper(), ext='pkl')
         smpl_path = osp.join(model_path, model_fn)
     else:
         smpl_path = model_path
@@ -73,7 +73,7 @@ class SMPLlayer(nn.Module):
         self.device = device
         self.model_type = model_type
         # create the SMPL model
-        data = load_bodydata(model_path, gender)
+        data = load_bodydata(model_type, model_path, gender)
         if with_color:
             self.color = data['vertex_colors']
         else:

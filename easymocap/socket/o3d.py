@@ -2,7 +2,7 @@
   @ Date: 2021-05-25 11:15:53
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-25 21:16:02
+  @ LastEditTime: 2021-06-28 19:36:58
   @ FilePath: /EasyMocapRelease/easymocap/socket/o3d.py
 '''
 import open3d as o3d
@@ -19,7 +19,7 @@ from ..assignment.criterion import CritRange
 import copy
 
 rotate = False
-def o3d_callback_rotate(vis):
+def o3d_callback_rotate(vis=None):
     global rotate
     rotate = not rotate
     return False
@@ -36,6 +36,8 @@ class VisOpen3DSocket(BaseSocket):
         # scene
         vis = o3d.visualization.VisualizerWithKeyCallback()
         vis.register_key_callback(ord('A'), o3d_callback_rotate)
+        if cfg.rotate:
+            o3d_callback_rotate()
         vis.create_window(window_name='Visualizer', width=cfg.width, height=cfg.height)
         self.vis = vis
         # load the scene

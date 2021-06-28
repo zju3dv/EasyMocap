@@ -8,6 +8,7 @@ max_human: 5
 track: True
 filter: True
 block: True # block visualization or not, True for visualize each frame, False in realtime applications
+rotate: False
 debug: False
 write: False
 out: 'none'

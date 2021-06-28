@@ -2,7 +2,7 @@
  * @Date: 2021-06-04 15:56:55
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-28 12:11:58
+ * @LastEditTime: 2021-06-28 13:56:41
  * @FilePath: /EasyMocapRelease/doc/realtime_visualization.md
 -->
 # EasyMoCap -> Real-time Visualization
@@ -31,7 +31,7 @@ This step will open the visualization window:
 
 ![](./assets/vis_server.png)
 
-You can alternate the viewpoints free. The configuration file `config/vis/o3d_scene.yml` defines the scene and other properties. In the default setting, we define the xyz-axis in the origin, the bounding box of the scene and a chessboard in the ground.
+You can alternate the viewpoints free. Press `a` to automatic rotate the scene.  The configuration file `config/vis/o3d_scene.yml` defines the scene and other properties. In the default setting, we define the xyz-axis in the origin, the bounding box of the scene and a chessboard in the ground.
 
 ## Send the data
 
@@ -80,59 +80,89 @@ In the configuration file, we main define the `body_model` and `scene`. You can 
 
 To understand our code, we provide lots of results for visualization.
 
+First download the data [here](https://zjueducn-my.sharepoint.com/:u:/g/personal/s_q_zju_edu_cn/EQO5cILlYS1BgTT1ufDv2N4Bj41cvhstgmw_tMyi-6smWA?e=wSS9FB) and set the path to `vis`:
+
+```bash
+vis=/path/to/vis/data
+```
+
 ### 1. Skeletons
 
 Basic skeletons:
 
 ```bash
 # Start the server:
-python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml write True out ${vis}/output/skel/base camera.cz 3. camera.cy 0.5
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml write True out ${vis}/output/skel-body25 camera.cz 3. camera.cy 0.5
 # Send the keypoints:
 python3 apps/vis/vis_client.py --path ${vis}/smpl/keypoints3d
 ```
 
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/skel-body25.gif" width="80%">
+</div>
+
 Body+Face+Hand:
 ```bash
 # Start the server:
-python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_total.yml write True out ${vis}/output/skel/total camera.cz 3. camera.cy 0.5
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_total.yml write True out ${vis}/output/skel-total camera.cz 3. camera.cy 0.5
 # Send the keypoints:
 python3 apps/vis/vis_client.py --path ${vis}/smplx/keypoints3d
 ```
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/skel-total.gif" width="80%">
+</div>
 
 Multiple Person:
 
 ```bash
 # Start the server:
-python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml write True out ${vis}/output/skel/base camera.cz 3. camera.cy 0.5
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml write True out ${vis}/output/skel-multi camera.cz 3. camera.cy 0.5
 # Send the keypoints:
 python3 apps/vis/vis_client.py --path ${vis}/multi/keypoints3d --step 4
 ```
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/skel-multi.gif" width="80%">
+</div>
 
 ### 2. Mesh
 
 SMPL:
 ```bash
 # Start the server:
-python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_smpl.yml write True out ${vis}/output/smpl/base camera.cz 3. camera.cy 0.5
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_smpl.yml write True out ${vis}/output/mesh-smpl camera.cz 3. camera.cy 0.5
 # Send the keypoints:
 python3 apps/vis/vis_client.py --path ${vis}/smpl/smpl --smpl
 ```
 
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/mesh-smpl.gif" width="80%">
+</div>
+
 SMPLX:
 ```bash
 # Start the server:
-python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_smplx.yml write True out ${vis}/output/smpl/smplx camera.cz 3. camera.cy 0.5
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_smplx.yml write True out ${vis}/output/mesh-smplx camera.cz 3. camera.cy 0.5
 # Send the keypoints:
 python3 apps/vis/vis_client.py --path ${vis}/smplx/smpl --smpl
 ```
 
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/mesh-smplx.gif" width="80%">
+</div>
+
 MANO:
 ```bash
 # Start the server:
-python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_manol.yml write True out ${vis}/output/smpl/manol camera.cz 3. camera.cy 0.5
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_manol.yml write True out ${vis}/output/mesh-manol camera.cz 3. camera.cy 0.5
 # Send the keypoints:
 python3 apps/vis/vis_client.py --path ${vis}/manol/smpl --smpl
 ```
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/mesh-manol.gif" width="80%">
+</div>
 
 ## Advanced
 

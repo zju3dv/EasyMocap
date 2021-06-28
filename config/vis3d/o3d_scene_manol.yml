@@ -9,3 +9,31 @@ body_model:
     gender: "neutral"
     device: "cuda"
     regressor_path: "data/smplx/J_regressor_mano_LEFT.txt"
+
+scene:
+  _no_merge_: True
+  "easymocap.visualize.o3dwrapper.create_coord":
+    camera: [-0.5, -0.5, -0.5]
+    radius: 1.
+    scale: 1.
+  "easymocap.visualize.o3dwrapper.create_bbox":
+    min_bound: [-0.5, -0.5, -0.5]
+    max_bound: [0.5, 0.5, 0.5]
+    flip: False
+  "easymocap.visualize.o3dwrapper.create_ground":
+    center: [-0.5, -0.5, -0.5]
+    xdir: [1, 0, 0]
+    ydir: [0, 1, 0]
+    step: 0.2
+    xrange: 5
+    yrange: 5
+    white: [1., 1., 1.]
+    black: [0.,0.,0.]
+    two_sides: False
+
+camera:
+  phi: 0
+  theta: -90
+  cx: 0
+  cy: 1
+  cz: 0.5

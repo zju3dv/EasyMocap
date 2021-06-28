@@ -2,8 +2,8 @@
   @ Date: 2021-05-30 11:17:18
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-22 10:35:26
-  @ FilePath: /EasyMocap/easymocap/config/vis_socket.py
+  @ LastEditTime: 2021-06-28 13:03:37
+  @ FilePath: /EasyMocapRelease/easymocap/config/vis_socket.py
 '''
 from .baseconfig import CN
 from .baseconfig import Config as BaseConfig
@@ -22,6 +22,7 @@ class Config(BaseConfig):
         cfg.max_human = 5
         cfg.track = True
         cfg.block = True # block visualization or not, True for visualize each frame, False in realtime applications
+        cfg.rotate = False
         cfg.debug = False
         cfg.write = False
         cfg.out = '/'

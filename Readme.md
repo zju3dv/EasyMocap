@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-28 11:13:59
+ * @LastEditTime: 2021-06-28 14:08:02
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -61,7 +61,7 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 
 ### Multiple views of multiple people
 
-[![report](https://img.shields.io/badge/CVPR20-mvpose-red)](https://arxiv.org/pdf/1901.04111.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/todo.md)
+[![report](https://img.shields.io/badge/CVPR20-mvpose-red)](https://arxiv.org/pdf/1901.04111.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/mvmp.md)
 
 <div align="center">
     <img src="doc/assets/mvmp1f.gif" width="80%"><br/>
@@ -77,14 +77,27 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
     <sup>Captured with 8 consumer cameras<sup/>
 </div>
 
-
 ## Other features
 
+### 3D Realtime visualization
+[![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/realtime_visualization.md)
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/skel-body25.gif" width="26%">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/skel-total.gif" width="26%">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/skel-multi.gif" width="26%">
+</div>
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/mesh-smpl.gif" width="26%">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/mesh-smplx.gif" width="26%">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/mesh-manol.gif" width="26%">
+</div>
+
+### Other
 - [Camera calibration](apps/calibration/Readme.md): a simple calibration tool based on OpenCV
 - [Pose guided synchronization](./doc/todo.md) (comming soon)
 - [Annotator](apps/calibration/Readme.md): a simple GUI annotator based on OpenCV
 - [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
-- [Real-time visualization](./doc/realtime_visualization.md)
 
 ## Updates
 
