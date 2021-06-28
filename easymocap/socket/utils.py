@@ -2,8 +2,8 @@
   @ Date: 2021-05-24 20:07:34
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-16 14:42:23
-  @ FilePath: /EasyMocap/easymocap/socket/utils.py
+  @ LastEditTime: 2021-06-28 12:05:35
+  @ FilePath: /EasyMocapRelease/easymocap/socket/utils.py
 '''
 import cv2
 import numpy as np
@@ -15,7 +15,7 @@ def encode_detect(data):
     return res.encode('ascii')
 
 def encode_smpl(data):
-    res = write_common_results(None, data, ['poses', 'shapes', 'Rh', 'Th'])
+    res = write_common_results(None, data, ['poses', 'shapes', 'expression', 'Rh', 'Th'])
     res = res.replace('\r', '').replace('\n', '').replace(' ', '')
     return res.encode('ascii')
 

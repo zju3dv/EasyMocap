@@ -2,7 +2,7 @@
  * @Date: 2021-04-02 11:52:33
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-04-13 17:15:49
+ * @LastEditTime: 2021-06-21 21:18:45
  * @FilePath: /EasyMocapRelease/doc/installation.md
 -->
 # EasyMocap - Installation
@@ -27,6 +27,8 @@ data
     ├── J_regressor_body25.npy
     ├── J_regressor_body25_smplh.txt
     ├── J_regressor_body25_smplx.txt
+    ├── J_regressor_mano_LEFT.txt
+    ├── J_regressor_mano_RIGHT.txt
     ├── smpl
     │   ├── SMPL_FEMALE.pkl
     │   ├── SMPL_MALE.pkl
@@ -47,7 +49,7 @@ This part is used in `1v1p*.py`. You can skip this step if you only use the mult
 
 Download pretrained SPIN model [here](http://visiondata.cis.upenn.edu/spin/model_checkpoint.pt) and place it to `data/models/spin_checkpoints.pt`.
 
-Fetch the extra data [here](http://visiondata.cis.upenn.edu/spin/dataset_extras.tar.gz) and place the `smpl_mean_params.npz` to `data/models/smpl_mean_params.npz`.
+Fetch the extra data [here](http://visiondata.cis.upenn.edu/spin/data.tar.gz) and place the `smpl_mean_params.npz` to `data/models/smpl_mean_params.npz`.
 
 ## 0.3 (Optional) 2D model
 

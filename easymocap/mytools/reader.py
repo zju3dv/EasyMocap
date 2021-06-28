@@ -2,8 +2,8 @@
   @ Date: 2021-04-21 15:19:21
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-26 17:37:07
-  @ FilePath: /EasyMocap/easymocap/mytools/reader.py
+  @ LastEditTime: 2021-06-28 11:55:27
+  @ FilePath: /EasyMocapRelease/easymocap/mytools/reader.py
 '''
 # function to read data
 """
@@ -44,8 +44,9 @@ def read_smpl(filename):
     datas = read_json(filename)
     outputs = []
     for data in datas:
-        for key in ['Rh', 'Th', 'poses', 'shapes']:
-            data[key] = np.array(data[key])
+        for key in ['Rh', 'Th', 'poses', 'shapes', 'expression']:
+            if key in data.keys():
+                data[key] = np.array(data[key])
         # for smplx results
         outputs.append(data)
     return outputs

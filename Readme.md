@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-14 16:41:00
+ * @LastEditTime: 2021-06-28 11:13:59
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -59,13 +59,13 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
     <sup>Internet videos of Roger Federer's serving<sup/>
 </div>
 
-### Multiple views of multiple people (Coming soon)
+### Multiple views of multiple people
 
 [![report](https://img.shields.io/badge/CVPR20-mvpose-red)](https://arxiv.org/pdf/1901.04111.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/todo.md)
 
 <div align="center">
-    <img src="doc/imocap/mvpose.gif" width="80%"><br/>
-    <sup>Captured with 4 consumer cameras<sup/>
+    <img src="doc/assets/mvmp1f.gif" width="80%"><br/>
+    <sup>Captured with 8 consumer cameras<sup/>
 </div>
 
 ### Novel view synthesis from sparse views
@@ -88,6 +88,7 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 
 ## Updates
 
+- 06/28/2021: The **Multi-view Multi-person** part is released!
 - 06/10/2021: The **real-time 3D visualization** part is released!
 - 04/11/2021: The calibration tool and the annotator are released.
 - 04/11/2021: **Mirrored-Human** part is released.

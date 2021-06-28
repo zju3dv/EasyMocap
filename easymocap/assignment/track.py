@@ -2,7 +2,7 @@
   @ Date: 2021-06-27 16:21:50
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-28 10:32:40
+  @ LastEditTime: 2021-06-28 10:59:59
   @ FilePath: /EasyMocapRelease/easymocap/assignment/track.py
 '''
 from tqdm import tqdm
@@ -146,6 +146,8 @@ class BaseTrack:
         for pid in range(occupancy.shape[0]):
             if occupancy[pid].sum() > self.MIN_FRAMES:
                 pids.append(pid)
+            else:
+                print('[track] remove {} with {} frames'.format(pid, occupancy[pid].sum()))
         occupancy = occupancy[pids]
         for nf in range(nFrames):
             result = results[nf]
@@ -171,6 +173,7 @@ class BaseTrack:
                     right = right.min() + nf + 1
                 else:
                     continue
+                print('[interp] {} in [{}, {}]'.format(pid, left, right))
                 # find valid (left, right)
                 # interpolate 3d pose
                 info_left = [res for res in results[left] if res['id'] == pid][0]
@@ -180,7 +183,7 @@ class BaseTrack:
                     res = self._interpolate(info_left, info_right, weight)
                     res['id'] = pid
                     results[nf_i].append(res)
-                    occupancy[pid, nf_i] = pid
+                    occupancy[pid, nf_i] = 1
         return results, occupancy
     
     def smooth(self, results, occupancy):
@@ -227,9 +230,9 @@ class Track3D(BaseTrack):
                         import ipdb; ipdb.set_trace()
         return results
     
-    def write(self, results, mapid):
+    def write(self, results, occupancy):
         os.makedirs(self.out, exist_ok=True)
-        for nf, res in enumerate(results):
+        for nf, res in enumerate(tqdm(results)):
             outname = join(self.out, 'keypoints3d', '{:06d}.json'.format(nf))
             result = results[nf]
             write_keypoints3d(outname, result)

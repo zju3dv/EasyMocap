@@ -18,6 +18,13 @@ body_model:
     body_type: "body25"
     joint_radius: 0.02
 
+camera:
+  phi: 0
+  theta: -30
+  cx: 0.
+  cy: 0.
+  cz: 6.
+
 scene:
   "easymocap.visualize.o3dwrapper.create_coord":
     camera: [0, 0, 0]

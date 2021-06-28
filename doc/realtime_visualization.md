@@ -2,7 +2,7 @@
  * @Date: 2021-06-04 15:56:55
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-12 15:29:23
+ * @LastEditTime: 2021-06-28 12:11:58
  * @FilePath: /EasyMocapRelease/doc/realtime_visualization.md
 -->
 # EasyMoCap -> Real-time Visualization
@@ -75,3 +75,83 @@ data = [
 ## Define your scene
 
 In the configuration file, we main define the `body_model` and `scene`. You can replace them for your data.
+
+## Examples
+
+To understand our code, we provide lots of results for visualization.
+
+### 1. Skeletons
+
+Basic skeletons:
+
+```bash
+# Start the server:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml write True out ${vis}/output/skel/base camera.cz 3. camera.cy 0.5
+# Send the keypoints:
+python3 apps/vis/vis_client.py --path ${vis}/smpl/keypoints3d
+```
+
+Body+Face+Hand:
+```bash
+# Start the server:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_total.yml write True out ${vis}/output/skel/total camera.cz 3. camera.cy 0.5
+# Send the keypoints:
+python3 apps/vis/vis_client.py --path ${vis}/smplx/keypoints3d
+```
+
+Multiple Person:
+
+```bash
+# Start the server:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene.yml write True out ${vis}/output/skel/base camera.cz 3. camera.cy 0.5
+# Send the keypoints:
+python3 apps/vis/vis_client.py --path ${vis}/multi/keypoints3d --step 4
+```
+
+### 2. Mesh
+
+SMPL:
+```bash
+# Start the server:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_smpl.yml write True out ${vis}/output/smpl/base camera.cz 3. camera.cy 0.5
+# Send the keypoints:
+python3 apps/vis/vis_client.py --path ${vis}/smpl/smpl --smpl
+```
+
+SMPLX:
+```bash
+# Start the server:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_smplx.yml write True out ${vis}/output/smpl/smplx camera.cz 3. camera.cy 0.5
+# Send the keypoints:
+python3 apps/vis/vis_client.py --path ${vis}/smplx/smpl --smpl
+```
+
+MANO:
+```bash
+# Start the server:
+python3 apps/vis/vis_server.py --cfg config/vis3d/o3d_scene_manol.yml write True out ${vis}/output/smpl/manol camera.cz 3. camera.cy 0.5
+# Send the keypoints:
+python3 apps/vis/vis_client.py --path ${vis}/manol/smpl --smpl
+```
+
+## Advanced
+
+### 1. Camera Setting
+
+Try to modify these keys to control the location and rotation of the cameras.
+```yml
+camera:
+  phi: 0
+  theta: -30
+  cx: 0.
+  cy: 0.
+  cz: 6.
+```
+
+### 2. Scene Setting
+
+We provide some useful mesh in `easymocap.visualize.o3dwrapper`. If you want to add your own 3D mesh, add it to the key `scene`.
+
+### 3. Body Model
+
+At present, we just allow use one type of body model in the scene for fast visualization. So you must set the body model before you run the `apps/vis/vis_server.py`. If you want to use different models in a scene, you can implement it and pull a request.

@@ -2,8 +2,8 @@
   @ Date: 2021-01-17 21:38:19
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-18 18:48:37
-  @ FilePath: /EasyMocap/easymocap/visualize/skelmodel.py
+  @ LastEditTime: 2021-06-28 11:43:00
+  @ FilePath: /EasyMocapRelease/easymocap/visualize/skelmodel.py
 '''
 import numpy as np
 import cv2
@@ -47,6 +47,7 @@ class SkelModel:
             config = CONFIG[body_type]
             self.nJoints = config['nJoints']
             self.kintree = config['kintree']
+        self.body_type = body_type
         self.device = 'none'
         cur_dir = os.path.dirname(__file__)
         faces = np.loadtxt(join(cur_dir, 'sphere_faces_20.txt'), dtype=np.int)
@@ -76,22 +77,30 @@ class SkelModel:
         for nper in range(keypoints3d.shape[0]):
             vertices_all = []
             kpts3d = keypoints3d[nper]
-            for nj in range(self.nJoints):
-                if kpts3d[nj, -1] < min_conf:
-                    vertices_all.append(self.vertices*0.001)
-                    continue
-                vertices_all.append(self.vertices*r + kpts3d[nj:nj+1, :3])
             # limb
+            closet_joints = []
             for nk, (i, j) in enumerate(self.kintree):
                 if kpts3d[i][-1] < min_conf or kpts3d[j][-1] < min_conf:
                     vertices_all.append(self.vertices*0.001)
                     continue
                 T, _, length = calTransformation(kpts3d[i, :3], kpts3d[j, :3], r=1)
-                if length > 2: # 超过两米的
+                if length > 2: # large than 2 meter
                     vertices_all.append(self.vertices*0.001)
                     continue
+                if length < self.joint_radius * 5:
+                    closet_joints.append(i)
+                    closet_joints.append(j)
                 vertices = self.vertices @ T[:3, :3].T + T[:3, 3:].T
                 vertices_all.append(vertices)
+            for nj in range(self.nJoints):
+                if self.body_type in ['bodyhand', 'bodyhandface'] and nj > 25:
+                    r_ = r / 2
+                else:
+                    r_ = r
+                if kpts3d[nj, -1] < min_conf:
+                    vertices_all.append(self.vertices*0.001)
+                    continue
+                vertices_all.append(self.vertices*r_ + kpts3d[nj:nj+1, :3])
             vertices = np.vstack(vertices_all)
             verts_final.append(vertices)
         verts_final = np.stack(verts_final)

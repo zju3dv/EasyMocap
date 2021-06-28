@@ -1,0 +1,6 @@
+parent: "config/vis3d/o3d_scene.yml"
+
+body_model:
+  args:
+    body_type: "bodyhandface"
+    joint_radius: 0.02
