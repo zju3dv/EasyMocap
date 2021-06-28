@@ -2,7 +2,7 @@
   @ Date: 2021-04-21 15:19:21
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-15 11:30:00
+  @ LastEditTime: 2021-06-26 17:37:07
   @ FilePath: /EasyMocap/easymocap/mytools/reader.py
 '''
 # function to read data
@@ -32,6 +32,8 @@ def read_keypoints3d(filename):
             # 对于有手的情况，把手的根节点赋值成body25上的点
             pose3d[25, :] = pose3d[7, :]
             pose3d[46, :] = pose3d[4, :]
+        if pose3d.shape[1] == 3:
+            pose3d = np.hstack([pose3d, np.ones((pose3d.shape[0], 1))])
         res_.append({
             'id': pid,
             'keypoints3d': pose3d

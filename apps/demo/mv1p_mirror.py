@@ -2,7 +2,7 @@
   @ Date: 2021-04-13 22:21:39
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-14 12:22:59
+  @ LastEditTime: 2021-06-14 15:31:48
   @ FilePath: /EasyMocap/apps/demo/mv1p_mirror.py
 '''
 import os
@@ -33,6 +33,6 @@ if __name__ == "__main__":
     if args.skel or not os.path.exists(skel_path):
         mv1pmf_skel(dataset, check_repro=False, args=args)
     from easymocap.pipeline.weight import load_weight_pose, load_weight_shape
-    weight_shape = load_weight_shape(args.opts)
+    weight_shape = load_weight_shape(args.model, args.opts)
     weight_pose = load_weight_pose(args.model, args.opts)
     mv1pmf_smpl(dataset, args=args, weight_pose=weight_pose, weight_shape=weight_shape)

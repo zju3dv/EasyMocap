@@ -2,19 +2,24 @@
   @ Date: 2021-06-04 20:47:38
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-04 21:50:53
-  @ FilePath: /EasyMocapRelease/easymocap/affinity/matchSVT.py
+  @ LastEditTime: 2021-06-15 17:30:16
+  @ FilePath: /EasyMocap/easymocap/affinity/matchSVT.py
 '''
 import numpy as np
 
-def matchSVT(M_aff, dimGroups, M_constr, M_obs, control):
+def matchSVT(M_aff, dimGroups, M_constr=None, M_obs=None, control={}):
     max_iter = control['maxIter']
     w_rank = control['w_rank']
     tol = control['tol']
-    X = M_aff
+    X = M_aff.copy()
     N = X.shape[0]
     index_diag = np.arange(N)
     X[index_diag, index_diag] = 0.
+    if M_constr is None:
+        M_constr = np.ones_like(M_aff)
+        for i in range(len(dimGroups) - 1):
+            M_constr[dimGroups[i]:dimGroups[i+1], dimGroups[i]:dimGroups[i+1]] = 0
+        M_constr[index_diag, index_diag] = 1
     X = (X + X.T)/2
     Y = np.zeros((N, N))
     mu = 64
