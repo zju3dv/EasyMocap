@@ -2,7 +2,7 @@
   @ Date: 2021-04-13 20:43:16
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-27 15:35:22
+  @ LastEditTime: 2021-06-14 15:32:24
   @ FilePath: /EasyMocap/easymocap/pipeline/basic.py
 '''
 from ..pyfitting import optimizeShape, optimizePose2D, optimizePose3D
@@ -57,7 +57,7 @@ def smpl_from_keypoints3d2d(body_model, kp3ds, kp2ds, bboxes, Pall, config, args
     model_type = body_model.model_type
     params_init = body_model.init_params(nFrames=1)
     if weight_shape is None:
-        weight_shape = load_weight_shape(args.opts)
+        weight_shape = load_weight_shape(model_type, args.opts)
     if model_type in ['smpl', 'smplh', 'smplx']:
         # when use SMPL model, optimize the shape only with first 1-14 limbs, 
         # don't use (nose, neck)
@@ -82,7 +82,7 @@ def smpl_from_keypoints3d(body_model, kp3ds, config, args,
     model_type = body_model.model_type
     params_init = body_model.init_params(nFrames=1)
     if weight_shape is None:
-        weight_shape = load_weight_shape(args.opts)
+        weight_shape = load_weight_shape(model_type, args.opts)
     if model_type in ['smpl', 'smplh', 'smplx']:
         # when use SMPL model, optimize the shape only with first 1-14 limbs, 
         # don't use (nose, neck)
