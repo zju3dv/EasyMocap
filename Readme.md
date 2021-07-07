@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-28 14:08:02
+ * @LastEditTime: 2021-07-07 12:02:24
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -61,7 +61,7 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 
 ### Multiple views of multiple people
 
-[![report](https://img.shields.io/badge/CVPR20-mvpose-red)](https://arxiv.org/pdf/1901.04111.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/mvmp.md)
+[![report](https://img.shields.io/badge/CVPR19-mvpose-red)](https://arxiv.org/pdf/1901.04111.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](./doc/mvmp.md)
 
 <div align="center">
     <img src="doc/assets/mvmp1f.gif" width="80%"><br/>
@@ -76,6 +76,10 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
     <img src="doc/neuralbody/sida.gif" width="80%"><br/>
     <sup>Captured with 8 consumer cameras<sup/>
 </div>
+
+## ZJU-MoCap
+
+With out proposed method, we release two large dataset of human motion: LightStage and Mirrored-Human. See the [website](https://chingswy.github.io/Dataset-Demo/) for more details.
 
 ## Other features
 
@@ -109,12 +113,6 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 ## Installation
 
 See [doc/install](./doc/installation.md) for more instructions.
-
-## Evaluation
-
-The weight parameters can be set according to your data.
-
-More quantitative reports will be added in [doc/evaluation.md](doc/evaluation.md)
 
 ## Acknowledgements
 
