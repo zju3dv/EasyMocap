@@ -2,7 +2,7 @@
  * @Date: 2021-06-07 11:57:34
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-07 14:45:17
+ * @LastEditTime: 2021-07-12 20:21:27
  * @FilePath: /EasyMocapRelease/doc/dataset.md
 -->
 # EasyMoCap - Dataset
@@ -86,6 +86,21 @@ For each image, we record its 2D pose in a `json` file. For an image at `root/im
 
 The definition of the `keypoints` is `body25`. If you want to use other definitions, you should add it to `easymocap/dataset/config.py`
 
+If you use hand and face, the annot is defined as:
+```bash
+{
+    "personID": i,
+    "bbox": [l, t, r, b, conf],
+    "keypoints": [[x0, y0, c0], [x1, y1, c1], ..., [xn, yn, cn]],
+    "bbox_handl2d": [l, t, r, b, conf],
+    "bbox_handr2d": [l, t, r, b, conf],
+    "bbox_face2d": [l, t, r, b, conf],
+    "handl2d": [[x0, y0, c0], [x1, y1, c1], ..., [xn, yn, cn]],
+    "handr2d": [[x0, y0, c0], [x1, y1, c1], ..., [xn, yn, cn]],
+    "face2d": [[x0, y0, c0], [x1, y1, c1], ..., [xn, yn, cn]]
+}
+```
+
 ## 3D Pose
 
 ```bash
@@ -100,3 +115,8 @@ The definition of the `keypoints` is `body25`. If you want to use other definiti
     }
 ]
 ```
+
+The definition of the keypoints can be found in `easymocap/dataset/config.py`. We main use the following formats:
+- body25: 25 keypoints of body
+- bodyhand: 25 body + 21 left hand + 21 right hand
+- bodyhandface: 25 body + 21 left hand + 21 right hand + 51 face keypoints

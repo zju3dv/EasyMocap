@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-07-07 12:02:24
+ * @LastEditTime: 2021-07-12 15:27:41
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -159,6 +159,13 @@ Please consider citing these works if you find this repo is useful for your proj
   title={Reconstructing 3D Human Pose by Watching Humans in the Mirror},
   author={Fang, Qi and Shuai, Qing and Dong, Junting and Bao, Hujun and Zhou, Xiaowei},
   booktitle={CVPR},
+  year={2021}
+}
+
+@inproceedings{dong2021fast,
+  title={Fast and Robust Multi-Person 3D Pose Estimation and Tracking from Multiple Views},
+  author={Dong, Junting and Fang, Qi and Jiang, Wen and Yang, Yurou and Bao, Hujun and Zhou, Xiaowei},
+  booktitle={T-PAMI},
   year={2021}
 }
 ```
