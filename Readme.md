@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-07-21 15:19:43
+ * @LastEditTime: 2021-07-21 21:49:14
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -109,10 +109,26 @@ With our proposed method, we release two large dataset of human motion: LightSta
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/assets/vis3d/mesh-manol.gif" width="26%">
 </div>
 
+### [Camera calibration](apps/calibration/Readme.md)
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/calib_intri.jpg" width="40%">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/calib_extri.jpg" width="40%">
+    <br>
+    <sup>Calibration for intrinsic and extrinsic parameters<sup/>
+</div>
+
+### [Annotator](apps/annotation/Readme.md)
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/annot_keypoints.jpg" width="40%">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/annot_mask.jpg" width="40%">
+    <br>
+    <sup>Annotator for bounding box, keypoints and mask<sup/>
+</div>
+
 ### Other
-- [Camera calibration](apps/calibration/Readme.md): a simple calibration tool based on OpenCV
 - [Pose guided synchronization](./doc/todo.md) (comming soon)
-- [Annotator](apps/annotation/Readme.md): a simple GUI annotator based on OpenCV
 - [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
 
 ## Updates
