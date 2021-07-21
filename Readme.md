@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-07-12 15:27:41
+ * @LastEditTime: 2021-07-21 15:04:22
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -25,6 +25,8 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 
 <div align="center">
     <img src="doc/feng/mv1pmf-smplx.gif" width="80%">
+    <br>
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/mv1p-dance-smpl.gif" width="80%">
     <br>
     <sup>Videos are from ZJU-MoCap, with 23 calibrated and synchronized cameras.<sup/>
 </div>
@@ -79,7 +81,17 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 
 ## ZJU-MoCap
 
-With out proposed method, we release two large dataset of human motion: LightStage and Mirrored-Human. See the [website](https://chingswy.github.io/Dataset-Demo/) for more details.
+With our proposed method, we release two large dataset of human motion: LightStage and Mirrored-Human. See the [website](https://chingswy.github.io/Dataset-Demo/) for more details.
+
+<div align="center">
+    <img src="doc/assets/ZJU-MoCap-lightstage.jpg" width="80%"><br/>
+    <sup>LightStage: captured with LightStage system<sup/>
+</div>
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/mirrored-human.jpg" width="80%"><br/>
+    <sup>Mirrored-Human: collected from the Internet<sup/>
+</div>
 
 ## Other features
 
@@ -126,11 +138,15 @@ Here are the great works this project is built upon:
   - `easymocap/estimator/YOLOv4`: an object detector[6](Coming soon)
   - `easymocap/estimator/HRNet` : a 2D human pose estimator[7](Coming soon)
 
-We also would like to thank Wenduo Feng, Di Huang, Yuji Chen, Hao Xu, Qing Shuai, Qi Fang, Ting Xie, Junting Dong, Sida Peng and Xiaopeng Ji who are the performers in the sample data.
-
 ## Contact
 
 Please open an issue if you have any questions. We appreciate all contributions to improve our project.
+
+## Contributor
+
+EasyMocap is **authored by** [**Qing Shuai**](https://chingswy.github.io/), [**Qi Fang**](https://raypine.github.io/), [**Junting Dong**](https://jtdong.com/), [**Sida Peng**](https://pengsida.net/), [**Di Huang**](https://www.raaj.tech), [**Hujun Bao**](https://jhugestar.github.io), **and** [**Xiaowei Zhou**](https://xzhou.me/). 
+
+We would like to thank Wenduo Feng, Di Huang, Yuji Chen, Hao Xu, Qing Shuai, Qi Fang, Ting Xie, Junting Dong, Sida Peng and Xiaopeng Ji who are the performers in the sample data. We would also like to thank all the people who has helped EasyMocap [in any way](https://github.com/zju3dv/EasyMocap/graphs/contributors).
 
 ## Citation
 
