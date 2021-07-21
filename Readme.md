@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-07-21 15:04:22
+ * @LastEditTime: 2021-07-21 15:19:43
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -144,13 +144,13 @@ Please open an issue if you have any questions. We appreciate all contributions 
 
 ## Contributor
 
-EasyMocap is **authored by** [**Qing Shuai**](https://chingswy.github.io/), [**Qi Fang**](https://raypine.github.io/), [**Junting Dong**](https://jtdong.com/), [**Sida Peng**](https://pengsida.net/), [**Di Huang**](https://www.raaj.tech), [**Hujun Bao**](https://jhugestar.github.io), **and** [**Xiaowei Zhou**](https://xzhou.me/). 
+EasyMocap is **authored by** [**Qing Shuai**](https://chingswy.github.io/), [**Qi Fang**](https://raypine.github.io/), [**Junting Dong**](https://jtdong.com/), [**Sida Peng**](https://pengsida.net/), **Di Huang**, **Hujun Bao**, **and** [**Xiaowei Zhou**](https://xzhou.me/). 
 
 We would like to thank Wenduo Feng, Di Huang, Yuji Chen, Hao Xu, Qing Shuai, Qi Fang, Ting Xie, Junting Dong, Sida Peng and Xiaopeng Ji who are the performers in the sample data. We would also like to thank all the people who has helped EasyMocap [in any way](https://github.com/zju3dv/EasyMocap/graphs/contributors).
 
 ## Citation
 
-This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/), [Mirrored-Human](https://zju3dv.github.io/Mirrored-Human/) and [Neural Body](https://zju3dv.github.io/neuralbody/)
+This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/), [Mirrored-Human](https://zju3dv.github.io/Mirrored-Human/), [mvpose](https://zju3dv.github.io/mvpose/) and [Neural Body](https://zju3dv.github.io/neuralbody/)
 
 Please consider citing these works if you find this repo is useful for your projects.
 
