@@ -29,7 +29,11 @@ First, you should record a video with your chessboard for each camera separately
 
 In this tutorial, we use our sample datasets as an example. In that dataset, the intri data is just like the picture below.
 
-![sample intri data](assets/intri_sample.png)
+<div align="center">
+    <img src="assets/intri_sample.png" width="60%">
+    <br>
+    <sup>Example Intrinsic Dataset<sup/>
+</div>
 
 
 For the extrinsic parameters, you should place the chessboard pattern where it will be visible to all the cameras (on the floor for example) and then take a picture or a short video on all of the cameras.
@@ -45,7 +49,13 @@ For the extrinsic parameters, you should place the chessboard pattern where it w
 
 The sample extri data is like the picture below.
 
-![sample extri data](assets/extri_sample.png)
+
+<div align="center">
+    <img src="assets/extri_sample.png" width="60%">
+    <br>
+    <sup>Example Extrinsic Dataset<sup/>
+</div>
+
 
 ## 2. Detect the chessboard
 For both intrinsic parameters and extrinsic parameters, we need detect the corners of the chessboard. So in this step, we first extract images from videos and second detect and write the corners.
@@ -63,10 +73,18 @@ Repeat this step for `<intri_data>` and `<extri_data>`.
 
 After this step, you should get the results like the pictures below.
 
+<div align="center">
+    <img src="assets/extri_chessboard.jpg" width="60%">
+    <br>
+    <sup>Result of Detecting Extrinsic Dataset<sup/>
+</div>
 
-![visualization result](assets/extri_chessboard.jpg)
 
-![vis intri](assets/intri_chessboard.jpg)
+<div align="center">
+    <img src="assets/intri_chessboard.jpg" width="60%">
+    <br>
+    <sup>Result of Detecting Intrinsic Dataset<sup/>
+</div>
 
 ## 2.5 Finetune the Chessboard Detection Result
 
@@ -78,39 +96,74 @@ python apps/annotation/annot_calib.py $data --mode chessboard --pattern 9,6 --an
 
 After running the script above, a OpenCV GUI prompt will show, like below:
 
-![](assets/ft1.png)
+<div align="center">
+    <img src="assets/ft1.png" width="60%">
+    <br>
+    <sup>Calibration Annotation Toolkit GUI Interface<sup/>
+</div>
 
-> This tool is component of our awesome annotation toolkits, so some key mapping is similar. To learn more about our annotation tools, please check [the document](../annotation/Readme.md)
+
+> This tool is component of our awesome annotation toolkits, so some key mapping is similar. To learn more about our annotation tools, please check [the document](../annotation/Readme.md).
 
 At the same time, you can see that the CLI presents some auxilary information.
 
-![](assets/ft2.png)
+
+<div align="center">
+    <img src="assets/ft2.png" width="60%">
+    <br>
+    <sup>CLI Prompt of the Annotation Tool<sup/>
+</div>
+
 
 You can learn from the CLI prompt to know the information and which point you are labeling.
 
-In the GUI, the current edited point is highlighted by a circle. If you want to make some modification, use mouse to click the correct place, then a white anchor point is presented to show the potential position. 
+In the GUI, the current edited corner is highlighted by a red circle. If you want to make some modification, use mouse to click the correct place, and then a white anchor "+" is presented there.
 
-![](assets/ft3.png)
 
-If you find this position is the correct position, press `Z` to confirm. Then the point position will be changed. 
+<div align="center">
+    <img src="assets/ft3.png" width="60%">
+    <br>
+    <sup>Use mouse to specify the correct position<sup/>
+</div>
 
-![](assets/ft4.png)
+If you think the newly specified coordinate(marked as white anchor) should be the correct position for this corner, rather than old one, press `Space` to confirm. Then the corner position will be changed. 
 
-After finish modifing this point, press `Space` to move to next point.
+<div align="center">
+    <img src="assets/ft4.png" width="60%">
+    <br>
+    <sup>The result after modifing the position of point<sup/>
+</div>
 
-![](assets/ft5.png)
+After finish modifying this point, press `Space` to move on to next point.
+
+
+<div align="center">
+    <img src="assets/ft5.png" width="60%">
+    <br>
+    <sup>Press Space to move on to next point<sup/>
+</div>
 
 > Currently we only support move to next point. If you want to move to previous point, please `Space` for many times until it back to start.
 
-If you're satisfied to this frame, you can press `D` move on to next frame.
+If you're satisfied with this frame, you can press `D` move on to next frame.
 
-![](assets/ft6.png)
+
+<div align="center">
+    <img src="assets/ft6.png" width="60%">
+    <br>
+    <sup>Press D to move on to next frame<sup/>
+</div>
+
 
 If you press `A`, you can move back to previous frame.
 
 After finish annotating every frames, press `q` to quit.
 
-![](assets/ft7.png)
+<div align="center">
+    <img src="assets/ft7.png" width="40%">
+    <br>
+    <sup>CLI prompt to save the result. Press Y to save and N to discard<sup/>
+</div>
 
 Then you can choose whether to save this annotation.
 
@@ -119,7 +172,7 @@ Then you can choose whether to save this annotation.
 
 ## 3. Intrinsic Parameter Calibration
 
-After extracting chessboard, it is available to calib the intri parameter.
+After extracting chessboard, it is available to calibrate the intrinsic parameter.
 
 ```bash
 python3 apps/calibration/calib_intri.py ${data} --step 5
@@ -127,12 +180,12 @@ python3 apps/calibration/calib_intri.py ${data} --step 5
 
 After the script finishes, you'll get `intri.yml` under `${data}/output`.
 
-> This step may takes a long time, please be patient. :-)
+> This step may take a long time, so please be patient. :-)
 
 ## 4. Extrinsic Parameter Calibration
 
 
-Then you can calib the extri parameter.
+Then you can calibrate the extrinsic parameter.
 
 ```
 python3 apps/calibration/calib_extri.py ${extri} --intri ${intri}/output/intri.yml
@@ -148,23 +201,32 @@ Coming soon
 
 To check whether your camera parameter is correct, we provide several approaches to make verification.
 
-1. Check the calibration results with chessboard:
+1. **Check the calibration results with chessboard:**
 ```bash
 python3 apps/calibration/check_calib.py ${extri} --out ${intri}/output --vis --show
 ```
 
 A window will be shown for checking.
 
-![](assets/vis_check.png)
+<div align="center">
+    <img src="assets/vis_check.png" width="60%">
+    <br>
+    <sup>Use chessboard to check results<sup/>
+</div>
 
-
-Check the results with a cube.
+**Check the results with a cube.**
 ```bash
 python3 apps/calibration/check_calib.py ${extri} --out ${extri}/output --cube
 ```
 
 You'll get results in `$data/output/cube`. 
 
-![](assets/cube.jpg)
+
+<div align="center">
+    <img src="assets/cube.jpg" width="60%">
+    <br>
+    <sup>Use cube to check results<sup/>
+</div>
+
 
 2. (TODO) Check the calibration results with people.
