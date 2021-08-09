@@ -19,7 +19,7 @@
 
 ### Multiple views of a single person
 
-[![report](https://img.shields.io/badge/quickstart-green)](./doc/quickstart.md)
+[![report](https://img.shields.io/badge/quickstart-green)](./doc/quickstart.md) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Cyvu_lPFUajr2RKt6yJIfS3HQIIYl6QU?usp=sharing)
 
 This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to capture body+hand+face poses from multiple views.
 
@@ -132,7 +132,7 @@ With our proposed method, we release two large dataset of human motion: LightSta
 - [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
 
 ## Updates
-
+- 08/09/2021: Add a colab demo [here](https://colab.research.google.com/drive/1Cyvu_lPFUajr2RKt6yJIfS3HQIIYl6QU?usp=sharing).
 - 06/28/2021: The **Multi-view Multi-person** part is released!
 - 06/10/2021: The **real-time 3D visualization** part is released!
 - 04/11/2021: The calibration tool and the annotator are released.
