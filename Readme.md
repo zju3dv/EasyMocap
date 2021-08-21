@@ -8,6 +8,10 @@
 
 # EasyMocap
 
+<div align="left">
+    <img src="logo.png" width="20%">
+</div>
+
 **EasyMocap** is an open-source toolbox for **markerless human motion capture** from RGB videos. In this project, we provide a lot of motion capture demos in different settings.
 
 ![python](https://img.shields.io/github/languages/top/zju3dv/EasyMocap)
