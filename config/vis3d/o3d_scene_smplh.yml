@@ -1,0 +1,3 @@
+parent: "config/vis3d/o3d_scene.yml"
+
+body_model: "_file_/config/model/smplh_male.yml"

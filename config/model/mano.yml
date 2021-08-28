@@ -1,0 +1,13 @@
+module: "easymocap.smplmodel.body_model.SMPLlayer"
+args:
+  model_path: "data/smplx/smplh/MANO_LEFT.pkl"
+  model_type: "mano"
+  gender: "male"
+  device: "cuda"
+  regressor_path: "data/smplx/J_regressor_mano_LEFT.txt"
+  use_pose_blending: True
+  use_shape_blending: True
+  # hand
+  num_pca_comps: 6
+  use_pca: True
+  use_flat_mean: True
