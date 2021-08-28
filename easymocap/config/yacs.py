@@ -78,6 +78,16 @@ class CfgNode(dict):
             if type(v) is dict:
                 # Convert dict to CfgNode
                 init_dict[k] = CfgNode(v, key_list=key_list + [k])
+                if '_parent_' in v.keys():
+                    init_dict[k].merge_from_file(v['_parent_'])
+                    init_dict[k].pop('_parent_')
+                if '_const_' in v.keys() and v['_const_']:
+                    init_dict[k].__dict__[CfgNode.IMMUTABLE] = True
+                    init_dict[k].pop('_const_')
+            elif type(v) is str and v.startswith('_file_/'):
+                filename = v.replace('_file_/', '')
+                init_dict[k] = CfgNode()
+                init_dict[k].merge_from_file(filename)
             else:
                 # Check for valid leaf type or nested CfgNode
                 _assert_with_logging(
@@ -385,7 +395,6 @@ def _merge_a_into_b(a, b, root, key_list):
     if '_no_merge_' in a.keys() and a['_no_merge_']:
         b.clear()
         a.pop('_no_merge_')
-
     for k, v_ in a.items():
         full_key = ".".join(key_list + [k])
         # a must specify keys that are in b

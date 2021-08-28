@@ -1,6 +1,7 @@
 import numpy as np
 from easymocap.dataset.mirror import flipPoint2D
 
+CONF_VANISHING_ANNOT = 2.
 def clear_vanish_points(self, param):
     "remove all vanishing points"
     annots = param['annots']
@@ -67,12 +68,16 @@ def get_record_vanish_lines(index):
             annots['vanish_point'] = [[], [], []]
         start, end = param['start'], param['end']
         if start is not None and end is not None:
-            annots['vanish_line'][index].append([[start[0], start[1], 2], [end[0], end[1], 2]])
+            annots['vanish_line'][index].append([[start[0], start[1], CONF_VANISHING_ANNOT], [end[0], end[1], CONF_VANISHING_ANNOT]])
             # 更新vanish point
-            if len(annots['vanish_line'][index]) > 1:
-                annots['vanish_point'][index] = update_vanish_points(annots['vanish_line'][index])
             param['start'] = None
             param['end'] = None
+        if len(annots['vanish_line'][index]) > 1:
+            for val in annots['vanish_line'][index]:
+                if len(val[0]) == 2:
+                    val[0].append(CONF_VANISHING_ANNOT)
+                    val[1].append(CONF_VANISHING_ANNOT)
+            annots['vanish_point'][index] = update_vanish_points(annots['vanish_line'][index])
     func = record_vanish_lines
     text = ['parallel to mirror edges', 'vertical to mirror', 'vertical to ground']
     func.__doc__ = 'vanish line of ' + text[index]
@@ -135,8 +140,10 @@ def get_calc_intrinsic(mode='xy'):
         K = np.eye(3)
         K[0, 2] = W/2
         K[1, 2] = H/2
+        print(vanish_point)
         vanish_point[:, 0] -= W/2
         vanish_point[:, 1] -= H/2
+        print(vanish_point)
         focal = np.sqrt(-(vanish_point[0][0]*vanish_point[1][0] + vanish_point[0][1]*vanish_point[1][1]))
         
         K[0, 0] = focal

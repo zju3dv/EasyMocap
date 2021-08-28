@@ -2,7 +2,7 @@
   @ Date: 2021-04-13 16:14:36
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-26 15:42:02
+  @ LastEditTime: 2021-07-17 16:00:17
   @ FilePath: /EasyMocap/easymocap/annotator/chessboard.py
 '''
 import numpy as np
@@ -53,7 +53,10 @@ def _findChessboardCornersAdapt(img, pattern):
     return _findChessboardCorners(img, pattern)
 
 def findChessboardCorners(img, annots, pattern):
-    if annots['visited']:
+    conf = sum([v[2] for v in annots['keypoints2d']])
+    if annots['visited'] and conf > 0:
+        return True
+    elif annots['visited']:
         return None
     annots['visited'] = True
     gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)

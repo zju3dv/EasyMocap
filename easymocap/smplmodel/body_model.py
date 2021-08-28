@@ -2,12 +2,13 @@
   @ Date: 2020-11-18 14:04:10
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-28 11:55:00
-  @ FilePath: /EasyMocapRelease/easymocap/smplmodel/body_model.py
+  @ LastEditTime: 2021-08-28 16:37:55
+  @ FilePath: /EasyMocap/easymocap/smplmodel/body_model.py
 '''
 import torch
 import torch.nn as nn
-from .lbs import lbs, batch_rodrigues
+from .lbs import batch_rodrigues
+from .lbs import lbs, dqs
 import os.path as osp
 import pickle
 import numpy as np
@@ -59,7 +60,7 @@ class SMPLlayer(nn.Module):
     def __init__(self, model_path, model_type='smpl', gender='neutral', device=None,
         regressor_path=None,
         use_pose_blending=True, use_shape_blending=True, use_joints=True,
-        with_color=False,
+        with_color=False, use_lbs=True,
         **kwargs) -> None:
         super(SMPLlayer, self).__init__()
         dtype = torch.float32
@@ -72,7 +73,12 @@ class SMPLlayer(nn.Module):
             device = torch.device(device)
         self.device = device
         self.model_type = model_type
+        self.NUM_POSES = NUM_POSES[model_type]
         # create the SMPL model
+        if use_lbs:
+            self.lbs = lbs
+        else:
+            self.lbs = dqs
         data = load_bodydata(model_type, model_path, gender)
         if with_color:
             self.color = data['vertex_colors']
@@ -151,35 +157,30 @@ class SMPLlayer(nn.Module):
             self.register_buffer('j_J_regressor', j_J_regressor)
         if self.model_type == 'smplh':
             # load smplh data
-            self.num_pca_comps = 6
+            self.num_pca_comps = kwargs['num_pca_comps']
             from os.path import join
             for key in ['LEFT', 'RIGHT']:
-                left_file = join(os.path.dirname(smpl_path), 'MANO_{}.pkl'.format(key))
+                left_file = join(kwargs['mano_path'], 'MANO_{}.pkl'.format(key))
                 with open(left_file, 'rb') as f:
                     data = pickle.load(f, encoding='latin1')
                 val = to_tensor(to_np(data['hands_mean'].reshape(1, -1)), dtype=dtype)
                 self.register_buffer('mHandsMean'+key[0], val)
                 val = to_tensor(to_np(data['hands_components'][:self.num_pca_comps, :]), dtype=dtype)
                 self.register_buffer('mHandsComponents'+key[0], val)
-            self.use_pca = True
-            self.use_flat_mean = True
-        elif self.model_type == 'mano':
-            # TODO:write this into config file
-            # self.num_pca_comps = 12
-            # self.use_pca = True
-            # if self.use_pca:
-            #     NUM_POSES['mano'] = self.num_pca_comps + 3
-            # else:
-            #     NUM_POSES['mano'] = 45 + 3
-            # self.use_flat_mean = True
-
-            self.num_pca_comps = 12
-            self.use_pca = True
-            self.use_flat_mean = True
+            self.use_pca = kwargs['use_pca']
+            self.use_flat_mean = kwargs['use_flat_mean']
             if self.use_pca:
-                NUM_POSES['mano'] = self.num_pca_comps + 3
+                self.NUM_POSES = 66 + self.num_pca_comps * 2
             else:
-                NUM_POSES['mano'] = 45 + 3
+                self.NUM_POSES = 66 + 15 * 3 * 2
+        elif self.model_type == 'mano':
+            self.num_pca_comps = kwargs['num_pca_comps']
+            self.use_pca = kwargs['use_pca']
+            self.use_flat_mean = kwargs['use_flat_mean']
+            if self.use_pca:
+                self.NUM_POSES = self.num_pca_comps + 3
+            else:
+                self.NUM_POSES = 45 + 3
 
             val = to_tensor(to_np(data['hands_mean'].reshape(1, -1)), dtype=dtype)
             self.register_buffer('mHandsMean', val)
@@ -202,19 +203,21 @@ class SMPLlayer(nn.Module):
     def extend_hand(poses, use_pca, use_flat_mean, coeffs, mean):
         if use_pca:
             poses = poses @ coeffs
-        if use_flat_mean:
+        if not use_flat_mean:
             poses = poses + mean
         return poses
 
     def extend_pose(self, poses):
+        # skip SMPL or already extend
         if self.model_type not in ['smplh', 'smplx', 'mano']:
             return poses
-        elif self.model_type == 'smplh' and poses.shape[-1] == 156:
+        elif self.model_type == 'smplh' and poses.shape[-1] == 156 and self.use_flat_mean:
             return poses
-        elif self.model_type == 'smplx' and poses.shape[-1] == 165:
+        elif self.model_type == 'smplx' and poses.shape[-1] == 165 and self.use_flat_mean:
             return poses
-        elif self.model_type == 'mano' and poses.shape[-1] == 48:
+        elif self.model_type == 'mano' and poses.shape[-1] == 48 and self.use_flat_mean:
             return poses
+        # skip mano
         if self.model_type == 'mano':
             poses_hand = self.extend_hand(poses[..., 3:], self.use_pca, self.use_flat_mean,
                 self.mHandsComponents, self.mHandsMean)
@@ -231,7 +234,7 @@ class SMPLlayer(nn.Module):
         if self.use_pca:
             poses_lh = poses_lh @ self.mHandsComponentsL
             poses_rh = poses_rh @ self.mHandsComponentsR
-        if self.use_flat_mean:
+        if not self.use_flat_mean:
             poses_lh = poses_lh + self.mHandsMeanL
             poses_rh = poses_rh + self.mHandsMeanR
         if self.model_type == 'smplh':
@@ -299,7 +302,9 @@ class SMPLlayer(nn.Module):
         return poses.detach().cpu().numpy()
 
     def forward(self, poses, shapes, Rh=None, Th=None, expression=None, 
-        return_verts=True, return_tensor=True, return_smpl_joints=False, only_shape=False, **kwargs):
+        v_template=None,
+        return_verts=True, return_tensor=True, return_smpl_joints=False, 
+        only_shape=False, pose2rot=True, **kwargs):
         """ Forward pass for SMPL model
 
         Args:
@@ -338,20 +343,23 @@ class SMPLlayer(nn.Module):
         if expression is not None and self.model_type == 'smplx':
             shapes = torch.cat([shapes, expression], dim=1)
         # process poses
-        poses = self.extend_pose(poses)
+        if pose2rot: # if given rotation matrix, no need for this
+            poses = self.extend_pose(poses)
         if return_verts or not self.use_joints:
-            vertices, joints = lbs(shapes, poses, self.v_template,
+            if v_template is None:
+                v_template = self.v_template
+            vertices, joints = self.lbs(shapes, poses, v_template,
                                 self.shapedirs, self.posedirs,
                                 self.J_regressor, self.parents,
-                                self.weights, pose2rot=True, dtype=self.dtype,
+                                self.weights, pose2rot=pose2rot, dtype=self.dtype,
                                 use_pose_blending=self.use_pose_blending, use_shape_blending=self.use_shape_blending, J_shaped=self.J_shaped)
             if not self.use_joints and not return_verts:
                 vertices = joints
         else:
-            vertices, joints = lbs(shapes, poses, self.j_v_template,
+            vertices, joints = self.lbs(shapes, poses, self.j_v_template,
                                 self.j_shapedirs, self.j_posedirs,
                                 self.j_J_regressor, self.parents,
-                                self.j_weights, pose2rot=True, dtype=self.dtype, only_shape=only_shape,
+                                self.j_weights, pose2rot=pose2rot, dtype=self.dtype, only_shape=only_shape,
                                 use_pose_blending=self.use_pose_blending, use_shape_blending=self.use_shape_blending, J_shaped=self.J_shaped)
             if return_smpl_joints:
                 vertices = vertices[:, :self.J_regressor.shape[0], :]
@@ -364,13 +372,13 @@ class SMPLlayer(nn.Module):
     
     def init_params(self, nFrames=1, nShapes=1, ret_tensor=False):
         params = {
-            'poses': np.zeros((nFrames, NUM_POSES[self.model_type])),
+            'poses': np.zeros((nFrames, self.NUM_POSES)),
             'shapes': np.zeros((nShapes, NUM_SHAPES)),
             'Rh': np.zeros((nFrames, 3)),
             'Th': np.zeros((nFrames, 3)),
         }
         if self.model_type == 'smplx':
-            params['expression'] = np.zeros((nFrames, NUM_EXPR))
+            params['expression'] = np.zeros((nFrames, self.NUM_EXPR))
         if ret_tensor:
             for key in params.keys():
                 params[key] = to_tensor(params[key], self.dtype, self.device)
@@ -379,10 +387,10 @@ class SMPLlayer(nn.Module):
     def check_params(self, body_params):
         model_type = self.model_type
         nFrames = body_params['poses'].shape[0]
-        if body_params['poses'].shape[1] != NUM_POSES[model_type]:
-            body_params['poses'] = np.hstack((body_params['poses'], np.zeros((nFrames, NUM_POSES[model_type] - body_params['poses'].shape[1]))))
+        if body_params['poses'].shape[1] != self.NUM_POSES:
+            body_params['poses'] = np.hstack((body_params['poses'], np.zeros((nFrames, self.NUM_POSES - body_params['poses'].shape[1]))))
         if model_type == 'smplx' and 'expression' not in body_params.keys():
-            body_params['expression'] = np.zeros((nFrames, NUM_EXPR))
+            body_params['expression'] = np.zeros((nFrames, self.NUM_EXPR))
         return body_params
 
     @staticmethod    
@@ -393,4 +401,22 @@ class SMPLlayer(nn.Module):
                 output[key] = np.vstack([v[key] for v in param_list])
         if share_shape:
             output['shapes'] = output['shapes'].mean(axis=0, keepdims=True)
+        # add other keys
+        for key in param_list[0].keys():
+            if key in output.keys():
+                continue
+            output[key] = np.stack([v[key] for v in param_list])
+        return output
+    
+    @staticmethod
+    def select_nf(params_all, nf):
+        output = {}
+        for key in ['poses', 'Rh', 'Th']:
+            output[key] = params_all[key][nf:nf+1, :]
+        if 'expression' in params_all.keys():
+            output['expression'] = params_all['expression'][nf:nf+1, :]
+        if params_all['shapes'].shape[0] == 1:
+            output['shapes'] = params_all['shapes']
+        else:
+            output['shapes'] = params_all['shapes'][nf:nf+1, :]
         return output

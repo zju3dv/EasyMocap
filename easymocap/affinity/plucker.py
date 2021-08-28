@@ -2,8 +2,8 @@
   @ Date: 2021-01-25 21:27:56
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-25 15:50:40
-  @ FilePath: /EasyMocapRelease/easymocap/affinity/plucker.py
+  @ LastEditTime: 2021-07-28 17:18:20
+  @ FilePath: /EasyMocap/easymocap/affinity/plucker.py
 '''
 import numpy as np
 
@@ -14,9 +14,9 @@ def plucker_from_pl(point, line):
         point {tensor} -- N, 3
         line {tensor} -- N, 3
     """
-    norm = np.linalg.norm(line, axis=1, keepdims=True)
+    norm = np.linalg.norm(line, axis=-1, keepdims=True)
     lunit = line/norm
-    moment = np.cross(point, lunit, axis=1)
+    moment = np.cross(point, lunit, axis=-1)
     return lunit, moment
 
 def plucker_from_pp(point1, point2):
@@ -70,3 +70,16 @@ def computeRay(keypoints2d, invK, R, T):
     res = np.hstack((l, m, conf))
     # 兼容cpp版本，所以补一个维度
     return res[None, :, :]
+
+def computeRaynd(keypoints2d, invK, R, T):
+    # keypoints2d: (..., 3)
+    conf = keypoints2d[..., 2:]
+    # cam_center: (1, 3)
+    cam_center = - (R.T @ T).T
+    kp_pixel = np.concatenate([keypoints2d[..., :2], np.ones_like(conf)], axis=-1)
+    kp_all_3d = (kp_pixel @ invK.T - T.T) @ R
+    while len(cam_center.shape) < len(kp_all_3d.shape):
+        cam_center = cam_center[None]
+    l, m = plucker_from_pp(cam_center, kp_all_3d)
+    res = np.concatenate((l, m, conf), axis=-1)
+    return res

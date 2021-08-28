@@ -2,8 +2,8 @@
   @ Date: 2021-01-17 21:38:19
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-28 11:43:00
-  @ FilePath: /EasyMocapRelease/easymocap/visualize/skelmodel.py
+  @ LastEditTime: 2021-08-24 16:42:22
+  @ FilePath: /EasyMocap/easymocap/visualize/skelmodel.py
 '''
 import numpy as np
 import cv2
@@ -39,7 +39,7 @@ def calTransformation(v_i, v_j, r, adaptr=False, ratio=10):
     return T, r, length
 
 class SkelModel:
-    def __init__(self, nJoints=None, kintree=None, body_type=None, joint_radius=0.02, **kwargs) -> None:
+    def __init__(self, nJoints=None, kintree=None, body_type=None, joint_radius=0.02, res=20, **kwargs) -> None:
         if nJoints is not None:
             self.nJoints = nJoints
             self.kintree = kintree
@@ -50,8 +50,8 @@ class SkelModel:
         self.body_type = body_type
         self.device = 'none'
         cur_dir = os.path.dirname(__file__)
-        faces = np.loadtxt(join(cur_dir, 'sphere_faces_20.txt'), dtype=np.int)
-        self.vertices = np.loadtxt(join(cur_dir, 'sphere_vertices_20.txt'))
+        faces = np.loadtxt(join(cur_dir, 'assets', 'sphere_faces_{}.txt'.format(res)), dtype=np.int)
+        self.vertices = np.loadtxt(join(cur_dir, 'assets', 'sphere_vertices_{}.txt'.format(res)))
         # compose faces
         faces_all = []
         for nj in range(self.nJoints):
@@ -69,7 +69,7 @@ class SkelModel:
         if not return_verts:
             return keypoints3d
         if keypoints3d.shape[-1] == 3: # add confidence
-            keypoints3d = np.hstack((keypoints3d, np.ones((keypoints3d.shape[0], 1))))
+            keypoints3d = np.dstack((keypoints3d, np.ones((keypoints3d.shape[0], keypoints3d.shape[1], 1))))
         r = self.joint_radius
         # joints 
         min_conf = 0.1

@@ -379,3 +379,115 @@ def batch_rigid_transform(rot_mats, joints, parents, dtype=torch.float32):
         torch.matmul(transforms, joints_homogen), [3, 0, 0, 0, 0, 0, 0, 0])
 
     return posed_joints, rel_transforms
+
+def dqs(betas, pose, v_template, shapedirs, posedirs, J_regressor, parents,
+        lbs_weights, pose2rot=True, dtype=torch.float32, only_shape=False,
+        use_shape_blending=True, use_pose_blending=True, J_shaped=None):
+    ''' Performs Linear Blend Skinning with the given shape and pose parameters
+
+        Parameters
+        ----------
+        betas : torch.tensor BxNB
+            The tensor of shape parameters
+        pose : torch.tensor Bx(J + 1) * 3
+            The pose parameters in axis-angle format
+        v_template torch.tensor BxVx3
+            The template mesh that will be deformed
+        shapedirs : torch.tensor 1xNB
+            The tensor of PCA shape displacements
+        posedirs : torch.tensor Px(V * 3)
+            The pose PCA coefficients
+        J_regressor : torch.tensor JxV
+            The regressor array that is used to calculate the joints from
+            the position of the vertices
+        parents: torch.tensor J
+            The array that describes the kinematic tree for the model
+        lbs_weights: torch.tensor N x V x (J + 1)
+            The linear blend skinning weights that represent how much the
+            rotation matrix of each part affects each vertex
+        pose2rot: bool, optional
+            Flag on whether to convert the input pose tensor to rotation
+            matrices. The default value is True. If False, then the pose tensor
+            should already contain rotation matrices and have a size of
+            Bx(J + 1)x9
+        dtype: torch.dtype, optional
+
+        Returns
+        -------
+        verts: torch.tensor BxVx3
+            The vertices of the mesh after applying the shape and pose
+            displacements.
+        joints: torch.tensor BxJx3
+            The joints of the model
+    '''
+
+    batch_size = max(betas.shape[0], pose.shape[0])
+    device = betas.device
+
+    # Add shape contribution
+    if use_shape_blending:
+        v_shaped = v_template + blend_shapes(betas, shapedirs)
+        # Get the joints
+        # NxJx3 array
+        J = vertices2joints(J_regressor, v_shaped)
+    else:
+        v_shaped = v_template.unsqueeze(0).expand(batch_size, -1, -1)
+        assert J_shaped is not None
+        J = J_shaped[None].expand(batch_size, -1, -1)
+
+    if only_shape:
+        return v_shaped, J
+    # 3. Add pose blend shapes
+    # N x J x 3 x 3
+    if pose2rot:
+        rot_mats = batch_rodrigues(
+            pose.view(-1, 3), dtype=dtype).view([batch_size, -1, 3, 3])
+    else:
+        rot_mats = pose.view(batch_size, -1, 3, 3)
+
+    if use_pose_blending:
+        ident = torch.eye(3, dtype=dtype, device=device)
+        pose_feature = (rot_mats[:, 1:, :, :] - ident).view([batch_size, -1])
+        pose_offsets = torch.matmul(pose_feature, posedirs) \
+            .view(batch_size, -1, 3)
+        v_posed = pose_offsets + v_shaped
+    else:
+        v_posed = v_shaped
+    # 4. Get the global joint location
+    J_transformed, A = batch_rigid_transform(rot_mats, J, parents, dtype=dtype)
+
+
+    # 5. Do skinning:
+    # W is N x V x (J + 1)
+    W = lbs_weights.unsqueeze(dim=0).expand([batch_size, -1, -1])
+
+    verts=batch_dqs_blending(A,W,v_posed)
+
+    return verts, J_transformed
+
+#A: B,J,4,4 W: B,V,J
+def batch_dqs_blending(A,W,Vs):
+    Bnum,Jnum,_,_=A.shape
+    _,Vnum,_=W.shape
+    A = A.view(Bnum*Jnum,4,4)
+    Rs=A[:,:3,:3]
+    ws=torch.sqrt(torch.clamp(Rs[:,0,0]+Rs[:,1,1]+Rs[:,2,2]+1.,min=1.e-6))/2.
+    xs=(Rs[:,2,1]-Rs[:,1,2])/(4.*ws)
+    ys=(Rs[:,0,2]-Rs[:,2,0])/(4.*ws)
+    zs=(Rs[:,1,0]-Rs[:,0,1])/(4.*ws)
+    Ts=A[:,:3,3]
+    vDw=-0.5*( Ts[:,0]*xs + Ts[:,1]*ys + Ts[:,2]*zs)
+    vDx=0.5*( Ts[:,0]*ws + Ts[:,1]*zs - Ts[:,2]*ys)
+    vDy=0.5*(-Ts[:,0]*zs + Ts[:,1]*ws + Ts[:,2]*xs)
+    vDz=0.5*( Ts[:,0]*ys - Ts[:,1]*xs + Ts[:,2]*ws)
+    b0=W.unsqueeze(-2)@torch.cat([ws[:,None],xs[:,None],ys[:,None],zs[:,None]],dim=-1).reshape(Bnum, 1, Jnum, 4) #B,V,J,4
+    be=W.unsqueeze(-2)@torch.cat([vDw[:,None],vDx[:,None],vDy[:,None],vDz[:,None]],dim=-1).reshape(Bnum, 1, Jnum, 4) #B,V,J,4
+    b0 = b0.reshape(-1, 4)
+    be = be.reshape(-1, 4)
+
+    ns=torch.norm(b0,dim=-1,keepdim=True)
+    be=be/ns
+    b0=b0/ns
+    Vs=Vs.view(Bnum*Vnum,3)
+    Vs=Vs+2.*b0[:,1:].cross(b0[:,1:].cross(Vs)+b0[:,:1]*Vs)+2.*(b0[:,:1]*be[:,1:]-be[:,:1]*b0[:,1:]+b0[:,1:].cross(be[:,1:]))
+    return Vs.reshape(Bnum,Vnum,3)

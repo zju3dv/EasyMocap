@@ -1,3 +1,10 @@
+'''
+  @ Date: 2021-07-13 21:12:15
+  @ Author: Qing Shuai
+  @ LastEditors: Qing Shuai
+  @ LastEditTime: 2021-07-13 21:12:46
+  @ FilePath: /EasyMocap/easymocap/annotator/vanish_visualize.py
+'''
 import cv2
 import numpy as np
 from .basic_visualize import plot_cross
@@ -17,7 +24,7 @@ def vis_vanish_lines(img, annots, **kwargs):
         plot_cross(img, x, y, colors[i])
         points = np.array(annots['vanish_line'][i]).reshape(-1, 3)
         for (xx, yy, conf) in points:
-            plot_cross(img, xx, yy, colors[i])
+            plot_cross(img, xx, yy, col=colors[i])
             cv2.line(img, (int(x), int(y)), (int(xx), int(yy)), colors[i], 2)
 
     for i in range(3):

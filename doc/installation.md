@@ -2,7 +2,7 @@
  * @Date: 2021-04-02 11:52:33
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-21 21:18:45
+ * @LastEditTime: 2021-07-22 20:58:33
  * @FilePath: /EasyMocapRelease/doc/installation.md
 -->
 # EasyMocap - Installation
@@ -74,7 +74,7 @@ data
 - torch==1.4.0
 - torchvision==0.5.0
 - opencv-python
-- [pyrender](https://pyrender.readthedocs.io/en/latest/install/index.html#python-installation): for visualization
+- [pyrender](https://pyrender.readthedocs.io/en/latest/install/index.html#python-installation): for visualization, or [pyrender for server without a screen](https://pyrender.readthedocs.io/en/latest/install/index.html#getting-pyrender-working-with-osmesa).
 - chumpy: for loading SMPL model
 - OpenPose[4]: for 2D pose
 

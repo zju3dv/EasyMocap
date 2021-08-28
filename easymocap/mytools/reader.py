@@ -2,8 +2,8 @@
   @ Date: 2021-04-21 15:19:21
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-28 11:55:27
-  @ FilePath: /EasyMocapRelease/easymocap/mytools/reader.py
+  @ LastEditTime: 2021-07-29 16:12:37
+  @ FilePath: /EasyMocap/easymocap/mytools/reader.py
 '''
 # function to read data
 """
@@ -27,7 +27,7 @@ def read_keypoints3d(filename):
     res_ = []
     for d in data:
         pid = d['id'] if 'id' in d.keys() else d['personID']
-        pose3d = np.array(d['keypoints3d'])
+        pose3d = np.array(d['keypoints3d'], dtype=np.float32)
         if pose3d.shape[0] > 25:
             # 对于有手的情况，把手的根节点赋值成body25上的点
             pose3d[25, :] = pose3d[7, :]
@@ -40,13 +40,27 @@ def read_keypoints3d(filename):
         })
     return res_
 
+def read_keypoints3d_dict(filename):
+    data = read_json(filename)
+    res_ = {}
+    for d in data:
+        pid = d['id'] if 'id' in d.keys() else d['personID']
+        pose3d = np.array(d['keypoints3d'], dtype=np.float32)
+        if pose3d.shape[1] == 3:
+            pose3d = np.hstack([pose3d, np.ones((pose3d.shape[0], 1))])
+        res_[pid] = {
+            'id': pid,
+            'keypoints3d': pose3d
+        }
+    return res_
+
 def read_smpl(filename):
     datas = read_json(filename)
     outputs = []
     for data in datas:
         for key in ['Rh', 'Th', 'poses', 'shapes', 'expression']:
             if key in data.keys():
-                data[key] = np.array(data[key])
+                data[key] = np.array(data[key], dtype=np.float32)
         # for smplx results
         outputs.append(data)
     return outputs
@@ -68,7 +82,7 @@ def read_keypoints3d_a4d(outname):
             pose3d = np.fromstring(content, dtype=float, sep=' ').reshape((nJoints, 4))
             # association4d 的关节顺序和正常的定义不一样
             pose3d = pose3d[[4, 1, 5, 9, 13, 6, 10, 14, 0, 2, 7, 11, 3, 8, 12], :]
-            res_.append({'id':trackId, 'keypoints3d':np.array(pose3d)})
+            res_.append({'id':trackId, 'keypoints3d':np.array(pose3d, dtype=np.float32)})
     return res_
 
 def read_keypoints3d_all(path, key='keypoints3d', pids=[]):

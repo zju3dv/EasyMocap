@@ -2,7 +2,7 @@
   @ Date: 2020-11-28 17:23:04
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-03 22:31:31
+  @ LastEditTime: 2021-08-22 16:11:25
   @ FilePath: /EasyMocap/easymocap/mytools/vis_base.py
 '''
 import cv2
@@ -75,7 +75,7 @@ def plot_line(img, pt1, pt2, lw, col):
 
 def plot_cross(img, x, y, col, width=-1, lw=-1):
     if lw == -1:
-        lw = int(round(img.shape[0]/1000))
+        lw = max(1, int(round(img.shape[0]/1000)))
         width = lw * 5
     cv2.line(img, (int(x-width), int(y)), (int(x+width), int(y)), col, lw)
     cv2.line(img, (int(x), int(y-width)), (int(x), int(y+width)), col, lw)
@@ -170,7 +170,7 @@ def merge(images, row=-1, col=-1, resize=False, ret_range=False, **kwargs):
             ret_img[height * i: height * (i+1), width * j: width * (j+1)] = img
             ranges.append((width*j, height*i, width*(j+1), height*(i+1)))
     if resize:
-        min_height = 3000
+        min_height = 1000
         if ret_img.shape[0] > min_height:
             scale = min_height/ret_img.shape[0]
             ret_img = cv2.resize(ret_img, None, fx=scale, fy=scale)

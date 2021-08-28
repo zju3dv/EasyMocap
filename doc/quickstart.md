@@ -2,10 +2,12 @@
  * @Date: 2021-04-02 11:53:16
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-06-14 14:26:19
+ * @LastEditTime: 2021-07-22 20:57:16
  * @FilePath: /EasyMocapRelease/doc/quickstart.md
 -->
 # Quick Start
+
+First install this project following [install](./installation.md)
 
 ## Demo
 

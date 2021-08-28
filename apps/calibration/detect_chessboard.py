@@ -2,8 +2,8 @@
   @ Date: 2021-07-16 20:13:57
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-07-17 19:25:00
-  @ FilePath: /EasyMocapRelease/apps/calibration/detect_chessboard.py
+  @ LastEditTime: 2021-07-21 19:56:38
+  @ FilePath: /EasyMocap/apps/calibration/detect_chessboard.py
 '''
 # detect the corner of chessboard
 from easymocap.annotator.file_utils import getFileList, read_json, save_json
@@ -60,7 +60,7 @@ def detect_chessboard(path, out, pattern, gridSize, args):
         cv2.imwrite(outname, show)
 
 def detect_chessboard_sequence(path, out, pattern, gridSize, args):
-    # create_chessboard(path, pattern, gridSize, ext=args.ext)
+    create_chessboard(path, pattern, gridSize, ext=args.ext)
     subs = sorted(os.listdir(join(path, 'images')))
     for sub in subs:
         dataset = ImageFolder(path, sub=sub, annot='chessboard', ext=args.ext)
@@ -69,8 +69,8 @@ def detect_chessboard_sequence(path, out, pattern, gridSize, args):
         found = np.zeros(nFrames, dtype=np.bool)
         visited = np.zeros(nFrames, dtype=np.bool)
         proposals = []
-        init_step = 50
-        min_step = 1
+        init_step = args.max_step
+        min_step = args.min_step
         for nf in range(0, nFrames, init_step):
             if nf + init_step < len(dataset):
                 proposals.append([nf, nf+init_step])
@@ -98,6 +98,8 @@ def detect_chessboard_sequence(path, out, pattern, gridSize, args):
             if not found[left] and not found[right]:
                 continue
             mid = (left+right)//2
+            if mid == left or mid == right:
+                continue
             if mid - left > min_step:
                 proposals.append((left, mid))
             if right - mid > min_step:
@@ -113,6 +115,9 @@ if __name__ == "__main__":
         help='The pattern of the chessboard', default=(9, 6))
     parser.add_argument('--grid', type=float, default=0.1, 
         help='The length of the grid size (unit: meter)')
+    parser.add_argument('--max_step', type=int, default=50)
+    parser.add_argument('--min_step', type=int, default=0)
+    
     parser.add_argument('--silent', action='store_true')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--seq', action='store_true')
