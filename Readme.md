@@ -8,6 +8,10 @@
 
 # EasyMocap
 
+<div align="left">
+    <img src="logo.png" width="20%">
+</div>
+
 **EasyMocap** is an open-source toolbox for **markerless human motion capture** from RGB videos. In this project, we provide a lot of motion capture demos in different settings.
 
 ![python](https://img.shields.io/github/languages/top/zju3dv/EasyMocap)
@@ -19,7 +23,7 @@
 
 ### Multiple views of a single person
 
-[![report](https://img.shields.io/badge/quickstart-green)](./doc/quickstart.md)
+[![report](https://img.shields.io/badge/quickstart-green)](./doc/quickstart.md) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1Cyvu_lPFUajr2RKt6yJIfS3HQIIYl6QU?usp=sharing)
 
 This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to capture body+hand+face poses from multiple views.
 
@@ -132,7 +136,7 @@ With our proposed method, we release two large dataset of human motion: LightSta
 - [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
 
 ## Updates
-
+- 08/09/2021: Add a colab demo [here](https://colab.research.google.com/drive/1Cyvu_lPFUajr2RKt6yJIfS3HQIIYl6QU?usp=sharing).
 - 06/28/2021: The **Multi-view Multi-person** part is released!
 - 06/10/2021: The **real-time 3D visualization** part is released!
 - 04/11/2021: The calibration tool and the annotator are released.
@@ -160,7 +164,7 @@ Please open an issue if you have any questions. We appreciate all contributions 
 
 ## Contributor
 
-EasyMocap is **authored by** [**Qing Shuai**](https://chingswy.github.io/), [**Qi Fang**](https://raypine.github.io/), [**Junting Dong**](https://jtdong.com/), [**Sida Peng**](https://pengsida.net/), **Di Huang**, **Hujun Bao**, **and** [**Xiaowei Zhou**](https://xzhou.me/). 
+EasyMocap is **built by** researchers from the 3D vision group of Zhejiang University: [**Qing Shuai**](https://chingswy.github.io/), [**Qi Fang**](https://raypine.github.io/), [**Junting Dong**](https://jtdong.com/), [**Sida Peng**](https://pengsida.net/), **Di Huang**, [**Hujun Bao**](http://www.cad.zju.edu.cn/home/bao/), **and** [**Xiaowei Zhou**](https://xzhou.me/). 
 
 We would like to thank Wenduo Feng, Di Huang, Yuji Chen, Hao Xu, Qing Shuai, Qi Fang, Ting Xie, Junting Dong, Sida Peng and Xiaopeng Ji who are the performers in the sample data. We would also like to thank all the people who has helped EasyMocap [in any way](https://github.com/zju3dv/EasyMocap/graphs/contributors).
 
