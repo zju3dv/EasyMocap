@@ -378,7 +378,7 @@ class SMPLlayer(nn.Module):
             'Th': np.zeros((nFrames, 3)),
         }
         if self.model_type == 'smplx':
-            params['expression'] = np.zeros((nFrames, self.NUM_EXPR))
+            params['expression'] = np.zeros((nFrames, NUM_EXPR))
         if ret_tensor:
             for key in params.keys():
                 params[key] = to_tensor(params[key], self.dtype, self.device)
@@ -390,7 +390,7 @@ class SMPLlayer(nn.Module):
         if body_params['poses'].shape[1] != self.NUM_POSES:
             body_params['poses'] = np.hstack((body_params['poses'], np.zeros((nFrames, self.NUM_POSES - body_params['poses'].shape[1]))))
         if model_type == 'smplx' and 'expression' not in body_params.keys():
-            body_params['expression'] = np.zeros((nFrames, self.NUM_EXPR))
+            body_params['expression'] = np.zeros((nFrames, NUM_EXPR))
         return body_params
 
     @staticmethod    
