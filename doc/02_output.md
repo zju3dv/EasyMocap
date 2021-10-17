@@ -91,7 +91,6 @@ Blender 2.79 is also needed. The `<path_to_output_smpl>` is usually `${out}/smpl
 BLENDER_PATH=<path_to_blender>/blender-2.79a-linux-glibc219-x86_64
 ${BLENDER_PATH}/blender -b -t 12 -P scripts/postprocess/convert2bvh.py -- <path_to_output_smpl> --o <output_path>
 ```
-We have not implement the export of SMPL+H, SMPL-X model yet. If you are interested on it, feel free to create a pull request to us.
 
 ### Blender 2.93
 #### Setup
