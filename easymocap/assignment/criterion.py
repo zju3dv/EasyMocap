@@ -46,7 +46,7 @@ class CritLenTorso(BaseCrit):
         if (keypoints3d[[self.src, self.dst], -1] < self.min_conf).all():
             # low confidence, skip
             return True
-        length = np.linalg.norm(keypoints3d[self.dst] - keypoints3d[self.src])
+        length = np.linalg.norm(keypoints3d[self.dst, :3] - keypoints3d[self.src, :3])
         self.log = '{}: {:.3f}'.format(self.name, length)
         if length < self.min_torso_length or length > self.max_torso_length:
             return False
