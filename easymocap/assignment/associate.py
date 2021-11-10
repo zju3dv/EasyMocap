@@ -18,7 +18,7 @@ def views_from_dimGroups(dimGroups):
 def set_keypoints2d(indices, annots, Pall, dimGroups):
     Vused = np.where(indices!=-1)[0]
     if len(Vused) < 1:
-        return [], [], []
+        return [], [], [], []
     keypoints2d = np.stack([annots[nv][indices[nv]-dimGroups[nv]]['keypoints'].copy() for nv in Vused])
     bboxes = np.stack([annots[nv][indices[nv]-dimGroups[nv]]['bbox'].copy() for nv in Vused])
     Pused = Pall[Vused]
@@ -63,7 +63,7 @@ def simple_associate(annots, affinity, dimGroups, Pall, group, cfg):
                         p = proposal.copy()
                         p[nv] = col
                         proposals_new.append(p)
-                proposals = proposals_new
+                proposals += proposals_new
         results = []
         while len(proposals) > 0:
             proposal = proposals.pop()
