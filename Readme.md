@@ -83,6 +83,12 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
     <sup>Captured with 8 consumer cameras<sup/>
 </div>
 
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/female-ballet.gif" width="80%"><br/>
+    <sup>Novel view synthesis for chanllenge motion(coming soom)<sup/>
+</div>
+
+    
 ## ZJU-MoCap
 
 With our proposed method, we release two large dataset of human motion: LightStage and Mirrored-Human. See the [website](https://chingswy.github.io/Dataset-Demo/) for more details.
@@ -161,6 +167,7 @@ Here are the great works this project is built upon:
 ## Contact
 
 Please open an issue if you have any questions. We appreciate all contributions to improve our project.
+    
 
 ## Contributor
 
