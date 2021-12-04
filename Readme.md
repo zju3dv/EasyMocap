@@ -182,6 +182,14 @@ This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/), [
 Please consider citing these works if you find this repo is useful for your projects.
 
 ```bibtex
+    
+@inproceedings{dong2021fast,
+  title={Fast and Robust Multi-Person 3D Pose Estimation and Tracking from Multiple Views},
+  author={Dong, Junting and Fang, Qi and Jiang, Wen and Yang, Yurou and Bao, Hujun and Zhou, Xiaowei},
+  booktitle={T-PAMI},
+  year={2021}
+}
+    
 @inproceedings{dong2020motion,
   title={Motion capture from internet videos},
   author={Dong, Junting and Shuai, Qing and Zhang, Yuanqing and Liu, Xian and Zhou, Xiaowei and Bao, Hujun},
@@ -205,12 +213,6 @@ Please consider citing these works if you find this repo is useful for your proj
   year={2021}
 }
 
-@inproceedings{dong2021fast,
-  title={Fast and Robust Multi-Person 3D Pose Estimation and Tracking from Multiple Views},
-  author={Dong, Junting and Fang, Qi and Jiang, Wen and Yang, Yurou and Bao, Hujun and Zhou, Xiaowei},
-  booktitle={T-PAMI},
-  year={2021}
-}
 ```
 
 ## Reference
