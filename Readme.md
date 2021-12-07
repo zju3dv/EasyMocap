@@ -85,7 +85,7 @@ This is the basic code for fitting SMPL[1]/SMPL+H[2]/SMPL-X[3]/MANO[2] model to 
 
 <div align="center">
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/female-ballet.gif" width="80%"><br/>
-    <sup>Novel view synthesis for chanllenge motion(coming soom)<sup/>
+    <sup>Novel view synthesis for chanllenge motion(coming soon)<sup/>
 </div>
 
     
