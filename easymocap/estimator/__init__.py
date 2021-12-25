@@ -5,4 +5,3 @@
   @ LastEditTime: 2021-04-14 16:25:49
   @ FilePath: /EasyMocapRelease/easymocap/estimator/__init__.py
 '''
-from .SPIN import SPIN, init_with_spin

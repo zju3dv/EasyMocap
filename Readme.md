@@ -142,6 +142,7 @@ With our proposed method, we release two large dataset of human motion: LightSta
 - [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
 
 ## Updates
+- 12/25/2021: Support mediapipe keypoints detector.
 - 08/09/2021: Add a colab demo [here](https://colab.research.google.com/drive/1Cyvu_lPFUajr2RKt6yJIfS3HQIIYl6QU?usp=sharing).
 - 06/28/2021: The **Multi-view Multi-person** part is released!
 - 06/10/2021: The **real-time 3D visualization** part is released!
@@ -160,6 +161,7 @@ Here are the great works this project is built upon:
 - Some functions are borrowed from [SPIN](https://github.com/nkolot/SPIN), [VIBE](https://github.com/mkocabas/VIBE), [SMPLify-X](https://github.com/vchoutas/smplify-x)
 - The method for fitting 3D skeleton and SMPL model is similar to [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/), without using point clouds.
 - We integrate some easy-to-use functions for previous great work:
+  - `easymocap/estimator/mediapipe_wrapper.py`: [MediaPipe](https://github.com/google/mediapipe)
   - `easymocap/estimator/SPIN`  : an SMPL estimator[5]
   - `easymocap/estimator/YOLOv4`: an object detector[6](Coming soon)
   - `easymocap/estimator/HRNet` : a 2D human pose estimator[7](Coming soon)
