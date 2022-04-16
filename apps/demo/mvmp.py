@@ -60,7 +60,7 @@ if __name__ == "__main__":
     cfg = Config.load(args.cfg, args.cfg_opts)
     # Define dataset
     help="""
-  Demo code for multiple views and one person:
+  Demo code for multiple views and multiple persons:
 
     - Input : {} => {}
     - Output: {}
