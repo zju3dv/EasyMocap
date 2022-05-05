@@ -89,6 +89,21 @@ def load_grid(xrange=10, yrange=10):
     lines = np.vstack(lines)
     return merge_points_lines(points3d, lines)
 
+def load_axes():
+    points3d = np.array([
+        [0., 0., 0.],
+        [1., 0., 0.],
+        [0., 1., 0.],
+        [0., 0., -1.]
+    ])
+    lines = np.array([
+        [0,1],
+        [0,2],
+        [0,3]
+    ], dtype=np.int)
+    points3d = np.hstack((points3d, np.ones((points3d.shape[0], 1))))
+    return points3d, lines
+
 def check_calib(path, out, vis=False, show=False, debug=False):
     if vis:
         out_dir = join(out, 'check')
@@ -195,14 +210,18 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--cube', action='store_true')
     parser.add_argument('--grid', action='store_true')
+    parser.add_argument('--axes', action='store_true')
     parser.add_argument('--calib', action='store_true')
-    
+
     args = parser.parse_args()
     if args.cube:
         points, lines = load_cube()
         check_scene(args.path, args.out, points, lines)
     elif args.grid:
         points, lines = load_grid(xrange=15, yrange=14)
+        check_scene(args.path, args.out, points, lines)
+    elif args.axes:
+        points, lines = load_axes()
         check_scene(args.path, args.out, points, lines)
     elif args.calib:
         check_match(args.path, args.out)
