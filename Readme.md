@@ -32,13 +32,23 @@ This is the basic code for fitting SMPL[^loper2015]/SMPL+H[^romero2017]/SMPL-X[^
     <br>
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/mv1p-dance-smpl.gif" width="80%">
     <br>
-    <sup>Videos are from ZJU-MoCap, with 23 calibrated and synchronized cameras.<sup/>
+    <sup>Videos are from ZJU-MoCap, with 23 calibrated and synchronized cameras.</sup>
 </div>
 
 <div align="center">
     <img src="doc/feng/mano.gif" width="80%">
     <br>
-    <sup>Captured with 8 cameras.<sup/>
+    <sup>Captured with 8 cameras.</sup>
+</div>
+
+### Internet video(Coming soon)
+
+This part is the basic code for fitting SMPL[^loper2015] with 2D keypoints estimation[^cao2018,^hrnet] and CNN initialization[^kolotouros2019].
+
+<div align="center">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/23EfsN7vEOA%2B003170%2B003670.gif" width="80%">
+    <br>
+    <sup>The raw video is from <a href="https://www.youtube.com/watch?v=23EfsN7vEOA">Youtube</a>.</sup>
 </div>
 
 ### Internet video with a mirror
@@ -48,13 +58,9 @@ This is the basic code for fitting SMPL[^loper2015]/SMPL+H[^romero2017]/SMPL-X[^
 <div align="center">
     <img src="https://raw.githubusercontent.com/zju3dv/Mirrored-Human/main/doc/assets/smpl-avatar.gif" width="80%">
     <br>
-    <sup>The raw video is from <a href="https://www.youtube.com/watch?v=KOCJJ27hhIE">Youtube<a/>.<sup/>
+    <sup>The raw video is from <a href="https://www.youtube.com/watch?v=KOCJJ27hhIE">Youtube</a>.</sup>
 </div>
 
-<div align="center">
-    <img src="doc/imocap/mv1p-mirror.gif" width="80%"><br/>
-    <sup>Captured with 6 cameras and a mirror<sup/>
-</div>
 
 ### Multiple Internet videos with a specific action (Coming soon)
 
@@ -62,7 +68,7 @@ This is the basic code for fitting SMPL[^loper2015]/SMPL+H[^romero2017]/SMPL-X[^
 
 <div align="center">
     <img src="doc/imocap/imocap.gif" width="80%"><br/>
-    <sup>Internet videos of Roger Federer's serving<sup/>
+    <sup>Internet videos of Roger Federer's serving</sup>
 </div>
 
 ### Multiple views of multiple people
@@ -71,21 +77,20 @@ This is the basic code for fitting SMPL[^loper2015]/SMPL+H[^romero2017]/SMPL-X[^
 
 <div align="center">
     <img src="doc/assets/mvmp1f.gif" width="80%"><br/>
-    <sup>Captured with 8 consumer cameras<sup/>
+    <sup>Captured with 8 consumer cameras</sup>
 </div>
 
 ### Novel view synthesis from sparse views
 [![report](https://img.shields.io/badge/CVPR21-neuralbody-red)](https://arxiv.org/pdf/2012.15838.pdf) [![quickstart](https://img.shields.io/badge/quickstart-green)](https://github.com/zju3dv/neuralbody)
 
 <div align="center">
-    <img src="doc/neuralbody/sida-frame0.jpg" width="80%"><br/>
-    <img src="doc/neuralbody/sida.gif" width="80%"><br/>
-    <sup>Captured with 8 consumer cameras<sup/>
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/female-ballet.gif" width="80%"><br/>
+    <sup>Novel view synthesis for chanllenge motion(coming soon)</sup>
 </div>
 
 <div align="center">
-    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/female-ballet.gif" width="80%"><br/>
-    <sup>Novel view synthesis for chanllenge motion(coming soon)<sup/>
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/nvs_mp_soccer1_6_rgb.gif" width="80%"><br/>
+    <sup>Novel view synthesis for human interaction(coming soon)</sup>
 </div>
 
     
@@ -97,12 +102,12 @@ If you would like to download the ZJU-Mocap dataset, please sign the [agreement]
 
 <div align="center">
     <img src="doc/assets/ZJU-MoCap-lightstage.jpg" width="80%"><br/>
-    <sup>LightStage: captured with LightStage system<sup/>
+    <sup>LightStage: captured with LightStage system</sup>
 </div>
 
 <div align="center">
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/mirrored-human.jpg" width="80%"><br/>
-    <sup>Mirrored-Human: collected from the Internet<sup/>
+    <sup>Mirrored-Human: collected from the Internet</sup>
 </div>
 
 ## Other features
@@ -127,7 +132,7 @@ If you would like to download the ZJU-Mocap dataset, please sign the [agreement]
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/calib_intri.jpg" width="40%">
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/calib_extri.jpg" width="40%">
     <br>
-    <sup>Calibration for intrinsic and extrinsic parameters<sup/>
+    <sup>Calibration for intrinsic and extrinsic parameters</sup>
 </div>
 
 ### [Annotator](apps/annotation/Readme.md)
@@ -136,7 +141,7 @@ If you would like to download the ZJU-Mocap dataset, please sign the [agreement]
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/annot_keypoints.jpg" width="40%">
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/annot_mask.jpg" width="40%">
     <br>
-    <sup>Annotator for bounding box, keypoints and mask<sup/>
+    <sup>Annotator for bounding box, keypoints and mask</sup>
 </div>
 
 ### Other
@@ -232,4 +237,4 @@ Please consider citing these works if you find this repo is useful for your proj
 
 [^bochkovskiy2020]: Bochkovskiy, Alexey, Chien-Yao Wang, and Hong-Yuan Mark Liao. "Yolov4: Optimal speed and accuracy of object detection." arXiv preprint arXiv:2004.10934 (2020).
 
-<!-- [8] Sun, Ke, et al. "Deep high-resolution representation learning for human pose estimation." Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2019. -->
+[^hrnet] Sun, Ke, et al. "Deep high-resolution representation learning for human pose estimation." Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2019.
