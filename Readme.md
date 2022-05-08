@@ -43,7 +43,7 @@ This is the basic code for fitting SMPL[^loper2015]/SMPL+H[^romero2017]/SMPL-X[^
 
 ### Internet video(Coming soon)
 
-This part is the basic code for fitting SMPL[^loper2015] with 2D keypoints estimation[^cao2018,^hrnet] and CNN initialization[^kolotouros2019].
+This part is the basic code for fitting SMPL[^loper2015] with 2D keypoints estimation[^cao2018][^hrnet] and CNN initialization[^kolotouros2019].
 
 <div align="center">
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/23EfsN7vEOA%2B003170%2B003670.gif" width="80%">
@@ -191,6 +191,13 @@ This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/), [
 Please consider citing these works if you find this repo is useful for your projects.
 
 ```bibtex
+@Misc{easymocap,  
+    title = {EasyMoCap - Make human motion capture easier.},
+    howpublished = {Github},  
+    year = {2021},
+    url = {https://github.com/zju3dv/EasyMocap}
+}
+
 @inproceedings{dong2021fast,
   title={Fast and Robust Multi-Person 3D Pose Estimation and Tracking from Multiple Views},
   author={Dong, Junting and Fang, Qi and Jiang, Wen and Yang, Yurou and Bao, Hujun and Zhou, Xiaowei},
@@ -237,4 +244,4 @@ Please consider citing these works if you find this repo is useful for your proj
 
 [^bochkovskiy2020]: Bochkovskiy, Alexey, Chien-Yao Wang, and Hong-Yuan Mark Liao. "Yolov4: Optimal speed and accuracy of object detection." arXiv preprint arXiv:2004.10934 (2020).
 
-[^hrnet] Sun, Ke, et al. "Deep high-resolution representation learning for human pose estimation." Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2019.
+[^hrnet]: Sun, Ke, et al. "Deep high-resolution representation learning for human pose estimation." Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition. 2019.
