@@ -24,7 +24,8 @@ def projectN3(kpts3d, Pall):
         kp2d[:2, :] /= kp2d[2:, :]
         kp2ds.append(kp2d.T[None, :, :])
     kp2ds = np.vstack(kp2ds)
-    kp2ds[..., -1] = kp2ds[..., -1] * (kpts3d[None, :, -1] > 0.)
+    if kpts3d.shape[-1] == 4:
+        kp2ds[..., -1] = kp2ds[..., -1] * (kpts3d[None, :, -1] > 0.)
     return kp2ds
 
 def simple_reprojection_error(kpts1, kpts1_proj):
