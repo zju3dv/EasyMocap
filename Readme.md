@@ -2,20 +2,22 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2021-07-21 21:49:14
+ * @LastEditTime: 2022-08-08 13:42:34
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
-# EasyMocap
-
-<div align="left">
-    <img src="logo.png" width="20%">
+<div align="center">
+    <img src="logo.png" width="40%">
 </div>
 
-**EasyMocap** is an open-source toolbox for **markerless human motion capture** from RGB videos. In this project, we provide a lot of motion capture demos in different settings.
+**EasyMocap** is an open-source toolbox for **markerless human motion capture** and **novel view synthesis** from RGB videos. In this project, we provide a lot of motion capture demos in different settings.
 
 ![python](https://img.shields.io/github/languages/top/zju3dv/EasyMocap)
 ![star](https://img.shields.io/github/stars/zju3dv/EasyMocap?style=social)
+
+## News
+
+- :tada: Our SIGGRAPH 2022 [**Novel View Synthesis of Human Interactions From Sparse Multi-view Videos**](https://chingswy.github.io/easymocap-public-doc/works/multinb.html) will be added to this repo soon.
 
 ---
 
