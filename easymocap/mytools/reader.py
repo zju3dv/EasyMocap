@@ -2,8 +2,8 @@
   @ Date: 2021-04-21 15:19:21
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-07-29 16:12:37
-  @ FilePath: /EasyMocap/easymocap/mytools/reader.py
+  @ LastEditTime: 2022-07-22 23:23:26
+  @ FilePath: /EasyMocapPublic/easymocap/mytools/reader.py
 '''
 # function to read data
 """
@@ -27,17 +27,14 @@ def read_keypoints3d(filename):
     res_ = []
     for d in data:
         pid = d['id'] if 'id' in d.keys() else d['personID']
-        pose3d = np.array(d['keypoints3d'], dtype=np.float32)
-        if pose3d.shape[0] > 25:
-            # 对于有手的情况，把手的根节点赋值成body25上的点
-            pose3d[25, :] = pose3d[7, :]
-            pose3d[46, :] = pose3d[4, :]
-        if pose3d.shape[1] == 3:
-            pose3d = np.hstack([pose3d, np.ones((pose3d.shape[0], 1))])
-        res_.append({
-            'id': pid,
-            'keypoints3d': pose3d
-        })
+        ret = {'id': pid, 'type': 'body25'}
+        for key in ['keypoints3d', 'handl3d', 'handr3d', 'face3d']:
+            if key not in d.keys():continue
+            pose3d = np.array(d[key], dtype=np.float32)
+            if pose3d.shape[1] == 3:
+                pose3d = np.hstack([pose3d, np.ones((pose3d.shape[0], 1))])
+            ret[key] = pose3d
+        res_.append(ret)
     return res_
 
 def read_keypoints3d_dict(filename):
@@ -54,11 +51,13 @@ def read_keypoints3d_dict(filename):
         }
     return res_
 
-def read_smpl(filename):
+def read_smpl(filename):    
     datas = read_json(filename)
+    if isinstance(datas, dict):
+        datas = datas['annots']
     outputs = []
     for data in datas:
-        for key in ['Rh', 'Th', 'poses', 'shapes', 'expression']:
+        for key in ['Rh', 'Th', 'poses', 'handl', 'handr', 'shapes', 'expression', 'keypoints3d']:
             if key in data.keys():
                 data[key] = np.array(data[key], dtype=np.float32)
         # for smplx results

@@ -2,8 +2,8 @@
   @ Date: 2021-03-15 12:23:12
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-06-14 22:25:58
-  @ FilePath: /EasyMocapRelease/easymocap/mytools/file_utils.py
+  @ LastEditTime: 2022-07-21 15:55:02
+  @ FilePath: /EasyMocapPublic/easymocap/mytools/file_utils.py
 '''
 import os
 import json
@@ -11,17 +11,34 @@ import numpy as np
 from os.path import join
 
 mkdir = lambda x:os.makedirs(x, exist_ok=True)
-mkout = lambda x:mkdir(os.path.dirname(x))
-
+# mkout = lambda x:mkdir(os.path.dirname(x)) if x is not None
+def mkout(x):
+    if x is not None:
+        mkdir(os.path.dirname(x))
 def read_json(path):
     assert os.path.exists(path), path
     with open(path) as f:
-        data = json.load(f)
+        try:
+            data = json.load(f)
+        except:
+            print('Reading error {}'.format(path))
+            data = []
     return data
 
 def save_json(file, data):
     if not os.path.exists(os.path.dirname(file)):
         os.makedirs(os.path.dirname(file))
+    with open(file, 'w') as f:
+        json.dump(data, f, indent=4)
+
+def append_json(file, data):
+    if not os.path.exists(os.path.dirname(file)):
+        os.makedirs(os.path.dirname(file))
+    if os.path.exists(file):
+        res = read_json(file)
+        assert isinstance(res, list)
+        res.append(data)
+        data = res
     with open(file, 'w') as f:
         json.dump(data, f, indent=4)
 
@@ -51,19 +68,24 @@ def read_annot(annotname, mode='body25'):
             data[i]['id'] = data[i].pop('personID')
         if 'keypoints2d' in data[i].keys() and 'keypoints' not in data[i].keys():
             data[i]['keypoints'] = data[i].pop('keypoints2d')
-        for key in ['bbox', 'keypoints', 'handl2d', 'handr2d', 'face2d']:
+        for key in ['bbox', 'keypoints', 
+            'bbox_handl2d', 'handl2d', 
+            'bbox_handr2d', 'handr2d', 
+            'bbox_face2d', 'face2d']:
             if key not in data[i].keys():continue
             data[i][key] = np.array(data[i][key])
             if key == 'face2d':
                 # TODO: Make parameters, 17 is the offset for the eye brows,
                 # etc. 51 is the total number of FLAME compatible landmarks
                 data[i][key] = data[i][key][17:17+51, :]
-        data[i]['bbox'] = data[i]['bbox'][:5]
-        if data[i]['bbox'][-1] < 0.001:
-            # print('{}/{} bbox conf = 0, may be error'.format(annotname, i))
-            data[i]['bbox'][-1] = 1
+        if 'bbox' in data[i].keys():
+            data[i]['bbox'] = data[i]['bbox'][:5]
+            if data[i]['bbox'][-1] < 0.001:
+                print('{}/{} bbox conf = 0, may be error'.format(annotname, i))
+                data[i]['bbox'][-1] = 0
+        # combine the basic results
         if mode == 'body25':
-            data[i]['keypoints'] = data[i]['keypoints']
+            data[i]['keypoints'] = data[i].get('keypoints', np.zeros((25, 3)))
         elif mode == 'body15':
             data[i]['keypoints'] = data[i]['keypoints'][:15, :]
         elif mode in ['handl', 'handr']:
@@ -91,7 +113,7 @@ def array2raw(array, separator=' ', fmt='%.3f'):
         res.append(separator.join([fmt%(d) for d in data]))
     
     
-def myarray2string(array, separator=', ', fmt='%.3f', indent=8):
+def myarray2string(array, separator=', ', fmt='%7.7f', indent=8):
     assert len(array.shape) == 2, 'Only support MxN matrix, {}'.format(array.shape)
     blank = ' ' * indent
     res = ['[']
@@ -110,14 +132,16 @@ def write_common_results(dumpname=None, results=[], keys=[], fmt='%2.3f'):
         out_text.append('    {\n')
         output = {}
         output['id'] = data['id']
-        for key in keys:
-            if key not in data.keys():continue
+        for k in ['type']:
+            if k in data.keys():output[k] = '\"{}\"'.format(data[k])
+        keys_current = [k for k in keys if k in data.keys()]
+        for key in keys_current:
             # BUG: This function will failed if the rows of the data[key] is too large
             # output[key] = np.array2string(data[key], max_line_width=1000, separator=', ', formatter=format_out)
             output[key] = myarray2string(data[key], separator=', ', fmt=fmt)
         for key in output.keys():
             out_text.append('        \"{}\": {}'.format(key, output[key]))
-            if key != keys[-1]:
+            if key != keys_current[-1]:
                 out_text.append(',\n')
             else:
                 out_text.append('\n')
@@ -134,17 +158,16 @@ def write_common_results(dumpname=None, results=[], keys=[], fmt='%2.3f'):
     else:
         return ''.join(out_text)
 
-def write_keypoints3d(dumpname, results):
+def write_keypoints3d(dumpname, results, keys = ['keypoints3d']):
     # TODO:rewrite it
-    keys = ['keypoints3d']
-    write_common_results(dumpname, results, keys, fmt='%6.3f')
+    write_common_results(dumpname, results, keys, fmt='%6.7f')
 
 def write_vertices(dumpname, results):
     keys = ['vertices']
-    write_common_results(dumpname, results, keys, fmt='%6.3f')
+    write_common_results(dumpname, results, keys, fmt='%6.5f')
 
 def write_smpl(dumpname, results):
-    keys = ['Rh', 'Th', 'poses', 'expression', 'shapes']
+    keys = ['Rh', 'Th', 'poses', 'handl', 'handr', 'expression', 'shapes']
     write_common_results(dumpname, results, keys)
 
 def batch_bbox_from_pose(keypoints2d, height, width, rate=0.1):
