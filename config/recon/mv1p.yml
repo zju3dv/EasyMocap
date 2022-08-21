@@ -1,0 +1,48 @@
+# This config provides the dataset for triangulation of one person
+module: easymocap.datasets.base.MultiView
+args:
+  path: none
+  out: none
+  camera: none
+  subs: []
+  subs_vis: []
+  ranges: [0, -1, 1]
+  keys:
+    keypoints2d: keypoints
+    handl2d: handl2d
+    handr2d: handr2d
+    face2d: face2d
+  reader:
+    image:
+      root: images
+      ext: jpg
+      read_image: False
+    annot:
+      root: annots
+      ext: json
+      check_length: True
+  # define the output
+  writer:
+    keypoints3d:
+      root: keypoints3d
+      ext: .json
+    keypoints2d:
+      root: keypoints2d
+      ext: .json
+    visdetect:
+      enable: True
+      root: detect
+      ext: .jpg
+      scale: 0.5
+      crop: True
+    vismatch:
+      enable: False
+      root: match
+      ext: .jpg
+      crop: True
+      scale: 0.5
+    visrepro:
+      enable: True
+      root: repro
+      ext: .jpg
+      scale: 0.5

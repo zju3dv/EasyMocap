@@ -1,0 +1,33 @@
+module: easymocap.mytools.triangulator.SimpleTriangulator
+args:
+  keys: ['keypoints2d', 'handl2d', 'handr2d', 'face2d']
+  debug: False
+  config:
+    keypoints2d:
+      min_conf: 0.3
+      min_view: 2
+      dist_max: 0.1
+      dist_vel: 0.1
+      thres_outlier_joint: 0.4
+      thres_outlier_view: 0.5
+    handl2d:
+      min_conf: 0.3
+      min_view: 2
+      dist_max: 0.015
+      dist_vel: 0.05
+      thres_outlier_joint: 0.4
+      thres_outlier_view: 0.5
+    handr2d:
+      min_conf: 0.3
+      min_view: 2
+      dist_max: 0.015
+      dist_vel: 0.05
+      thres_outlier_joint: 0.4
+      thres_outlier_view: 0.5
+    face2d:
+      min_conf: 0.3
+      min_view: 2
+      dist_max: 0.015
+      dist_vel: 0.05
+      thres_outlier_joint: 0.4
+      thres_outlier_view: 0.5    

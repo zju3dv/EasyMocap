@@ -1,0 +1,116 @@
+module: easymocap.multistage.base.MultiStage
+args:
+  batch_size: 1
+  _parents_:
+    - config/fit/lbfgs.yml
+  initialize:
+    init_spin:
+      module: easymocap.multistage.init_cnn.InitSpin
+      args:
+        mean_params: data/models/smpl_mean_params.npz
+        ckpt_path: data/models/spin_checkpoint.pt
+        share_shape: True
+    init_pose:
+      module: easymocap.multistage.init_pose.SmoothPoses
+      args:
+        window_size: 2 # 前后N帧
+  stages:
+    camera:
+      optimize: [Th, Rh]
+      before_after: {}
+      loss:
+        k2d:
+          weight: 100.0
+          module: easymocap.multistage.lossbase.Keypoints2D
+          infos: [keypoints2d, K, Rc, Tc]
+          args:
+            index_est: [2, 5, 9, 12]
+            index_gt: [2, 5, 9, 12]
+            norm: l2
+            unproj: True
+        smoothTh:
+          weight: 100.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: Th
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        smoothDepth:
+          weight: 1000.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: Th
+            index: [2]
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        smoothRh:
+          weight: 100.
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: Rh
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+    joints:
+      optimize: [poses, Th, Rh]
+      repeat: 2 # repeat twice to avoid wrong initialization
+      loss:
+        k2d:
+          weight: 1000.
+          module: easymocap.multistage.lossbase.Keypoints2D
+          infos: [keypoints2d, K, Rc, Tc]
+          args:
+            norm: l2
+            norm_info: 0.02
+            unproj: True
+        init:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnyReg
+          infos: [init_poses]
+          args:
+            key: poses
+            norm: l2
+        pf-smoothtorso:
+          weight: 100.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: poses_full
+            index: [0,1,2,9,10,11,12,13,14,18,19,20,39,40,41,42,43,44]
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        smoothposes:
+          weight: 100.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: poses
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        smoothTh:
+          weight: 100.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: Th
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        smoothDepth:
+          weight: 1000.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: Th
+            index: [2]
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        smoothRh:
+          weight: 100.
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: Rh
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2

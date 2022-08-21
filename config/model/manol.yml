@@ -1,0 +1,9 @@
+module: easymocap.bodymodel.smplx.MANO
+args:
+  model_path: data/bodymodels/manov1.2/MANO_LEFT.pkl
+  device: cuda
+  regressor_path: data/smplx/J_regressor_mano_LEFT.txt
+  cfg_hand:
+    use_pca: True
+    num_pca_comps: 12
+    use_flat_mean: False

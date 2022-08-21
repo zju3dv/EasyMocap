@@ -2,8 +2,8 @@
   @ Date: 2021-06-09 10:16:46
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-08-31 16:19:48
-  @ FilePath: /EasyMocap/easymocap/annotator/file_utils.py
+  @ LastEditTime: 2022-06-27 17:26:00
+  @ FilePath: /EasyMocapPublic/easymocap/annotator/file_utils.py
 '''
 import os
 import json
@@ -36,10 +36,12 @@ def annot2string(data):
         value = data[key]
         indent = 4
         if key != 'annots':
-            if isinstance(value, str):
+            if key == 'isKeyframe':
+                res = '"{}": {}'.format(key, tobool(value))
+            elif isinstance(value, str):
                 res = '"{}": "{}",'.format(key, value)
             elif isinstance(value, bool):
-                res = '"{}": {}'.format(key, tobool(value))
+                res = '"{}": {},'.format(key, tobool(value))
             elif isinstance(value, int):
                 res = '"{}": {},'.format(key, value)
             elif isinstance(value, np.ndarray):
@@ -56,12 +58,17 @@ def annot2string(data):
                 pid = ind + '"personID": {},\n'.format(annot['personID'])
                 out_text.append(head)
                 out_text.append(pid)
+                for ckey in ['class']:
+                    if ckey not in annot.keys():
+                        continue
+                    info_class = ind + '"class": "{}",\n'.format(annot['class'])
+                    out_text.append(info_class)
                 for bkey in ['bbox', 'bbox_handl2d', 'bbox_handr2d', 'bbox_face2d']:
                     if bkey not in annot.keys():
                         continue
                     bbox = ind + '"{}": [{:.2f}, {:.2f}, {:.2f}, {:.2f}, {:.2f}],\n'.format(bkey, *annot[bkey][:5])
                     out_text.append(bbox)
-                for bkey in ['keypoints', 'handl2d', 'handr2d', 'face2d']:
+                for bkey in ['keypoints', 'handl2d', 'handr2d', 'face2d', 'keypoints3d']:
                     if bkey not in annot.keys():
                         continue
                     val = np.array(annot[bkey])
@@ -70,6 +77,19 @@ def annot2string(data):
                     ret = myarray2string(val, fmt='%7.2f', indent=12)
                     kpts = ind + '"{}": '.format(bkey) + ret + ',\n'
                     out_text.append(kpts)
+                if 'params' in annot.keys():
+                    out_text.append(ind + '"params": {\n')
+                    keys = list(annot['params'].keys())
+                    for vkey, val in annot['params'].items():
+                        val = np.array(val)
+                        ret = myarray2string(val, fmt='%7.2f', indent=4*4)
+                        kpts = ind + 4*' ' + '"{}": '.format(vkey) + ret
+                        if vkey == keys[-1]:
+                            kpts += '\n'
+                        else:
+                            kpts += ',\n'
+                        out_text.append(kpts)
+                    out_text.append(ind + '},\n')
                 for rkey in ['isKeyframe']:
                     val = annot.get(rkey, False)
                     bkey = ind + '"{}": {}\n'.format(rkey, tobool(val))
@@ -124,7 +144,7 @@ def load_annot_to_tmp(annotname):
     if not os.path.exists(annotname):
         dirname = os.path.dirname(annotname)
         os.makedirs(dirname, exist_ok=True)
-        shutil.copy(annotname.replace('_tmp', ''), annotname)
+        shutil.copyfile(annotname.replace('_tmp', ''), annotname)
     annot = read_json(annotname)
     if isinstance(annot, list):
         annot = {'annots': annot, 'isKeyframe': False, 'isList': True}

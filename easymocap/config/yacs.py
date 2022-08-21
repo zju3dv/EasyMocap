@@ -79,8 +79,18 @@ class CfgNode(dict):
                 # Convert dict to CfgNode
                 init_dict[k] = CfgNode(v, key_list=key_list + [k])
                 if '_parent_' in v.keys():
-                    init_dict[k].merge_from_file(v['_parent_'])
+                    parent_ = CfgNode()
+                    parent_.merge_from_file(v['_parent_'])
                     init_dict[k].pop('_parent_')
+                    parent_.merge_from_other_cfg(init_dict[k])
+                    init_dict[k] = parent_
+                if '_parents_' in v.keys():
+                    parent_ = CfgNode()
+                    for parent in v['_parents_']:
+                        parent_.merge_from_file(parent)
+                    init_dict[k].pop('_parents_')
+                    parent_.merge_from_other_cfg(init_dict[k])
+                    init_dict[k] = parent_
                 if '_const_' in v.keys() and v['_const_']:
                     init_dict[k].__dict__[CfgNode.IMMUTABLE] = True
                     init_dict[k].pop('_const_')
@@ -157,8 +167,10 @@ class CfgNode(dict):
 
         r = ""
         s = []
+        if len(self.keys()) == 0:
+            return "{}"
         for k, v in self.items():
-            seperator = "\n" if isinstance(v, CfgNode) else " "
+            seperator = "\n" if isinstance(v, CfgNode) and len(v.keys()) > 0 else " "
             attr_str = "{}:{}{}".format(str(k), seperator, str(v))
             attr_str = _indent(attr_str, 4)
             s.append(attr_str)
@@ -175,12 +187,17 @@ class CfgNode(dict):
 
     def merge_from_file(self, cfg_filename):
         """Load a yaml config file and merge it this CfgNode."""
-        with open(cfg_filename, "r") as f:
+        with open(cfg_filename, "r", encoding='utf8') as f:
             cfg = load_cfg(f)
         if 'parent' in cfg.keys():
             if cfg.parent != 'none':
                 print('[Config] merge from parent file: {}'.format(cfg.parent))
                 self.merge_from_file(cfg.parent)
+        if 'parents' in cfg.keys():
+            for parent in cfg['parents']:
+                print('[Config] merge from parent file: {}'.format(parent))
+                self.merge_from_file(parent)
+            cfg.pop('parents')
         self.merge_from_other_cfg(cfg)
 
     def merge_from_other_cfg(self, cfg_other):
@@ -198,6 +215,17 @@ class CfgNode(dict):
             ),
         )
         root = self
+        cfg_list_new = []
+        alias = self.pop('_alias_', {})
+        for i in range(len(cfg_list)//2):
+            if cfg_list[2*i] in alias.keys():
+                for name in alias[cfg_list[2*i]]:
+                    cfg_list_new.append(name)
+                    cfg_list_new.append(cfg_list[2*i+1])
+            else:
+                cfg_list_new.append(cfg_list[2*i])
+                cfg_list_new.append(cfg_list[2*i+1])
+        cfg_list = cfg_list_new
         for full_key, v in zip(cfg_list[0::2], cfg_list[1::2]):
             if root.key_is_deprecated(full_key):
                 continue
@@ -211,9 +239,13 @@ class CfgNode(dict):
                 )
                 d = d[subkey]
             subkey = key_list[-1]
-            _assert_with_logging(subkey in d, "Non-existent key: {}".format(full_key))
             value = _decode_cfg_value(v)
-            value = _check_and_coerce_cfg_value_type(value, d[subkey], subkey, full_key)
+            if subkey not in d.keys():
+                logger.warning("Key is not in the template: {}".format(full_key))
+                d[subkey] = value
+            else:
+                value = _decode_cfg_value(v)
+                value = _check_and_coerce_cfg_value_type(value, d[subkey], subkey, full_key)
             d[subkey] = value
 
     def freeze(self):
@@ -394,7 +426,10 @@ def _merge_a_into_b(a, b, root, key_list):
     )
     if '_no_merge_' in a.keys() and a['_no_merge_']:
         b.clear()
-        a.pop('_no_merge_')
+        # TODO:这里好像b好像有时候是a的拷贝，有时候不是
+        if '_no_merge_' in a.keys():
+            a.pop('_no_merge_')
+
     for k, v_ in a.items():
         full_key = ".".join(key_list + [k])
         # a must specify keys that are in b

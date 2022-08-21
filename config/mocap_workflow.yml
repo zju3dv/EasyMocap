@@ -1,0 +1,172 @@
+# This file defines the work flow of the mocap pipeline.
+triangulation-dense:
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/triangulator-mv1p-total-mobilestage-studio.yml
+    out: output-keypoints3d
+lightstage-dense-smpl:
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/triangulator-mv1p-total-mobilestage-studio.yml
+    out: output-keypoints3d
+  fit: smpl-3d
+  output: output-smpl-3d
+lightstage-dense-smplh:
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/triangulator-mv1p-total-mobilestage-studio.yml
+    out: output-keypoints3d
+  fit: smplh-3d
+  output: output-smpl-3d
+lightstage-dense-manol:
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/triangulator-mv1p-total-mobilestage-studio.yml
+    out: output-keypoints3d
+  fit: handl-3d
+  output: output-manol-3d
+lightstage-dense-unsync:
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/triangulator-mv1p-total-mobilestage-studio.yml
+    out: output-keypoints3d
+  fit: smplh-3d-unsync
+  output: output-smpl-3d-unsync
+  evaluate: none
+lightstage-dense-smplh-unsync:
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/triangulator-mv1p-total-mobilestage-studio.yml
+    out: output-keypoints3d
+  fit: smplh-3d-unsync
+  output: output-smpl-3d
+  evaluate: none
+internet:
+  calibration: "python3 apps/calibration/create_blank_camera.py ${data}"
+  extract_image: none
+  extract_keypoints:
+    hrnet: "python3 apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "python3 apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  fit: mono-smpl-robust
+  output: output-smpl-3d
+internet-rotate:
+  calibration: "python3 apps/calibration/create_blank_camera.py ${data}"
+  extract_image: none
+  extract_keypoints:
+    hrnet: "python3 apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "python3 apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  fit: mono-smpl-rotate
+  output: output-smpl-3d
+mirror:
+  calibration: "python3 apps/calibration/create_blank_camera.py ${data}"
+  extract_image: none
+  extract_keypoints:
+    hrnet: "python3 apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "python3 apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+    track: "python3 apps/preprocess/extract_track.py ${data}"
+  fit: mirror-smpl
+  output: output-smpl-3d
+mirror2p:
+  calibration: "python3 apps/calibration/create_blank_camera.py ${data}"
+  extract_image: none
+  extract_keypoints:
+    hrnet: "python3 apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "python3 apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+    track: "python3 apps/preprocess/extract_track.py ${data}"
+    match: "python3 apps/preprocess/extract_match_for_mirror.py ${data}"
+  fit: mirror2p-smpl
+  output: output-smpl-3d
+mv1p:
+  extract_image: none
+  calibration: none
+  extract_keypoints:
+    hrnet: "apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/mv1p-total.yml
+    out: output-keypoints3d
+  fit: smpl-3d
+  evaluate: none
+mv1p-smplh:
+  extract_image: none
+  calibration: none
+  extract_keypoints:
+    hrnet: "apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/mv1p-total.yml
+    out: output-keypoints3d
+  fit: smplh-3d
+  evaluate: none
+mv1p-manol:
+  extract_image: none
+  calibration: none
+  extract_keypoints:
+    hrnet: "apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/mv1p-total.yml
+    out: output-keypoints3d
+  fit: handl-3d
+  evaluate: none
+mvmp:
+  extract_image: none
+  calibration: none
+  extract_keypoints:
+    hrnet: "apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  triangulation:
+    data: config/recon/mvmp.yml
+    exp: config/recon/triangulator-mvmp-dense.yml
+    out: output-keypoints3d
+  fit: smpl-3d-mp
+mvmp-1p: # This mode is for using matching and only fit one person
+  extract_image: none
+  calibration: none
+  extract_keypoints:
+    hrnet: "apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  triangulation:
+    data: config/recon/mvmp.yml
+    exp: config/recon/triangulator-mvmp-wild.yml
+    out: output-keypoints3d
+  fit: smpl-3d
+mvmp-wild:
+  extract_image: none
+  calibration: none
+  extract_keypoints:
+    hrnet: "apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  triangulation:
+    data: config/recon/mvmp.yml
+    exp: config/recon/triangulator-mvmp-wild.yml
+    out: output-keypoints3d
+  fit: smpl-3d-mp-unsync
+mvmp-sync:
+  extract_image: none
+  calibration: none
+  extract_keypoints:
+    hrnet: "apps/preprocess/extract_keypoints.py ${data} --mode yolo-hrnet"
+    openpose: "apps/preprocess/extract_keypoints.py ${data} --mode feetcrop --hand"
+  triangulation:
+    data: config/recon/mvmp.yml
+    exp: config/recon/triangulator-mvmp-wild.yml
+    out: output-keypoints3d
+  fit: smpl-3d-mp
+object:
+  extract_keypoints: none
+  triangulation:
+    data: config/recon/mvobj.yml
+    exp: config/recon/tri-mvobj.yml
+    out: output-object3d
+render:
+  postprocess:
+    vertices: "python3 apps/postprocess/write_vertices.py ${data}/output-smpl-3d/smpl ${data}/output-smpl-3d/vertices --cfg_model ${data}/output-smpl-3d/cfg_model.yml --mode vertices"
+    mask: "python3 apps/postprocess/render.py ${data} --exp output-smpl-3d --mode instance-d0.05"
+render-d0.1:
+  postprocess:
+    vertices: "python3 apps/postprocess/write_vertices.py ${data}/output-smpl-3d/smpl ${data}/output-smpl-3d/vertices --cfg_model ${data}/output-smpl-3d/cfg_model.yml --mode vertices"
+    # mask: "python3 apps/postprocess/render.py ${data} --exp output-smpl-3d --mode instance-d0.1"

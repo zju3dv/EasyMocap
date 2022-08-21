@@ -1,0 +1,120 @@
+module: easymocap.multistage.base.MultiStage
+args:
+  batch_size: -1
+  _parents_:
+    - config/fit/lbfgs.yml
+  initialize:
+    check_keypoints:
+      module: easymocap.multistage.initialize.CheckKeypoints
+      args:
+        type: body25
+    init_RT:
+      module: "easymocap.multistage.initialize.InitRT"
+      args:
+        torso: [8, 1, 9, 12]
+  stages:
+    shape:
+      optimize: [shapes]
+      loss:
+        _parents_:
+          - config/fit/loss/shape_by_limb.yml
+    RT:
+      optimize: ["Th", "Rh"]
+      loss:
+        k3d:
+          weight: 1.0
+          module: easymocap.multistage.lossbase.Keypoints3D
+          infos: ["keypoints3d"]
+          args:
+            index_est: [2, 5, 9, 12]
+            index_gt: [2, 5, 9, 12]
+            norm: l2
+        sTh:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: Th
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+        sRh:
+          weight: 1.
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: Rh
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+    joints:
+      repeat: 2
+      optimizes: [[poses, Rh, Th], [shapes, poses, Rh, Th]]
+      before_after:
+        skip_poses:
+          module: easymocap.multistage.base_ops.SkipPoses
+          args:
+            nPoses: 69
+            index: [51, 53, 54, 56, 57, 58, 59, 60, 61, 62, # only keep rotation of elbow
+            10, 11, 13, 14, # only keep knee
+            27, 28, 29, 30, 31, 32] # remove feet
+      loss:
+        k3d:
+          weight: 1.0
+          module: easymocap.multistage.lossbase.Keypoints3D
+          infos: ["keypoints3d"]
+          args:
+            ranges_est: [0, 25]
+            norm: l2
+        rpose:
+          weight: 0.000001
+          module: easymocap.multistage.lossbase.AnyReg
+          infos: []
+          args:
+            key: poses
+            norm: l2
+            reduce: mean
+        skpts2:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: kpts_est
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        spose1:
+          weight: 0.0001
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: poses
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 1
+        spose2:
+          weight: 0.01
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: poses
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sTh:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: Th
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sRh:
+          weight: 1.
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: Rh
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        rshape:
+          weights: [0., 0.0001]
+          module: easymocap.multistage.lossbase.AnyReg
+          infos: []
+          args:
+            key: shapes
+            norm: l2
+            reduce: mean

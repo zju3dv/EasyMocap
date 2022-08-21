@@ -1,0 +1,20 @@
+optimizer:
+  optim_type: "lbfgs"
+  # L-BFGS
+  tolerance_grad: 0.0000001 # float32的有效位数是7位
+  tolerance_change: 0.0000001
+  max_iter: 20 # for L-BFGS
+  # adam
+  lr: 0.001
+  betas: [0.9, 0.999]
+  weight_decay: 0.0
+monitor:
+  ftol: 0.0000001
+  gtol: 0.0000001
+  maxiters: 100000
+  vis2d: False
+  vis3d: False
+  timer: True
+  verbose: False
+  printloss: False
+  check: False

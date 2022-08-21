@@ -1,0 +1,19 @@
+parents:
+  - config/recon/triangulator-mv1p-total.yml
+args:
+  config:
+    keypoints2d:
+      min_view: 8
+      dist_max: 0.05
+      dist_vel: 0.1
+      thres_outlier_joint: 0.4
+      thres_outlier_view: 0.5
+    handl2d:
+      min_view: 8
+      dist_max: 0.02
+    handr2d:
+      min_view: 8
+      dist_max: 0.02
+    face2d:
+      min_view: 8
+      dist_max: 0.02

@@ -1,0 +1,59 @@
+module: easymocap.multistage.base.MultiStage
+args:
+  _parents_:
+    - config/fit/lbfgs.yml
+  batch_size: -1
+  initialize: {}
+  stages:
+    shape:
+      optimize: [shapes]
+      loss:
+        _parents_:
+          - config/fit/loss/shape_by_limb.yml
+        limb:
+          infos: [handl3d]
+          args:
+            key: handl3d
+            kintree: [[0, 5], [0, 9], [0, 13], [0, 17]]
+        regshape:
+          weight: 0.01
+    RT:
+      optimize: [Rh, Th]
+      before_after: {}
+      loss:
+        k3d:
+          weight: 1000.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3D
+          infos: [handl3d]
+          args:
+            key: handl3d
+            index_est: [0, 1, 5, 9, 13, 17]
+            index_gt: [0, 1, 5, 9, 13, 17]
+            norm: l2
+    joints:
+      repeat: 3
+      optimizes: [[poses, Rh, Th], [shapes], [poses, shapes, Rh, Th]]
+      before_after: {}
+      loss:
+        k3d: 
+          weight: 1000.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3D
+          infos: [handl3d]
+          args:
+            key: handl3d
+            ranges_est: [0, 21]
+            norm: l2
+        reg:
+          weight: 0.001
+          module: easymocap.multistage.lossbase.AnyReg
+          infos: []
+          args:
+            key: poses
+            norm: l2
+        regshape:
+          module: easymocap.multistage.lossbase.AnyReg
+          weight: 0.0001
+          infos: []
+          args:
+            key: shapes
+            norm: l2

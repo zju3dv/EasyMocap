@@ -1,0 +1,10 @@
+module: easymocap.bodymodel.smplx.SMPLHModel
+args:
+  model_path: data/bodymodels/smplhv1.2/neutral/model.npz
+  device: cuda
+  regressor_path: data/smplx/J_regressor_body25_smplh.txt
+  mano_path: data/bodymodels/manov1.2
+  cfg_hand:
+    use_pca: True
+    use_flat_mean: False
+    num_pca_comps: 12

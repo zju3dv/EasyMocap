@@ -1,0 +1,119 @@
+smpl-3d:
+  comment: "Fitting SMPL to 3D body keypoints"
+  data: config/data/mv1p.yml
+  exp: config/fit/mv1p3d.yml
+  model: config/model/smpl.yml
+# mirror
+mirror-smpl:
+  comment: "Fitting SMPL to mirror"
+  data: config/data/multivideo-mirror.yml
+  model: config/model/smpl.yml
+  exp: config/fit/1v1p-mirror-direct.yml
+smpl-3d-mp:
+  comment: "Fitting SMPL to 3D body keypoints"
+  data: config/data/mvmp.yml
+  exp: config/fit/mv1p3d.yml
+  model: config/model/smpl.yml
+handl-3d:
+  comment: "Fitting Left hand to 3D hand keypoints"
+  data: config/data/mv1h.yml
+  exp: config/fit/mv1h3d.yml
+  model: config/model/manol.yml
+smplh-3d:
+  comment: "Fitting SMPLH to 3D body keypoints"
+  data: config/data/mv1p.yml
+  exp: config/fit/mv1p3dhand-new.yml
+  model: config/model/smplh.yml
+handlr-3d:
+  comment: "Fitting Left and right hands to 3D hand keypoints"
+  data: config/data/mv2h.yml
+  exp: config/fit/mv2h3d.yml
+  model: config/model/manolr.yml
+# monocular demos
+mono-smpl:
+  comment: "Fitting SMPL to monocular videos"
+  data: config/data/multivideo.yml
+  model: config/model/smpl.yml
+  exp: config/fit/1v1p.yml
+mono-smpl-fast:
+  comment: "Fitting SMPL to monocular videos with fast motion"
+  data: config/data/multivideo.yml
+  model: config/model/smpl.yml
+  exp: config/fit/1v1p.yml
+  opt_exp:
+    - args.stages.joints.loss.smoothposes.weight
+    - "20."
+    - args.stages.joints.loss.k2d.weight
+    - "10000."
+mono-smpl-rotate:
+  comment: "Fitting SMPL to monocular videos with fast motion with rotation"
+  data: config/data/multivideo.yml
+  model: config/model/smpl.yml
+  exp: config/fit/1v1p.yml
+  opt_exp:
+    - args.stages.camera.loss.smoothRh.weight
+    - "0.5"
+    - args.stages.joints.loss.smoothRh.weight
+    - "0.5"
+    - args.stages.joints.repeat
+    - "10"
+    - args.stages.joints.loss.smoothposes.weight
+    - "20."
+mono-smpl-robust:
+  comment: "Fitting SMPL to monocular videos with robust loss"
+  data: config/data/multivideo.yml
+  model: config/model/smpl.yml
+  exp: config/fit/1v1p.yml
+  opt_exp: [args.stages.joints.loss.k2d.weight, "100.", args.stages.joints.loss.k2d.args.norm, gm]
+mono-vposer:
+  comment: "Fitting SMPL to monocular videos"
+  data: config/data/multivideo.yml
+  model: config/model/smpl_vposer.yml
+  exp: config/fit/1v1p.yml
+smpl-3d-unsync:
+  comment: "Fitting SMPL to 3D body keypoints and unsync 2D keypoints"
+  data: config/data/mv1p.yml
+  exp: config/fit/mv1p3d-unsync.yml
+  model: config/model/smpl.yml
+smplh-3d-unsync:
+  comment: "Fitting SMPL to 3D body keypoints and unsync 2D keypoints"
+  data: config/data/mv1p.yml
+  exp: config/fit/mv1p3dhand-unsync.yml
+  model: config/model/smplh.yml
+  # opt_exp: [args.stages.fitBodySync.loss.k2d.args.einsum, 'fvab,fvnb->fvna']
+smpl-3d-mp-unsync:
+  comment: "Fitting SMPL to 3D body keypoints and unsync 2D keypoints"
+  data: config/data/mvmp.yml
+  exp: config/fit/mv1p3d-unsync.yml
+  model: config/model/smpl.yml
+  opt_exp: [args.stages.fitBodySync.loss.k2d.args.einsum, 'fvab,fvpnb->fvpna']
+smpl-3d-mp-wild:
+  comment: "Fitting SMPL to 3D body keypoints and unsync 2D keypoints"
+  data: config/data/mvmp.yml
+  exp: config/fit/mv1p3d.yml
+  model: config/model/smpl.yml
+  # opt_exp: [args.stages.fitBodySync.loss.k2d.args.einsum, 'fvab,fvpnb->fvpna']
+smpl-3d-mp-wild-unsync:
+  comment: "Fitting SMPL to 3D body keypoints and unsync 2D keypoints"
+  data: config/data/mvmp.yml
+  exp: config/fit/mv1p3d-unsync.yml
+  model: config/model/smpl.yml
+  opt_exp: [args.stages.fitBodySync.loss.k2d.args.einsum, 'fvab,fvpnb->fvpna']
+smplh-3d-mp:
+  comment: "Fitting SMPLH to 3D body keypoints and 2D keypoints"
+  data: config/data/mvmp.yml
+  exp: config/fit/mv1p3dhand.yml
+  model: config/model/smplh.yml
+  # opt_exp: [args.stages.fitBodySync.loss.k2d.args.einsum, 'fvab,fvpnb->fvpna']
+smplh-3d-mp-unsync:
+  comment: "Fitting SMPLH to 3D body keypoints and 2D keypoints"
+  data: config/data/mvmp.yml
+  exp: config/fit/mv1p3dhand-unsync.yml
+  model: config/model/smplh.yml
+  opt_exp: [args.stages.fitBodySync.loss.k2d.args.einsum, 'fvab,fvpnb->fvpna']
+# Public Dataset
+panoptic:
+  comment: "Fitting SMPL to 3D body keypoints"
+  data: config/data/mv1p-total-keypoints3donly.yml
+  exp: config/fit/mv1p3dhand.yml
+  model: config/model/smplh.yml

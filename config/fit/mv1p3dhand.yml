@@ -1,0 +1,286 @@
+parents:
+  - config/fit/mv1p3d.yml
+args:
+  stages:
+    # first optimize hand parameters
+    hand:
+      repeat: 2
+      optimizes: [[T_handl3d, T_handr3d], [R_handl3d, T_handl3d, R_handr3d, T_handr3d]]
+      at_start:
+        add: [R_handl3d, T_handl3d, R_handr3d, T_handr3d]
+        convert: numpy_to_tensor
+      loss: 
+        handl:
+          weight: 1000.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3DWithRT
+          infos: [handl3d]
+          args:
+            key: handl3d
+            index_est: [25, 30, 34, 38, 42]
+            index_gt: [0, 5, 9, 13, 17]
+            norm: l2
+        handr:
+          weight: 1000.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3DWithRT
+          infos: [handr3d]
+          args:
+            key: handr3d
+            index_est: [46, 51, 55, 59, 63]
+            index_gt: [0, 5, 9, 13, 17]
+            norm: l2
+        sTl:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: T_handl3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sTr:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: T_handr3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sRl:
+          weights: [1, 1.]
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: R_handl3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sRr:
+          weights: [1., 1.]
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: R_handr3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+    handpose:
+      repeat: 1
+      optimize: [handl, handr, R_handl3d, T_handl3d, R_handr3d, T_handr3d]
+      loss: 
+        handl:
+          weight: 1000.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3DWithRT
+          infos: [handl3d]
+          args:
+            key: handl3d
+            ranges_est: [25, 46]
+            norm: l2
+        handr:
+          weight: 1000.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3DWithRT
+          infos: [handr3d]
+          args:
+            key: handr3d
+            ranges_est: [46, 67]
+            norm: l2
+        sHl:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: handl
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sHr:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: handr
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sTl:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: T_handl3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sTr:
+          weight: 1.
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: T_handr3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sRl:
+          weight: 1.
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: R_handl3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+        sRr:
+          weight: 1.
+          module: easymocap.multistage.lossbase.SmoothRot
+          args:
+            key: R_handr3d
+            weight: [0.5, 0.3, 0.1, 0.1]
+            norm: l2
+            order: 2
+    posehandrot:
+      repeat: 3
+      optimizes: [[poses], [shapes], [poses]]
+      loss:
+        initk3d:
+          weight: 100.0
+          module: easymocap.multistage.lossbase.AnyReg
+          infos: ["init_kpts_est"]
+          args:
+            key: kpts_est
+            index: [0, 1, 2, 3, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]
+            norm: l2
+            dim: -2
+        handl:
+          weight: 10.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3D
+          infos: ["handl3d"]
+          args:
+            key: handl3d
+            ranges_est: [25, 46]
+            norm: l2
+        handr:
+          weight: 10.0
+          module: easymocap.multistage.lossbase.AnyKeypoints3D
+          infos: ["handr3d"]
+          args:
+            key: handr3d
+            ranges_est: [46, 67]
+            norm: l2
+        spose1:
+          weight: 0.0001
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: poses
+            weight: [0.5, 0.3, 0.1, 0.1]
+            ranges: [0, 60]
+            norm: l2
+            order: 1
+        spose2:
+          weight: 0.01
+          module: easymocap.multistage.lossbase.AnySmooth
+          args:
+            key: poses
+            weight: [0.5, 0.3, 0.1, 0.1]
+            ranges: [0, 60]
+            norm: l2
+            order: 2
+        # rshape:
+        #   weight: 0.01
+        #   module: easymocap.multistage.lossbase.AnyReg
+        #   infos: [init_shapes]
+        #   args:
+        #     key: shapes
+        #     norm: l2
+        #     reduce: mean
+        # rpose:
+        #   weight: 0.0001
+        #   module: easymocap.multistage.lossbase.AnyReg
+        #   infos: [init_poses]
+        #   args:
+        #     key: poses
+        #     norm: l2
+        #     reduce: mean
+        # spose:
+        #   weight: 0.005
+        #   module: easymocap.multistage.lossbase.AnySmooth
+        #   args:
+        #     key: poses
+        #     weight: [0.5, 0.3, 0.1, 0.1]
+        #     norm: l2
+        #     order: 2
+    # hand:
+    #   repeat: 1
+    #   optimize: [poses, handl, handr]
+    #   loss:
+    #     k3d:
+    #       weight: 1.0
+    #       module: easymocap.multistage.lossbase.Keypoints3D
+    #       infos: ["keypoints3d"]
+    #       args:
+    #         ranges_est: [0, 25]
+    #         norm: l2
+    #     handl:
+    #       weight: 10.0
+    #       module: easymocap.multistage.lossbase.AnyKeypoints3D
+    #       infos: ["handl3d"]
+    #       args:
+    #         key: handl3d
+    #         ranges_est: [25, 46]
+    #         norm: l2
+    #     handr:
+    #       weight: 10.0
+    #       module: easymocap.multistage.lossbase.AnyKeypoints3D
+    #       infos: ["handr3d"]
+    #       args:
+    #         key: handr3d
+    #         ranges_est: [46, 67]
+    #         norm: l2
+    #     rpose:
+    #       weight: 0.0001
+    #       module: easymocap.multistage.lossbase.AnyReg
+    #       infos: [init_poses]
+    #       args:
+    #         key: poses
+    #         norm: l2
+    #         reduce: mean
+    #     spose2:
+    #       weight: 0.01
+    #       module: easymocap.multistage.lossbase.AnySmooth
+    #       args:
+    #         key: poses
+    #         weight: [0.5, 0.3, 0.1, 0.1]
+    #         norm: l2
+    #         order: 2
+    #     spose1:
+    #       weight: 0.01
+    #       module: easymocap.multistage.lossbase.AnySmooth
+    #       args:
+    #         key: poses
+    #         weight: [0.5, 0.3, 0.1, 0.1]
+    #         norm: l2
+    #         order: 1
+    #     # pf-shead:
+    #     #   weight: 10.
+    #     #   module: easymocap.multistage.lossbase.AnySmooth
+    #     #   args:
+    #     #     key: poses_full
+    #     #     index: [36, 37, 38, 45, 46, 47]
+    #     #     weight: [0.5, 0.3, 0.1, 0.1]
+    #     #     norm: l2
+    #     #     order: 1
+    #     # pf-shead2:
+    #     #   weight: 10.
+    #     #   module: easymocap.multistage.lossbase.AnySmooth
+    #     #   args:
+    #     #     key: poses_full
+    #     #     index: [36, 37, 38, 45, 46, 47]
+    #     #     weight: [0.5, 0.3, 0.1, 0.1]
+    #     #     norm: l2
+    #     #     order: 2
+    #     sHl:
+    #       weight: 1.
+    #       module: easymocap.multistage.lossbase.AnySmooth
+    #       args:
+    #         key: handl
+    #         weight: [0.5, 0.3, 0.1, 0.1]
+    #         norm: l2
+    #         order: 2
+    #     sHr:
+    #       weight: 1.
+    #       module: easymocap.multistage.lossbase.AnySmooth
+    #       args:
+    #         key: handr
+    #         weight: [0.5, 0.3, 0.1, 0.1]
+    #         norm: l2
+    #         order: 2

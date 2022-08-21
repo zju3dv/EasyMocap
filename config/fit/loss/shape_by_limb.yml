@@ -1,0 +1,14 @@
+limb:
+  module: easymocap.multistage.lossbase.LimbLength
+  weight: 1000.
+  infos: [keypoints3d]
+  args:
+    kintree: [[8, 1], [2, 5], [2, 3], [5, 6], [3, 4], [6, 7], [2, 3], [5, 6], [3, 4], [6, 7], [2, 3], [5, 6], [3, 4], [6, 7], [1, 0], [9, 12], [9, 10], [10, 11], [12, 13],[13, 14]]
+    norm: "l2"
+regshape:
+  module: easymocap.multistage.lossbase.AnyReg
+  weight: 0.002
+  infos: []
+  args:
+    key: shapes
+    norm: l2
