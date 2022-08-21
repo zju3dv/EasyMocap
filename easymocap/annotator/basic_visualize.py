@@ -95,6 +95,7 @@ def plot_bbox_sp(img, annots, bbox_type='handl_bbox', add_center=False):
         if bbox_type not in data.keys():
             continue
         bbox = data[bbox_type]
+        if bbox[-1] < 0.001: continue
         # 画一个X形
         x1, y1, x2, y2 = bbox[:4]
         pid = data['personID']

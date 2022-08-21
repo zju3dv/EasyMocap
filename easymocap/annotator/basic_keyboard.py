@@ -2,8 +2,8 @@
   @ Date: 2021-04-15 17:39:34
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-07-24 17:01:18
-  @ FilePath: /EasyMocap/easymocap/annotator/basic_keyboard.py
+  @ LastEditTime: 2022-05-23 15:06:00
+  @ FilePath: /EasyMocapPublic/easymocap/annotator/basic_keyboard.py
 '''
 from glob import glob
 from tqdm import tqdm
@@ -14,7 +14,12 @@ def print_help(annotator, **kwargs):
     print('Here is the help:')
     print(  '------------------')
     for key, val in annotator.register_keys.items():
-        print('    {}: '.format(key, ': '), str(val.__doc__))
+        if isinstance(val, list):
+            print('    {}: '.format(key, ': '), str(val[0].__doc__))
+            for v in val[1:]:
+                print('       ', str(v.__doc__))
+        else:
+            print('    {}: '.format(key, ': '), str(val.__doc__))
 
 def print_help_mv(annotator, **kwargs):
     print_help(annotator)
@@ -31,6 +36,10 @@ def close(annotator, **kwargs):
     else:
         annotator.save_and_quit()
         # annotator.pbar.close()
+def close_wo_save(annotator, **kwargs):
+    """quit the annotation without saving"""
+    annotator.save_and_quit(key='n')
+
 def skip(annotator, **kwargs):
     """skip the annotation"""
     annotator.save_and_quit(key='y')
@@ -49,14 +58,18 @@ def get_move(wasd):
     get_frame = {
         'a': lambda x, f: f - 1,
         'd': lambda x, f: f + 1,
-        'w': lambda x, f: f - x.step,
-        's': lambda x, f: f + x.step
+        'w': lambda x, f: f - 10,
+        's': lambda x, f: f + 10,
+        'f': lambda x, f: f + 100,
+        'g': lambda x, f: f - 100,
     }[wasd]
     text = {
         'a': 'Move to last frame',
         'd': 'Move to next frame',
         'w': 'Move to last step frame',
-        's': 'Move to next step frame'
+        's': 'Move to next step frame',
+        'f': 'Move to last step frame',
+        'g': 'Move to next step frame'
     }
     clip_frame = lambda x, f: max(x.start, min(x.nFrames-1, min(x.end-1, f)))
     def move(annotator, **kwargs):
@@ -174,6 +187,7 @@ register_keys = {
     'h': print_help,
     'H': print_help_mv,
     'q': close,
+    'Q': close_wo_save,
     ' ': skip,
     'p': capture_screen,
     'A': automatic,
@@ -181,7 +195,7 @@ register_keys = {
     'k': set_keyframe
 }
 
-for key in 'wasd':
+for key in 'wasdfg':
     register_keys[key] = get_move(key)
 
 for i in range(5):

@@ -2,7 +2,7 @@
   @ Date: 2021-04-15 16:57:53
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-07-14 22:15:26
+  @ LastEditTime: 2021-10-15 16:43:12
   @ FilePath: /EasyMocap/easymocap/annotator/basic_dataset.py
 '''
 from os.path import join
@@ -11,19 +11,22 @@ import shutil
 from .file_utils import getFileList
 
 class ImageFolder:
-    def __init__(self, path, sub=None, image='images', annot='annots', no_annot=False, ext='.jpg', remove_tmp=True) -> None:
+    def __init__(self, path, sub=None, image='images', annot='annots', 
+        no_annot=False, share_annot=False, ext='.jpg', remove_tmp=True,
+        max_per_folder=-1) -> None:
         self.root = path
         self.image = image
         self.annot = annot
         self.image_root = join(path, self.image)
         self.annot_root = join(path, self.annot)
-        if not os.path.exists(self.annot_root):
+        if not os.path.exists(self.annot_root) or no_annot:
             no_annot = True
+        self.share_annot = share_annot
         self.annot_root_tmp = join(path, self.annot + '_tmp')
         if os.path.exists(self.annot_root_tmp) and remove_tmp:
             shutil.rmtree(self.annot_root_tmp)
         if sub is None:
-            self.imgnames = getFileList(self.image_root, ext=ext)
+            self.imgnames = getFileList(self.image_root, ext=ext, max=max_per_folder)
             if not no_annot:
                 self.annnames = getFileList(self.annot_root, ext='.json')
         else:
@@ -32,10 +35,13 @@ class ImageFolder:
             if not no_annot:
                 self.annnames = getFileList(join(self.annot_root, sub), ext='.json')
                 self.annnames = [join(sub, name) for name in self.annnames]
-                length = min(len(self.imgnames), len(self.annnames))
-                self.imgnames = self.imgnames[:length]
-                self.annnames = self.annnames[:length]
-                # assert len(self.imgnames) == len(self.annnames)
+                if len(self.annnames) != len(self.imgnames) and share_annot:
+                    if len(self.annnames) == 1:
+                        self.annnames = [self.annnames[0] for _ in range(len(self.imgnames))]
+                else:
+                    length = min(len(self.imgnames), len(self.annnames))
+                    self.imgnames = self.imgnames[:length]
+                    self.annnames = self.annnames[:length]
         self.isTmp = True
         self.no_annot = no_annot
     

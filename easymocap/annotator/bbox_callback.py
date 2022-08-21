@@ -1,4 +1,5 @@
 import numpy as np
+from ..dataset.config import CONFIG
 
 MIN_PIXEL = 50
 def findNearestPoint(points, click):
@@ -24,6 +25,8 @@ def callback_select_bbox_corner(start, end, annots, select, bbox_name, **kwargs)
         return 0
     # 判断选择了哪个角点
     annots = annots['annots']
+    if len(annots) == 0:
+        return 0
     # not select a bbox
     if select[bbox_name] == -1 and select['corner'] == -1:
         corners = []
@@ -68,16 +71,20 @@ def callback_select_bbox_corner(start, end, annots, select, bbox_name, **kwargs)
     elif select[bbox_name] == -1 and select['corner'] != -1:
         select['corner'] = -1
 
-def callback_select_bbox_center(click, annots, select, bbox_name, **kwargs):
+def callback_select_bbox_center(click, annots, select, bbox_name, min_pixel=-1, **kwargs):
     if click is None:
         return 0
+    if min_pixel == -1:
+        min_pixel = MIN_PIXEL
     annots = annots['annots']
+    if len(annots) == 0:
+        return 0
     bboxes = np.array([d[bbox_name] for d in annots])
     center = (bboxes[:, [2, 3]] + bboxes[:, [0, 1]])/2
     click = np.array(click)[None, :]
     dist = np.linalg.norm(click - center, axis=1)
     mindist, minid = dist.min(), dist.argmin()
-    if mindist < MIN_PIXEL:
+    if mindist < min_pixel:
         select[bbox_name] = minid
 
 def get_auto_track(mode='kpts'):
@@ -161,8 +168,8 @@ def copy_previous_missing(self, param, **kwargs):
         return 0
     previous = self.previous()
     annots = param['annots']['annots']
-    pre_ids = [d['personID'] for d in previous['annots']]
-    now_ids = [d['personID'] for d in annots]
+    pre_ids = [d.get('personID', d.get('id')) for d in previous['annots']]
+    now_ids = [d.get('personID', d.get('id')) for d in annots]
     for i in range(len(pre_ids)):
         if pre_ids[i] not in now_ids:
             annots.append(previous['annots'][i])
@@ -194,6 +201,34 @@ def create_bbox(self, param, **kwargs):
     annots.append(data)
     param['start'], param['end'] = None, None
 
+def create_bbox_mv(self, param, **kwargs):
+    "add new boundbox"
+    start, end = param['start'], param['end']
+    if start is None or end is None:
+        return 0
+    nv = param['select']['camera']
+    if nv == -1:
+        return 0
+    ranges = param['ranges']
+    start = (start[0]-ranges[nv][0], start[1]-ranges[nv][1])
+    end = (end[0]-ranges[nv][0], end[1]-ranges[nv][1])
+    annots = param['annots'][nv]['annots']
+
+    nowids = [d['personID'] for d in annots]
+    body = param['body']
+    bbox_name, kpts_name = param['bbox_name'], param['kpts_name']
+    if len(nowids) == 0:
+        maxID = 0
+    else:
+        maxID = max(nowids) + 1
+    data = {
+        'personID': maxID,
+        bbox_name: [start[0], start[1], end[0], end[1], 1],
+        kpts_name: [[0., 0., 0.] for _ in range(CONFIG[body]['nJoints'])]
+    }
+    annots.append(data)
+    param['start'], param['end'] = None, None
+
 def delete_bbox(self, param, **kwargs):
     "delete the person"
     bbox_name = param['bbox_name']
@@ -211,3 +246,69 @@ def delete_all_bbox(self, param, **kwargs):
     param['annots']['annots'] = []
     param['select'][bbox_name] = -1
     return 0
+
+def callback_select_image(click, select, ranges, **kwargs):
+    if click is None:
+        return 0
+    ranges = np.array(ranges)
+    click = np.array(click).reshape(1, -1)
+    res = (click[:, 0]>ranges[:, 0])&(click[:, 0]<ranges[:, 2])&(click[:, 1]>ranges[:, 1])&(click[:, 1]<ranges[:, 3])
+    if res.any():
+        select['camera'] = int(np.where(res)[0])
+
+def callback_select_image_bbox(click, start, end, select, ranges, annots, bbox_name='bbox', **kwargs):
+    if click is None:
+        return 0
+    ranges = np.array(ranges)
+    click = np.array(click).reshape(1, -1)
+    res = (click[:, 0]>ranges[:, 0])&(click[:, 0]<ranges[:, 2])&(click[:, 1]>ranges[:, 1])&(click[:, 1]<ranges[:, 3])
+    if res.any():
+        select['camera'] = int(np.where(res)[0])
+    # 判断是否在人体bbox里面
+    nv = select['camera']
+    if nv == -1:
+        return 0
+    click_view = click[0] - ranges[nv][:2]
+    callback_select_bbox_center(click_view, annots[nv], select, bbox_name, min_pixel=MIN_PIXEL*2)
+
+def callback_move_bbox(start, end, click, select, annots, ranges, bbox_name='bbox', **kwargs):
+    if start is None or end is None:
+        return 0
+    nv, nb = select['camera'], select[bbox_name]
+    if nv == -1 or nb == -1:
+        return 0
+    start = (start[0]-ranges[nv][0], start[1]-ranges[nv][1])
+    end = (end[0]-ranges[nv][0], end[1]-ranges[nv][1])
+    annots = annots[nv]['annots']
+    # 判断start是否在bbox的角点附近
+    i = select[bbox_name]
+    if select['corner'] == -1:
+        l, t, r, b = annots[i][bbox_name][:4]
+        corners = np.array([(l, t), (l, b), (r, t), (r, b), ((l+r)/2, (t+b)/2)])
+        flag, minid = findNearestPoint(corners, start)
+        if flag:
+            select['corner'] = minid[0]
+        else:
+            flag, minid = findNearestPoint(corners, end)
+            if flag:
+                select['corner'] = minid[0]
+            else:
+                select['corner'] = -1
+    if select['corner'] == -1:
+        return 0
+    x, y = end
+     # Move the corner
+    if select['corner'] < 4:
+        (i, j) = [(0, 1), (0, 3), (2, 1), (2, 3)][select['corner']]
+        data = annots[select[bbox_name]]
+        data[bbox_name][i] = x
+        data[bbox_name][j] = y
+    # Move the center
+    else:
+        bbox = annots[select[bbox_name]][bbox_name]
+        w = (bbox[2] - bbox[0])/2
+        h = (bbox[3] - bbox[1])/2
+        bbox[0] = x - w
+        bbox[1] = y - h
+        bbox[2] = x + w
+        bbox[3] = y + h

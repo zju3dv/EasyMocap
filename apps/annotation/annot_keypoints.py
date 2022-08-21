@@ -2,8 +2,8 @@
   @ Date: 2021-03-28 21:23:34
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-07-21 20:46:27
-  @ FilePath: /EasyMocap/apps/annotation/annot_keypoints.py
+  @ LastEditTime: 2022-05-24 14:27:46
+  @ FilePath: /EasyMocapPublic/apps/annotation/annot_keypoints.py
 '''
 from easymocap.annotator.basic_visualize import capture_screen, plot_skeleton_factory, resize_to_screen
 import os
@@ -92,7 +92,7 @@ def annot_example(path, sub, image, annot, step, args):
     key_funcs = {
         'v': set_unvisible,
         'V': set_unvisible_according_previous,
-        'f': set_face_unvisible,
+        # 'f': set_face_unvisible,
         'c': check_track,
         'm': mirror_keypoints2d,
         'M': mirror_keypoints2d_leg,
@@ -103,7 +103,7 @@ def annot_example(path, sub, image, annot, step, args):
         key_funcs['r'] = estimator.detect_with_bbox90
         key_funcs['t'] = estimator.detect_with_bbox180
         key_funcs['y'] = estimator.detect_with_bbox270
-        key_funcs['g'] = estimator.detect_with_previous_slow
+        # key_funcs['g'] = estimator.detect_with_previous_slow
         key_funcs['j'] = estimator.detect_with_previous_mid
     # callback of bounding box
     callbacks = [callback_select_bbox_corner, callback_select_bbox_center, callback_select_joints]
