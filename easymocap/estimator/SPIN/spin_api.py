@@ -2,8 +2,8 @@
   @ Date: 2020-10-23 20:07:49
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-03-05 13:43:01
-  @ FilePath: /EasyMocap/code/estimator/SPIN/spin_api.py
+  @ LastEditTime: 2022-07-14 12:44:30
+  @ FilePath: /EasyMocapPublic/easymocap/estimator/SPIN/spin_api.py
 '''
 """
 Demo code
@@ -32,7 +32,6 @@ Running the previous command will save the results in ```examples/im1010_{shape,
 """
 
 import torch
-from torchvision.transforms import Normalize
 import numpy as np
 import cv2
 
@@ -45,6 +44,81 @@ class constants:
     # Mean and standard deviation for normalizing input image
     IMG_NORM_MEAN = [0.485, 0.456, 0.406]
     IMG_NORM_STD = [0.229, 0.224, 0.225]
+
+def normalize(tensor, mean, std, inplace: bool = False):
+    """Normalize a tensor image with mean and standard deviation.
+
+    .. note::
+        This transform acts out of place by default, i.e., it does not mutates the input tensor.
+
+    See :class:`~torchvision.transforms.Normalize` for more details.
+
+    Args:
+        tensor (Tensor): Tensor image of size (C, H, W) or (B, C, H, W) to be normalized.
+        mean (sequence): Sequence of means for each channel.
+        std (sequence): Sequence of standard deviations for each channel.
+        inplace(bool,optional): Bool to make this operation inplace.
+
+    Returns:
+        Tensor: Normalized Tensor image.
+    """
+    if not isinstance(tensor, torch.Tensor):
+        raise TypeError('Input tensor should be a torch tensor. Got {}.'.format(type(tensor)))
+
+    if tensor.ndim < 3:
+        raise ValueError('Expected tensor to be a tensor image of size (..., C, H, W). Got tensor.size() = '
+                         '{}.'.format(tensor.size()))
+
+    if not inplace:
+        tensor = tensor.clone()
+
+    dtype = tensor.dtype
+    mean = torch.as_tensor(mean, dtype=dtype, device=tensor.device)
+    std = torch.as_tensor(std, dtype=dtype, device=tensor.device)
+    if (std == 0).any():
+        raise ValueError('std evaluated to zero after conversion to {}, leading to division by zero.'.format(dtype))
+    if mean.ndim == 1:
+        mean = mean.view(-1, 1, 1)
+    if std.ndim == 1:
+        std = std.view(-1, 1, 1)
+    tensor.sub_(mean).div_(std)
+    return tensor
+
+class Normalize(torch.nn.Module):
+    """Normalize a tensor image with mean and standard deviation.
+    Given mean: ``(mean[1],...,mean[n])`` and std: ``(std[1],..,std[n])`` for ``n``
+    channels, this transform will normalize each channel of the input
+    ``torch.*Tensor`` i.e.,
+    ``output[channel] = (input[channel] - mean[channel]) / std[channel]``
+
+    .. note::
+        This transform acts out of place, i.e., it does not mutate the input tensor.
+
+    Args:
+        mean (sequence): Sequence of means for each channel.
+        std (sequence): Sequence of standard deviations for each channel.
+        inplace(bool,optional): Bool to make this operation in-place.
+
+    """
+
+    def __init__(self, mean, std, inplace=False):
+        super().__init__()
+        self.mean = mean
+        self.std = std
+        self.inplace = inplace
+
+    def forward(self, tensor):
+        """
+        Args:
+            tensor (Tensor): Tensor image to be normalized.
+
+        Returns:
+            Tensor: Normalized Tensor image.
+        """
+        return normalize(tensor, self.mean, self.std, self.inplace)
+
+    def __repr__(self):
+        return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 
 
 def get_transform(center, scale, res, rot=0):
@@ -116,7 +190,7 @@ def crop(img, center, scale, res, rot=0, bias=0):
         new_img = new_img[pad:-pad, pad:-pad]
     new_img = cv2.resize(new_img, (res[0], res[1]))
     return new_img
-    
+
 def process_image(img, bbox, input_res=224):
     """Read image, do preprocessing and possibly crop it according to the bounding box.
     If there are bounding box annotations, use them to crop the image.
@@ -133,6 +207,23 @@ def process_image(img, bbox, input_res=224):
     img = torch.from_numpy(img).permute(2,0,1)
     norm_img = normalize_img(img.clone())[None]
     return img, norm_img
+
+def solve_translation(X, x, K):
+    A = np.zeros((2*X.shape[0], 3))
+    b = np.zeros((2*X.shape[0], 1))
+    fx, fy = K[0, 0], K[1, 1]
+    cx, cy = K[0, 2], K[1, 2]
+    for nj in range(X.shape[0]):
+        A[2*nj, 0] = 1
+        A[2*nj + 1, 1] = 1
+        A[2*nj, 2] = -(x[nj, 0] - cx)/fx
+        A[2*nj+1, 2] = -(x[nj, 1] - cy)/fy
+        b[2*nj, 0] = X[nj, 2]*(x[nj, 0] - cx)/fx - X[nj, 0]
+        b[2*nj+1, 0] = X[nj, 2]*(x[nj, 1] - cy)/fy - X[nj, 1]
+        A[2*nj:2*nj+2, :] *= x[nj, 2]
+        b[2*nj:2*nj+2, :] *= x[nj, 2]
+    trans = np.linalg.inv(A.T @ A) @ A.T @ b
+    return trans.T[0]
 
 def estimate_translation_np(S, joints_2d, joints_conf, K):
     """Find camera translation that brings 3D joints S closest to 2D the corresponding joints_2d.
@@ -197,16 +288,46 @@ class SPIN:
             p, _ = cv2.Rodrigues(rotmat[i])
             poses[0, 3*i:3*i+3] = p[:, 0]
         results['poses'] = poses
-        if use_rh_th:
-            body_params = {
-                'poses': results['poses'],
-                'shapes': results['shapes'],
-                'Rh': results['poses'][:, :3].copy(),
-                'Th': np.zeros((1, 3)),
-            }
-            body_params['Th'][0, 2] = 5
-            body_params['poses'][:, :3] = 0
-            results = body_params
+        body_params = {
+            'Rh': poses[:, :3],
+            'poses': poses[:, 3:],
+            'shapes': results['shapes'],
+        }
+        results = body_params
+        return results
+    
+    def __call__(self, body_model, img, bbox, kpts, camera, ret_vertices=True):
+        body_params = self.forward(img.copy(), bbox)
+        # TODO: bug: This encode will arise errors in keypoints
+        kpts1 = body_model.keypoints(body_params, return_tensor=False)[0]
+        body_params = body_model.encode(body_params)
+        # only use body joints to estimation translation
+        nJoints = 15
+        keypoints3d = body_model.keypoints(body_params, return_tensor=False)[0]
+        kpts_diff = np.linalg.norm(kpts1 - keypoints3d, axis=-1).max()
+        # print('Encode and decode error: {}'.format(kpts_diff))
+        trans = solve_translation(keypoints3d[:nJoints], kpts[:nJoints], camera['K'])
+        body_params['Th'] += trans[None, :]
+        if body_params['Th'][0, 2] < 0:
+            print('  [WARN in SPIN] solved a negative position of human {}'.format(body_params['Th'][0]))
+            body_params['Th'] = -body_params['Th']
+            Rhold = cv2.Rodrigues(body_params['Rh'])[0]
+            rotx = cv2.Rodrigues(np.pi*np.array([1., 0, 0]))[0]
+            Rhold = rotx @ Rhold
+            body_params['Rh'] = cv2.Rodrigues(Rhold)[0].reshape(1, 3)
+        # convert to world coordinate
+        if False:
+            Rhold = cv2.Rodrigues(body_params['Rh'])[0]
+            Thold = body_params['Th']
+            Rh = camera['R'].T @ Rhold
+            Th = (camera['R'].T @ (Thold.T - camera['T'])).T
+            body_params['Th'] = Th
+            body_params['Rh'] = cv2.Rodrigues(Rh)[0].reshape(1, 3)
+        keypoints3d = body_model.keypoints(body_params, return_tensor=False)[0]
+        results = {'body_params': body_params, 'keypoints3d': keypoints3d}
+        if ret_vertices:
+            vertices = body_model(return_verts=True, return_tensor=False, **body_params)[0]
+            results['vertices'] = vertices
         return results
 
 def init_with_spin(body_model, spin_model, img, bbox, kpts, camera):
