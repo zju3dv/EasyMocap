@@ -1,0 +1,25 @@
+module: easymocap.datasets.base.MultiVideo
+args:
+  path: none
+  subs: []
+  subs_vis: []
+  ranges: [0, -1, 1]
+  camera: none
+  loadmp: True
+  compose_mp: False
+  keys:
+    keypoints2d: keypoints
+  reader:
+    image:
+      root: images
+      ext: jpg
+      read_image: False
+    annot:
+      root: annots
+      ext: json
+  # define the output
+  writer:
+    render:
+      root: smplmesh
+      ext: .jpg
+      scale: 1

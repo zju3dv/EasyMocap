@@ -1,0 +1,12 @@
+parents:
+  - config/data/multivideo.yml
+args:
+  loadmp: True 
+  compose_mp: True
+  pids: [0, 1]
+  filter:
+    min_conf: 0.3
+    # bound: 0.05 # 如果启用这个，会导致图像下边缘的脚被丢掉，导致优化错误
+  keys:
+    _no_merge_: True
+    keypoints2d: keypoints

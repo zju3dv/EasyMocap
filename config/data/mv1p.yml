@@ -1,0 +1,42 @@
+module: easymocap.datasets.base.MultiView
+args:
+  path: none
+  out: none
+  subs: []
+  subs_vis: []
+  keys:
+    keypoints2d: keypoints
+    handl2d: handl2d
+    handr2d: handr2d
+    face2d: face2d
+  ranges: [0, -1, 1]
+  camera: none
+  compose_mp: False
+  reader:
+    image:
+      root: images
+      ext: jpg
+      read_image: False
+    annot:
+      root: output-keypoints3d/keypoints2d
+      ext: json
+      check_length: True
+      read: True
+    keypoints3d:
+      root: output-keypoints3d/keypoints3d
+      ext: json
+      key: [keypoints3d, handl3d, handr3d, face3d]
+      read: True
+  # define the output
+  writer:
+    keypoints3d:
+      root: keypoints3d
+      ext: .json
+    render:
+      enable: True
+      root: smplmesh
+      ext: .jpg
+      scale: 0.5
+      mode: image
+    fullpose:
+      root: smplfull
