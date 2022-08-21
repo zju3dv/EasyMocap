@@ -88,6 +88,11 @@ mv1p:
     out: output-keypoints3d
   fit: smpl-3d
   evaluate: none
+mv1p-skel:
+  triangulation:
+    data: config/recon/mv1p.yml
+    exp: config/recon/mv1p-total.yml
+    out: output-keypoints3d
 mv1p-smplh:
   extract_image: none
   calibration: none
@@ -123,6 +128,11 @@ mvmp:
     exp: config/recon/triangulator-mvmp-dense.yml
     out: output-keypoints3d
   fit: smpl-3d-mp
+mvmp-skel:
+  triangulation:
+    data: config/recon/mvmp.yml
+    exp: config/recon/triangulator-mvmp-dense.yml
+    out: output-keypoints3d
 mvmp-1p: # This mode is for using matching and only fit one person
   extract_image: none
   calibration: none
