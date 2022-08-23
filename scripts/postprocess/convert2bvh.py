@@ -152,6 +152,8 @@ def read_smpl(outname):
     assert os.path.exists(outname), outname
     datas = read_json(outname)
     outputs = []
+    if isinstace(datas, dict):
+        datas = datas['annots']
     for data in datas:
         for key in ['Rh', 'Th', 'poses', 'shapes']:
             data[key] = np.array(data[key])
