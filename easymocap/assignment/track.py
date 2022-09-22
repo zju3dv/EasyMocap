@@ -90,12 +90,16 @@ class BaseTrack:
             # directly assign
             if id0 != -1 and id1 == -1:
                 if nf1 in frames_of_id[id0].keys():
-                    log('Merge conflict')
+                    log(f'Merge conflict1 nf0: {nf0} ni0: {ni0} id0: {id0} nf1: {nf1} ni1: {ni1} id1: {id1}')
+                    continue
                 results[nf1][ni1]['id'] = id0
                 # log('Merge person {}'.format(maxid))
                 frames_of_id[id0][nf1] = ni1
                 continue
             if id0 == -1 and id1 != -1:
+                if nf0 in frames_of_id[id1].keys():
+                    log(f'Merge conflict2 nf0: {nf0} ni0: {ni0} id0: {id0} nf1: {nf1} ni1: {ni1} id1: {id1}')
+                    continue
                 results[nf0][ni0]['id'] = id1
                 frames_of_id[id1][nf0] = ni0
                 continue
