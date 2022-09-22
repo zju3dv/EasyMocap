@@ -77,9 +77,9 @@ def simple_associate(annots, affinity, dimGroups, Pall, group, cfg):
             err = ((kptsRepro[:, :, 2]*keypoints2d[:, :, 2]) > 0.) * np.linalg.norm(kptsRepro[:, :, :2] - keypoints2d[:, :, :2], axis=2)
             size = (bboxes[:, [2, 3]] - bboxes[:, [0, 1]]).max(axis=1, keepdims=True)
             err = err / size
-            err_view = err.sum(axis=1)/((err>0.).sum(axis=1))
+            err_view = err.sum(axis=1)/((err>0. + 1e-9).sum(axis=1))
             flag = (err_view < cfg.max_repro_error).all()
-            err = err.sum()/(err>0).sum()
+            err = err.sum()/(err>0 + 1e-9).sum()
             # err_view = err.sum(axis=1)/((err>0.).sum(axis=1))
             # err = err.sum()/(err>0.).sum()
             # flag = err_view.max() < err_view.mean() * 2
