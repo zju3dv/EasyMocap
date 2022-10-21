@@ -2,7 +2,7 @@
   @ Date: 2021-06-09 10:16:46
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-06-27 17:26:00
+  @ LastEditTime: 2022-10-21 16:55:26
   @ FilePath: /EasyMocapPublic/easymocap/annotator/file_utils.py
 '''
 import os
@@ -38,6 +38,8 @@ def annot2string(data):
         if key != 'annots':
             if key == 'isKeyframe':
                 res = '"{}": {}'.format(key, tobool(value))
+            elif key == 'filename':
+                res = '"{}": "{}",'.format(key, value.replace('\\', "\\\\"))
             elif isinstance(value, str):
                 res = '"{}": "{}",'.format(key, value)
             elif isinstance(value, bool):
@@ -122,6 +124,7 @@ def getFileList(root, ext='.jpg', max=-1, ret_full=False):
     dirs = sorted(os.listdir(root))
     while len(dirs) > 0:
         path = dirs.pop()
+        if path.startswith('.'):continue
         fullname = join(root, path)
         if os.path.isfile(fullname) and fullname.endswith(ext):
             if ret_full:
