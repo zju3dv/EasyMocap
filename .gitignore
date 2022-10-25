@@ -108,7 +108,9 @@ exp/coco*
 *.weights
 .idea
 output
-data
+data/**
 .DS*
 code_deprecate
 code
+neuralbody
+lightning_logs

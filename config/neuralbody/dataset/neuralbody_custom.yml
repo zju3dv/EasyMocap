@@ -1,0 +1,105 @@
+data_share_args:
+  root: /nas/datasets/EasyMocap/313
+  subs: ['01', '04', '07', '10', '13', '16', '19']
+  ranges: [0, 300, 1]
+  image_args:
+    root: images
+    ext: .jpg
+    scale: 1.
+    undis: True
+    mask_bkgd: True
+    white_bkgd: False
+    mask: mask-schp
+    unsync: none
+    ignore_back: True
+  object_keys: []
+  ignore_keys: []
+  object_args:
+    # 定义了object
+    allhuman:
+      pids: [0]
+      model: neuralbody
+      rate: 1
+      args:
+        pid: -1
+        rate_body: 0.85
+        use_param_foreachview: False
+        reader:
+          smpl:
+            root: output-smpl-3d/smpl
+          mask:
+            root: mask-schp
+            undis: True
+          vertices:
+            root: output-smpl-3d/vertices
+            padding: 0.1
+  sample_args:
+    nrays: 4096
+
+data_train_module: easymocap.neuralbody.dataset.mvbase.BaseDataset
+data_train_args:
+  split: train
+
+data_val_module: easymocap.neuralbody.dataset.mvbase.BaseDataset
+data_val_args:
+  subs: []
+  split: test
+  image_args:
+    scale: 0.5
+
+data_demo_module: easymocap.neuralbody.dataset.mvbase.BaseDatasetDemo
+data_demo_args:
+  split: demo
+  camera_args:
+    method: mean
+    H: 1024
+    W: 1024
+    allstep: 300
+
+data_canonical_module: easymocap.neuralbody.dataset.mvbase.BaseCanonical
+data_canonical_args:
+  root: none
+  nFrames: 300
+  camera_args:
+    H: 1024
+    W: 1024
+    focal: 1200
+    center: [0., -0.3, 0.]
+    radius: 3.
+    up: 'y'
+    angle_x: 0
+    ranges: [90, 450, 300]
+  object_keys: []
+  ignore_keys: []
+  object_args: {}
+  sample_args:
+    nrays: 4096
+
+data_novelposes_module: easymocap.neuralbody.dataset.mvbase.BaseNovelPose
+data_novelposes_args:
+  root: none
+  camera_args:
+    H: 1024
+    W: 1024
+    focal: 1200
+    center: [0., 0, 2.2]
+    radius: 3.
+    up: 'z'
+    angle_x: 30
+    ranges: [90, 450, 300]
+  object_keys: []
+  object_args:
+    allhuman:
+      pids: [0]
+      model: neuralbody
+      rate: 1
+      args:
+        pid: -1
+        scale: [0.8, 0.8, 1.2]
+        reader:
+          smpl:
+            root: smpl
+          vertices:
+            root: vertices
+  sample_args:
+    nrays: 2048

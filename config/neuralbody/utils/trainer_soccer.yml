@@ -1,0 +1,52 @@
+parents:
+  - config/neuralbody/utils/trainer_base.yml
+
+trainer_module: "easymocap.neuralbody.renderer.render_wrapper.RenderWrapper"
+trainer_args:
+  renderer_args:
+    return_extra: True
+  loss:
+    rgb:
+      weight: 1.
+      module: "easymocap.neuralbody.renderer.render_loss.LossRGB"
+      args:
+        norm: "l2"
+    reg:
+      weight: 0.1
+      module: easymocap.neuralbody.renderer.render_loss.AnyReg
+      args:
+        key: ball_0_reg_t
+        norm: norm
+    sparse:
+      weight: 0.001
+      module: easymocap.neuralbody.renderer.render_loss.LossSparseEntropy
+      args:
+        norm: "l2"
+        start: 10000
+        end: 999999
+    entropy:
+      weight: 0.01
+      module: easymocap.neuralbody.renderer.render_loss.LossEntropyInstance
+      args:
+        norm: "l2"
+        start: 0
+        end: 5000
+
+canonical:
+  renderer_module: easymocap.neuralbody.renderer.render_base.BaseRenderer
+  renderer_args:
+    use_canonical: True
+    chunk: 8192
+    white_bkgd: False
+    use_occupancy: True
+    N_samples: 128
+    split: test
+
+mesh:
+  renderer_module: easymocap.neuralbody.renderer.render_base.MeshRenderer
+  renderer_args:
+    chunk: 8192
+    white_bkgd: False
+    use_occupancy: True
+    N_samples: 32
+    split: test

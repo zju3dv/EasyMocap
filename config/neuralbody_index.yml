@@ -1,0 +1,69 @@
+# This script provides the config index of neuralbody
+# 1 person part:
+neuralbody:
+  comment: "[mv1p] NeuralBody"
+  data: config/neuralbody/dataset/neuralbody_custom.yml # define the dataset
+  model: config/neuralbody/network/neuralbody.yml # define the network
+  base: config/neuralbody/utils/train_base.yml # define the training details
+  trainer: config/neuralbody/utils/trainer_base.yml # define the training renderer and loss
+  visualizer: config/neuralbody/utils/vis_base.yml # define the visualization functions
+aninerf:
+  comment: "[mv1p] Animatable NeRF"
+  data: config/neuralbody/dataset/neuralbody_custom.yml
+  model: config/neuralbody/network/aninerf.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_aninerf.yml
+  visualizer: config/neuralbody/utils/vis_base.yml
+neuralbody+back:
+  comment: "[mvmp] Neuralbody + background on ZJUMoCap datast"
+  data: config/neuralbody/dataset/neuralbody_lightstage_simple.yml
+  model: config/neuralbody/network/comp_neuralbody+back.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_base.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+neuralbody+bkgdimg:
+  comment: "[mvmp] Neuralbody with background images"
+  data: config/neuralbody/dataset/neuralbody_custom+backgroundimg.yml
+  model: config/neuralbody/network/neuralbody.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_base+backimg.yml
+  visualizer: config/neuralbody/utils/vis_base.yml
+# 
+# 2. experiements for MultiNeuralBody
+# 
+#   2.1 Multi-person + LightStage
+# 
+multineuralbody:
+  comment: "[mvmp] Neuralbody + background on ZJUMoCap datast"
+  data: config/neuralbody/dataset/neuralbody_lightstage.yml
+  model: config/neuralbody/network/comp_neuralbody+back.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_base.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+soccer1:
+  comment: "[mvmp] Neuralbody + background in the wild"
+  data: config/neuralbody/dataset/neuralbody_soccer.yml
+  model: config/neuralbody/network/comp_neuralbody+back+soccer.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_soccer.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+soccer1_beijia:
+  comment: "Beijia in soccer scenes"
+  exp: soccer1
+  opts: 
+    - data_share_args.ranges
+    - [0, 200, 1]
+    - network_args.models.allball.network_args.traj.path
+    - ${data}/output-object3d/keypoints3d
+    - data_demo_args.camera_args.allstep
+    - 400
+soccer1_yuang:
+  comment: "Beijia in soccer scenes"
+  exp: soccer1
+  opts: 
+    - data_share_args.ranges
+    - [0, 200, 1]
+    - network_args.models.allball.network_args.traj.path
+    - ${data}/output-object3d/keypoints3d
+    - data_demo_args.camera_args.allstep
+    - 400

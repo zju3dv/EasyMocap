@@ -1,0 +1,75 @@
+network_module: easymocap.neuralbody.model.compose.ComposedModel
+network_args:
+  models:
+    background:
+      _parent_: config/neuralbody/network/nerf_t.yml
+      network_args:
+        embed:
+          mode: mlp
+          shape: [300, 512]
+          res: 32
+          D: 0
+          W: 128
+        nerf:
+          sample_args:
+            method: uniform
+            N_samples: 32
+          D: 3
+          D_rgb: 3
+          skips: [4]
+    ground:
+      _parent_: config/neuralbody/network/nerf_t.yml
+      network_args:
+        embed:
+          mode: mlp
+          shape: [300, 512]
+          res: 32
+          D: 0
+          W: 128
+        nerf:
+          sample_args:
+            method: uniform
+            N_samples: 16
+          D: 3
+          D_rgb: 3
+          init_bias: 2.
+          pts_to_rgb: False
+          # xyz_res: 20
+    allhuman:
+      _parent_: config/neuralbody/network/neuralbody.yml
+      pids: [0]
+      network_args:
+        embed_time:
+          mode: mlp
+          shape: [300, 64]
+          res: 10
+          D: 0
+          W: 128
+        embed_vert: [6890, 32]
+        sparse:
+          dims: [32, 32, 64, 128]
+        nerf:
+          sample_args:
+            method: uniform
+            N_samples: 64
+          D: 3
+          skips: []
+          D_rgb: 3
+          pts_to_rgb: False
+          pts_to_density: True
+    allball:
+      _parent_: config/neuralbody/network/DCNerf.yml
+      pids: [0]
+      network_args:
+        opt_traj_step: 10000
+        share_view: True
+        embed:
+          mode: mlp
+          shape: [300, 512]
+          res: 32
+          D: 0
+          W: 128
+        nerf:
+          sample_args:
+            method: uniform
+            N_samples: 16

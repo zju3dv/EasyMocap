@@ -1,0 +1,348 @@
+# This file contains the experiements of
+# Novel View Synthesis of Human Interactions 
+# From Sparse Multi-view Videos 
+boxing:
+  comment: "boxing dataset"
+  data: config/neuralbody/dataset/neuralbody_lightstage.yml
+  # model: config/neuralbody/network/comp_neuralbody+back.yml
+  # model: config/neuralbody/network/comp_neuralbody+back+lightstage.yml
+  model: config/neuralbody/network/comp_neuralbody+back+groundshadow.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_entropy.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+  opts: 
+    - network_args.models.allhuman.pids
+    - [0, 1]
+  opts_dict:
+    data_share_args:
+      subs: ['03', '05', '07', '11', '14', '17', '19', '23']
+      object_args:
+        allhuman:
+          pids: [0, 1]
+    data_demo_args:
+      camera_args:
+        loop: True
+        allstep: 600
+      demo_args:
+        mode: scripts
+        stages:
+          # normal:
+          #   frame: [0, 80, 1]
+          #   view: [360, 600, 3]
+          #   object_keys: []
+          normal1:
+            frame: [80, 300, 1]
+            view: [0, 440, 2]
+            object_keys: 
+              - 'background'
+              - 'ground'
+              - 'human_0'
+              - "human_1"
+              - "human_0_@{'rotation': [ 0.0, 0.01,  1.6], 'translation': [-0.5, 0.0, 0.0]}"
+              - "human_0_@{'rotation': [ 0.0, 0.01,  3.2], 'translation': [0.32, -0.4, 0.0]}"
+              - "human_0_@{'rotation': [ 0.0, 0.01,  4.8], 'translation': [0.62, 0.0, 0.0]}"
+          # bullet1:
+          #   frame: [299, 300, 1]
+          #   view: [440, 600, 2]
+          #   object_keys: 
+          #     - 'background'
+          #     - 'ground'
+          #     - 'human_0'
+          #     - "human_1"
+          #     - "human_0_@{'rotation': [ 0.0, 0.01,  1.6], 'translation': [-0.5, 0.0, 0.0]}"
+          #     - "human_0_@{'rotation': [ 0.0, 0.01,  3.2], 'translation': [0.32, -0.4, 0.0]}"
+          #     - "human_0_@{'rotation': [ 0.0, 0.01,  4.8], 'translation': [0.62, 0.0, 0.0]}"
+          # bullet2:
+          #   frame: [299, 300, 1]
+          #   view: [0, 440, 2]
+          #   object_keys: 
+          #     - 'background'
+          #     - 'ground'
+          #     - 'human_0'
+          #     - "human_1"
+          #     - "human_0_@{'rotation': [ 0.0, 0.01,  1.6], 'translation': [-0.5, 0.0, 0.0]}"
+          #     - "human_0_@{'rotation': [ 0.0, 0.01,  3.2], 'translation': [0.32, -0.4, 0.0]}"
+          #     - "human_0_@{'rotation': [ 0.0, 0.01,  4.8], 'translation': [0.62, 0.0, 0.0]}"
+handstand:
+  comment: "handstand"
+  data: config/neuralbody/dataset/neuralbody_lightstage_multiobject.yml
+  # model: config/neuralbody/network/comp_neuralbody+back.yml
+  # model: config/neuralbody/network/comp_neuralbody+back+lightstage.yml
+  model: config/neuralbody/network/comp_neuralbody+back+groundshadow.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_entropy.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+  opts_dict:
+    network_args:
+      models:
+        allhuman:
+          pids: [0, 1, 2]
+    data_share_args:
+      ranges: [0, 200, 1]
+      subs: ['02', '05' , '08', '11', '14', '16', '19', '22']
+      object_args:
+        allhuman:
+          pids: [0, 1, 2]
+      sample_args:
+        nrays: 4096
+    data_val_args:
+      object_keys: [human_0, human_1, human_2]
+      subs: ['02', '05' , '08', '11', '14', '16', '19', '22']
+      image_args:
+        scale: 1.
+    data_demo_args:
+      camera_args:
+        method: mean
+        loop: True
+        allstep: 600
+        H: 1024
+        W: 1024
+      demo_args:
+        mode: scripts
+        stages:
+          normal:
+            frame: [0, 170, 1]
+            view: [0, 510, 3]
+            object_keys: []
+          disappear:
+            frame: [170, 171, 1]
+            view: [510, 600, 2]
+            object_keys: []
+            effect: disappear
+            effect_args:
+              key: ['human_0', 'human_1']
+          bullet:
+            frame: [170, 171, 1]
+            view: [0, 510, 2]
+            object_keys: [background, ground, human_2]
+          end:
+            frame: [170, 200, 1]
+            view: [510, 570, 2]
+            object_keys: [background, ground, human_2]
+          appear:
+            frame: [199, 200, 1]
+            view: [570, 600, 2]
+            object_keys: []
+            effect: appear
+            effect_args:
+              key: ['human_0', 'human_1']
+basketball:
+  comment: "basketball"
+  data: config/neuralbody/dataset/neuralbody_lightstage_multiobject.yml
+  model: config/neuralbody/network/comp_neuralbody+back+groundshadow.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_entropy.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+  opts:
+    - network_args.models.allhuman.pids
+    - [0, 1]
+    - network_args.models.allball.network_args.embed.shape
+    - [200, 128] # use a wider network for basketball
+    - network_args.models.allball.pids
+    - [0]
+    - network_args.models.allball.network_args.traj.path
+    - ${data}/output-object3d/keypoints3d
+    - network_args.models.allball.network_args.traj.ranges
+    - [0, 200, 1]
+  opts_dict:
+    data_share_args:
+      ranges: [0, 200, 1]
+      subs: ['02', '07', '10', '13', '16', '18', '21', '23']
+      object_args:
+        allhuman:
+          pids: [0, 1]
+        allball:
+          pids: [0]
+      sample_args:
+        nrays: 4096
+    data_demo_args:
+      camera_args:
+        method: mean
+        loop: True
+        allstep: 600
+        H: 1024
+        W: 1024
+      demo_args:
+        mode: scripts
+        stages:
+          disappear:
+            frame: [0, 200, 1]
+            view: [0, 400, 2]
+            object_keys: []
+            effect: disappear
+            effect_args:
+              key: ['human_0', 'human_1']          
+juggle:
+  comment: "juggle"
+  data: config/neuralbody/dataset/neuralbody_lightstage_multiobject.yml
+  # model: config/neuralbody/network/comp_neuralbody+back+lightstage.yml
+  model: config/neuralbody/network/comp_neuralbody+back+groundshadow.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_entropy.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+  opts:
+    - network_args.models.allhuman.pids
+    - [0, 1, 2, 3]
+    - network_args.models.allball.pids
+    - [0, 1, 2]
+    - network_args.models.allball.network_args.traj.path
+    - ${data}/output-object3d/keypoints3d
+    - network_args.models.allball.network_args.traj.ranges
+    - [0, 200, 1]
+  opts_dict:
+    data_share_args:
+      ranges: [0, 200, 1]
+      subs: ['02', '05' , '08', '11', '14', '16', '19', '22']
+      object_args:
+        allhuman:
+          pids: [0, 1, 2, 3]
+        allball:
+          pids: [0, 1, 2]
+      sample_args:
+        nrays: 4096
+    data_demo_args:
+      camera_args:
+        method: mean
+        loop: True
+        allstep: 600
+        H: 1024
+        W: 1024
+      demo_args:
+        mode: scripts
+        stages:
+          disappear0:
+            frame: [0, 200, 1]
+            view: [0, 400, 2]
+            object_keys: []
+            effect: disappear
+            effect_args:
+              key: ['human_0', 'human_1', 'human_2']
+          onlyhuman3:
+            frame: [0, 100, 1]
+            view: [400, 600, 2]
+            object_keys: [background, ground, human_3, ball_0, ball_1, ball_2]
+          duplicate:
+            frame: [100, 200, 1]
+            view: [0, 200, 2]
+            object_keys: [background, ground, human_3, ball_0, ball_1, ball_2, "ball_2_@{'translation': [0, 0.2, 0]}"]
+              # - "back"
+              # - "human_3"
+              # - "ball_1002"
+              # - "ball_1003"
+              # - "ball_1004"
+              # # - "ball_1002_@{'translation': [0, 0, 0.2]}"
+              # # - "ball_1003_@{'translation': [0, 0, 0.2]}"
+              # # - "ball_1004_@{'translation': [0, 0, 0.2]}"
+              # # - "ball_1002_@{'translation': [0, 0, -0.2]}"
+              # # - "ball_1003_@{'translation': [0, 0, -0.2]}"
+              # # - "ball_1004_@{'translation': [0, 0, -0.2]}"
+              # - "ball_1002_@{'translation': [0, 0.2, 0]}"
+              # - "ball_1003_@{'translation': [0, 0.2, 0]}"
+              # - "ball_1004_@{'translation': [0, 0.2, 0]}"
+              # - "ball_1002_@{'translation': [0,-0.2,0]}"
+              # - "ball_1003_@{'translation': [0,-0.2,0]}"
+              # - "ball_1004_@{'translation': [0,-0.2,0]}"
+            effect: appear
+            effect_args:
+              key: ["ball_2_@{'translation': [0, 0.2, 0]}"]
+                # # - "ball_1002_@{'translation': [0, 0, 0.2]}"
+                # # - "ball_1003_@{'translation': [0, 0, 0.2]}"
+                # # - "ball_1004_@{'translation': [0, 0, 0.2]}"
+                # # - "ball_1002_@{'translation': [0, 0, -0.2]}"
+                # # - "ball_1003_@{'translation': [0, 0, -0.2]}"
+                # # - "ball_1004_@{'translation': [0, 0, -0.2]}"
+                # - "ball_1002_@{'translation': [0, 0.2, 0]}"
+                # - "ball_1003_@{'translation': [0, 0.2, 0]}"
+                # - "ball_1004_@{'translation': [0, 0.2, 0]}"
+                # - "ball_1002_@{'translation': [0,-0.2,0]}"
+                # - "ball_1003_@{'translation': [0,-0.2,0]}"
+                # - "ball_1004_@{'translation': [0,-0.2,0]}"
+          humandis:
+            frame: [0, 1, 1]
+            view: [200, 400, 2]
+            object_keys: [background, ground, human_3, ball_0, ball_1, ball_2, "ball_2_@{'translation': [0, 0.2, 0]}"]
+              # - "back"
+              # - "human_3"
+              # - "ball_1002"
+              # - "ball_1003"
+              # - "ball_1004"
+              # # - "ball_1002_@{'translation': [0, 0, 0.2]}"
+              # # - "ball_1003_@{'translation': [0, 0, 0.2]}"
+              # # - "ball_1004_@{'translation': [0, 0, 0.2]}"
+              # # - "ball_1002_@{'translation': [0, 0, -0.2]}"
+              # # - "ball_1003_@{'translation': [0, 0, -0.2]}"
+              # # - "ball_1004_@{'translation': [0, 0, -0.2]}"
+              # - "ball_1002_@{'translation': [0, 0.2, 0]}"
+              # - "ball_1003_@{'translation': [0, 0.2, 0]}"
+              # - "ball_1004_@{'translation': [0, 0.2, 0]}"
+              # - "ball_1002_@{'translation': [0,-0.2,0]}"
+              # - "ball_1003_@{'translation': [0,-0.2,0]}"
+              # - "ball_1004_@{'translation': [0,-0.2,0]}"
+            effect: disappear
+            effect_args:
+              key: ["human_3"]
+          # nohuman1:
+          #   frame: [0, 100, 1]
+          #   view: [400, 600, 2]
+          #   object_keys:
+          #     - "back"
+          #     - "ball_1002"
+          #     - "ball_1003"
+          #     - "ball_1004"
+          #     # - "ball_1002_@{'translation': [0, 0, 0.2]}"
+          #     # - "ball_1003_@{'translation': [0, 0, 0.2]}"
+          #     # - "ball_1004_@{'translation': [0, 0, 0.2]}"
+          #     # - "ball_1002_@{'translation': [0, 0, -0.2]}"
+          #     # - "ball_1003_@{'translation': [0, 0, -0.2]}"
+          #     # - "ball_1004_@{'translation': [0, 0, -0.2]}"
+          #     - "ball_1002_@{'translation': [0, 0.2, 0]}"
+          #     - "ball_1003_@{'translation': [0, 0.2, 0]}"
+          #     - "ball_1004_@{'translation': [0, 0.2, 0]}"
+          #     - "ball_1002_@{'translation': [0,-0.2,0]}"
+          #     - "ball_1003_@{'translation': [0,-0.2,0]}"
+          #     - "ball_1004_@{'translation': [0,-0.2,0]}"
+          # nohuman2:
+          #   frame: [100, 200, 1]
+          #   view: [0, 200, 2]
+          #   object_keys:
+          #     - "back"
+          #     - "ball_1002"
+          #     - "ball_1003"
+          #     - "ball_1004"
+          #     # - "ball_1002_@{'translation': [0, 0, 0.2]}"
+          #     # - "ball_1003_@{'translation': [0, 0, 0.2]}"
+          #     # - "ball_1004_@{'translation': [0, 0, 0.2]}"
+          #     # - "ball_1002_@{'translation': [0, 0, -0.2]}"
+          #     # - "ball_1003_@{'translation': [0, 0, -0.2]}"
+          #     # - "ball_1004_@{'translation': [0, 0, -0.2]}"
+          #     - "ball_1002_@{'translation': [0, 0.2, 0]}"
+          #     - "ball_1003_@{'translation': [0, 0.2, 0]}"
+          #     - "ball_1004_@{'translation': [0, 0.2, 0]}"
+          #     - "ball_1002_@{'translation': [0,-0.2,0]}"
+          #     - "ball_1003_@{'translation': [0,-0.2,0]}"
+          #     - "ball_1004_@{'translation': [0,-0.2,0]}"
+soccer1_6:
+  comment: "[mvmp] Neuralbody + background in the wild"
+  data: config/neuralbody/dataset/demo_soccer1_6.yml
+  model: config/neuralbody/network/comp_neuralbody+back+soccer.yml
+  base: config/neuralbody/utils/train_base.yml
+  trainer: config/neuralbody/utils/trainer_soccer.yml
+  visualizer: config/neuralbody/utils/vis_multi.yml
+  opts_dict:
+    data_share_args:
+      sample_args:
+        nrays: 6144
+      ranges: [0, 200, 1]
+  opts:
+    - data_share_args.object_args.allhuman.pids
+    - [0, 1, 2, 3, 4, 5]
+    - network_args.models.allball.network_args.traj.ranges
+    - [0, 200, 1]
+    - network_args.models.allball.network_args.traj.path
+    - ${data}/output-object3d/keypoints3d
+    - network_args.models.allhuman.pids
+    - [0, 1, 2, 3, 4, 5]
+    - trainer_args.loss.reg.weight
+    - 0.1
+    - network_args.models.allball.network_args.share_view
+    - True

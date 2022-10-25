@@ -1,0 +1,18 @@
+network_module: easymocap.neuralbody.model.nerfplus.NeRFT
+network_args:
+  embed:
+    mode: dense
+    shape: [300, 128]
+  nerf:
+    D: 8
+    W: 256
+    dim_pts: 3
+    dim_dir: 3
+    xyz_res: 10
+    view_res: 4
+    skips: [4]
+    use_viewdirs: True
+    use_occupancy: True
+    linear_func: 'Linear'
+    act_fn: expsoftplus
+    init_bias: 0.1

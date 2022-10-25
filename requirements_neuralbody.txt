@@ -1,0 +1,6 @@
+setuptools==59.5.0
+tensorboard==2.8.0
+pytorch-lightning==1.5.0
+spconv-cu111
+lpips
+scikit-image

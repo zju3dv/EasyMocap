@@ -1,0 +1,51 @@
+exp: none
+gpus: [0,]
+output: none
+resume: True
+
+log_interval: 50
+record_interval: 1
+test_interval: 10
+
+local_rank: 0
+distributed: False
+
+fix_random: True
+split: train
+
+optimizer:
+  lr: 0.0005
+  batch_size: 1
+  optim: "adam"
+  weight_decay: 0
+
+scheduler:
+  type: "exponential"
+  gamma: 0.1
+  decay_epochs: 1000
+
+recorder_module: easymocap.train.recorder.Recorder
+recorder_args:
+  resume: True
+  local_rank: 0
+  log_dir: "none"
+
+train:
+  ep_iter: 1000
+  epoch: 400
+  save_ep: 1
+  save_latest_ep: 5
+  eval_ep: 100
+  skip_eval: True
+  batch_size: 1
+  shuffle: True
+  batch_sampler: "default"
+  num_workers: 4
+  collator: "default"
+test:
+  batch_size: 1
+  sampler: "default"
+  batch_sampler: "default"
+  epoch: -1
+  collator: "default"
+  num_workers: 4

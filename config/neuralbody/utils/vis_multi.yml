@@ -1,0 +1,9 @@
+visualizer_module: easymocap.neuralbody.visualizer.vis_rgb.Visualizer
+visualizer_args:
+  out: none
+  concat: none
+  format: index
+  keys: ['rgb', 'rgb_map', 'instance_map', 'depth_map', 'acc_map']
+  depth_range: [0.1, 8.]
+  back_col: [1., 1., 1.]
+  # back_col: [0., 0., 0.]

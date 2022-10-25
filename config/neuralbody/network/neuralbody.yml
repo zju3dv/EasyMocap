@@ -1,0 +1,28 @@
+network_module: easymocap.neuralbody.model.neuralbody.Network
+network_args:
+  embed_vert: [6890, 16]
+  embed_time: 
+    mode: dense
+    shape: [300, 128]
+  voxel_size: [0.005, 0.005, 0.005]
+  voxel_pad: [0.1, 0.1, 0.1]
+  sparse:
+    dims: [16, 32, 64, 128]
+  nerf:
+    sample_args:
+      method: uniform
+      N_samples: 64
+    D: 3 # follow neuralbody
+    skips: []
+    W: 256
+    dim_pts: 3
+    dim_dir: 3
+    # follow neural body: use pts to rgb and not use pts to density
+    pts_to_density: False
+    pts_to_rgb: True
+    xyz_res: 10
+    view_res: 4
+    use_viewdirs: True
+    use_occupancy: True
+    linear_func: 'Linear'
+    act_fn: expsoftplus

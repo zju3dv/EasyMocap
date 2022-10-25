@@ -207,13 +207,19 @@ def run_triangulation(cfg_data, cfg_exp, path, out, args):
     if args.vismatch:
         opt_data += ' args.writer.vismatch.enable True'
     if args.disable_visrepro:
-        opt_data += ' args.writer.visrepro.enable False'        
+        opt_data += ' args.writer.visrepro.enable False'
     if args.disable_crop:
         opt_data += ' args.writer.vismatch.crop False args.writer.visdetect.crop False '
+    if args.vis_scale is not None:
+        opt_data += ' args.writer.visrepro.scale {}'.format(args.vis_scale)
+        opt_data += ' args.writer.visdetect.scale {}'.format(args.vis_scale)
+        opt_data += ' args.writer.vismatch.scale {}'.format(args.vis_scale)
     if args.ranges is not None:
         opt_data += ' args.ranges {},{},{}'.format(*args.ranges)
     # config for experiment
     opt_exp = ' args.debug {}'.format('True' if args.debug else 'False')
+    if args.triangulator_min_views is not None:
+        opt_exp += ' args.config.keypoints2d.min_view {view}'.format(view=args.triangulator_min_views)
     cmd = 'python3 apps/fit/triangulate1p.py --cfg_data {cfg_data} --opt_data {opt_data} --cfg_exp {cfg_exp} --opt_exp {opt_exp}'.format(
         cfg_data=cfg_data,
         cfg_exp=cfg_exp,
@@ -334,7 +340,11 @@ def workflow(work, args):
         append_mocap_flags(path, output, cfg_data, cfg_model, cfg_exp, workflow.fit, args)
     if 'postprocess' in workflow.keys():
         for key, cmd in workflow.postprocess.items():
-            cmd = cmd.replace('${data}', args.path)
+            cmd = cmd.replace('${data}', args.path).replace('${exp}', args.exp)
+            if '${subs_vis}' in cmd:
+                cmd = cmd.replace('${subs_vis}', ' '.join(args.subs_vis))
+            if '${vis_scale}' in cmd:
+                cmd = cmd.replace('${vis_scale}', '{}'.format(args.vis_scale))
             run_cmd(cmd)
 
 if __name__ == '__main__':
@@ -360,7 +370,7 @@ if __name__ == '__main__':
     parser.add_argument('--subs', type=str, default=None, nargs='+')
     parser.add_argument('--subs_vis', type=str, default=None, nargs='+')
     parser.add_argument('--mode', type=str, default='smpl-3d')
-    parser.add_argument('--exp', type=str, default=None)
+    parser.add_argument('--exp', type=str, default='output-smpl-3d')
     parser.add_argument('--opt_data', type=str, default=[], nargs='+')
     parser.add_argument('--opt_exp', type=str, default=[], nargs='+')
     parser.add_argument('--debug', action='store_true')
@@ -377,6 +387,7 @@ if __name__ == '__main__':
     parser.add_argument('--disable_visrepro', action='store_true')
     parser.add_argument('--disable_vismesh', action='store_true')
     parser.add_argument('--disable_crop', action='store_true')
+    parser.add_argument('--triangulator_min_views', type=int, default=None)
     args = parser.parse_args()
 
     if args.work is not None:

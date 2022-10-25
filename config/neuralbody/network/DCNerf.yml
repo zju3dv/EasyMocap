@@ -1,0 +1,23 @@
+network_module: easymocap.neuralbody.model.nerfplus.DynamicColorNerf
+network_args:
+  pid: -1
+  traj:
+    ranges: [0, 300, 1]
+    nViews: 8
+    path: none
+  embed:
+    mode: mlp
+    shape: [300, 128]
+  nerf:
+    D: 3
+    D_rgb: 3
+    W: 256
+    dim_pts: 3
+    dim_dir: 3
+    xyz_res: 10
+    view_res: 4
+    skips: [4]
+    use_viewdirs: True
+    use_occupancy: True
+    linear_func: 'Linear'
+    act_fn: expsoftplus
