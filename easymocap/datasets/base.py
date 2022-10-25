@@ -229,8 +229,13 @@ class Base(BaseData):
             self.image_names = get_allname(self.root, self.subs, self.ranges, **reader.image)
         self.reader = reader
         self.writer = writer
-        if camera != 'none' and os.path.exists(camera):
-            cameras = read_cameras(camera)
+        if camera != 'none':
+            if not os.path.isabs(camera):
+                camera = join(self.root, camera)
+            if os.path.exists(camera):
+                cameras = read_cameras(camera)
+            else:
+                cameras = None
         else:
             cameras = None
         self.cameras = cameras
@@ -417,7 +422,7 @@ class ImageFolder(Base):
             if self.loadmp:
                 for i, data_ in enumerate(data['annots']['annots']):
                     if keyname not in data_.keys():
-                        if key not in self.cache_shape.keys():
+                        if key not in self.cache_shape.keys() and self.read_flag[keyname]:
                             cache_shape = {
                                 'handl2d': np.zeros((21, 3)),
                                 'handr2d': np.zeros((21, 3)),
@@ -473,6 +478,23 @@ class ImageFolder(Base):
                 data[key+'_distort'] = np.stack([d[key+'_distort'] for d in data['annots']])
         else:
             data.pop('annots')
+        if not self.loadmp:
+            if 'depth' in self.reader.keys():
+                depthname = join(self.root, self.reader['depth']['root'], self.get_view(index)[1], '{}.png'.format(os.path.basename(data['annname']).replace('.json', '')))
+                depthmap = cv2.imread(depthname, cv2.IMREAD_UNCHANGED)
+                depthmap = depthmap.astype(np.float32)/1000.
+                depths = np.zeros_like(data['keypoints2d'][:, :2])
+                for i, (x, y, c) in enumerate(data['keypoints2d']):
+                    if c < 0.3:continue
+                    if i >= 15:continue
+                    x, y = int(x+0.5), int(y+0.5)
+                    if x > depthmap.shape[0] or y > depthmap.shape[1] or x < 0 or y < 0:
+                        continue
+                    d_value = depthmap[y, x]
+                    if d_value < 0.1:continue
+                    depths[i, 0] = d_value
+                    depths[i, 1] = c
+                data['depth'] = depths
         return data
     
     def vis_data(self, data, img=None):
@@ -503,14 +525,27 @@ class MultiVideo(ImageFolder):
         camera_for_each_image = False
         if 'camera' in self.reader.keys():
             camera_for_each_image = True
-            cameras = read_cameras(join(self.root, self.reader['camera'], sub))
+            if os.path.exists(join(self.root, self.reader['camera'], sub)):
+                cameras = read_cameras(join(self.root, self.reader['camera'], sub))
+            elif os.path.exists(join(self.root, self.reader['camera'])):
+                cameras = read_cameras(join(self.root, self.reader['camera']))
+            else:
+                myerror("You must give a valid camera path")
+                raise NotImplementedError
         for info in tqdm(self.image_dict[sub], 'Loading {}'.format(sub)):
             basename = os.path.basename(info['imgname']).split('.')[0]
             if camera_for_each_image:
-                K, dist = cameras[basename]['K'], cameras[basename]['dist']
+                if basename in cameras.keys():
+                    camera = cameras[basename]
+                elif sub+'/'+basename in cameras.keys():
+                    camera = cameras[sub+'/'+basename]
+                else:
+                    myerror("You must give a valid camera")
+                    raise NotImplementedError
+                K, dist = camera['K'], camera['dist']
                 data = super().__getitem__(info['index'], K=K, dist=dist)
                 for oldkey, newkey in [('K', 'K'), ('dist', 'dist'), ('R', 'Rc'), ('T', 'Tc')]:
-                    data[newkey] = cameras[basename][oldkey].astype(np.float32)
+                    data[newkey] = camera[oldkey].astype(np.float32)
             else:
                 data = super().__getitem__(info['index'])
             data_all.append(data)
@@ -518,6 +553,12 @@ class MultiVideo(ImageFolder):
         ret = self.collect_data(data_all)
         if self.loadmp and self.compose_mp: # 针对镜子的情况，需要load多人的数据
             for key in ['keypoints2d', 'keypoints2d_distort', 'keypoints2d_unproj']:
+                if len(self.pids) > 0:
+                    for i in range(len(ret[key])):
+                        ret[key][i] = ret[key][i][:len(self.pids)]
+                shapes = set([v.shape for v in ret[key]])
+                if len(shapes) > 1:
+                    myerror('The shape is not the same!')
                 ret[key] = np.stack(ret[key])
             ret['pid'] = self.pids
         return ret

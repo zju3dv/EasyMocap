@@ -1,5 +1,6 @@
 import shutil
 import cv2
+import os
 from tqdm import tqdm
 from .basic_keyboard import print_help, register_keys
 from .basic_visualize import plot_text, resize_to_screen, merge
@@ -203,6 +204,7 @@ class AnnotBase:
         param['frame'] = nf
         param['annots'] = annots
         if not no_img:
+            assert os.path.exists(imgname), imgname
             img0 = cv2.imread(imgname)
             param['img0'] = img0
             # param['pid'] = len(annot['annots'])
@@ -239,6 +241,7 @@ class AnnotBase:
             img = func(img, **self.param)
         if not self.no_window:
             cv2.imshow(self.name, img)
+        return img
 
 class AnnotMV:
     def __init__(self, datasets, key_funcs={}, key_funcs_view={}, callbacks=[], vis_funcs=[], vis_funcs_all=[], 
@@ -602,8 +605,11 @@ def parse_parser(parser):
         data = read_json(args.from_file)
         args.sub = sorted([v['vid'] for v in data])
     elif len(args.sub) == 0:
+        if not os.path.exists(join(args.path, args.image)):
+            print('{} not exists, Please run extract_image first'.format(join(args.path, args.image)))
+            raise FileNotFoundError
         subs = sorted(os.listdir(join(args.path, args.image)))
-        subs = [s for s in subs if os.path.isdir(join(args.path, args.image, s))]
+        subs = [s for s in subs if os.path.isdir(join(args.path, args.image, s)) and not s.startswith('._')]
         if len(subs) > 0 and subs[0].isdigit():
             subs = sorted(subs, key=lambda x:int(x))
         args.sub = subs

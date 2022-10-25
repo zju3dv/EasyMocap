@@ -73,7 +73,9 @@ class InitRT:
         self.torso = torso
 
     def __call__(self, body_model, body_params, infos):
-        keypoints3d = infos['keypoints3d'].detach().cpu().numpy()
+        keypoints3d = infos['keypoints3d']
+        if torch.is_tensor(keypoints3d):
+            keypoints3d = keypoints3d.detach().cpu().numpy()
         temp_joints = body_model.keypoints(body_params, return_tensor=False)
         
         torso = keypoints3d[..., self.torso, :3].copy()

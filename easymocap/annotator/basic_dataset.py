@@ -2,8 +2,8 @@
   @ Date: 2021-04-15 16:57:53
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-10-15 16:43:12
-  @ FilePath: /EasyMocap/easymocap/annotator/basic_dataset.py
+  @ LastEditTime: 2022-09-15 21:58:57
+  @ FilePath: /EasyMocapPublic/easymocap/annotator/basic_dataset.py
 '''
 from os.path import join
 import os
@@ -25,13 +25,20 @@ class ImageFolder:
         self.annot_root_tmp = join(path, self.annot + '_tmp')
         if os.path.exists(self.annot_root_tmp) and remove_tmp:
             shutil.rmtree(self.annot_root_tmp)
+        print('- Load data from {}'.format(path))        
         if sub is None:
+            print('- Try to find image names...')
             self.imgnames = getFileList(self.image_root, ext=ext, max=max_per_folder)
+            print('  -> find {} images'.format(len(self.imgnames)))
             if not no_annot:
+                print('- Try to find annot names...')
                 self.annnames = getFileList(self.annot_root, ext='.json')
+                print('  -> find {} annots'.format(len(self.annnames)))
         else:
+            print('- Try to find image names of camera {}...'.format(sub))
             self.imgnames = getFileList(join(self.image_root, sub), ext=ext)
             self.imgnames = [join(sub, name) for name in self.imgnames]
+            print('  -> find {} images'.format(len(self.imgnames)))
             if not no_annot:
                 self.annnames = getFileList(join(self.annot_root, sub), ext='.json')
                 self.annnames = [join(sub, name) for name in self.annnames]
@@ -46,6 +53,9 @@ class ImageFolder:
         self.no_annot = no_annot
     
     def __getitem__(self, index):
+        if index > len(self.imgnames):
+            print('!!! You are try to read {} image from {} images'.format(index, len(self.imgnames)))
+            print('!!! Please check image path: {}'.format(self.image_root))
         imgname = join(self.image_root, self.imgnames[index])
         if self.no_annot:
             annname = None

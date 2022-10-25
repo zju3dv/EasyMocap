@@ -2,7 +2,7 @@
   @ Date: 2021-05-13 14:20:13
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-06-10 22:47:42
+  @ LastEditTime: 2022-09-13 12:24:20
   @ FilePath: /EasyMocapPublic/easymocap/visualize/pyrender_wrapper.py
 '''
 import pyrender
@@ -97,7 +97,7 @@ class Renderer:
                     # material = pyrender.material.SpecularGlossinessMaterial(
                     #     diffuseFactor=1.0, glossinessFactor=0.0
                     # )
-                    mesh = pyrender.Mesh.from_trimesh(mesh, material=material, smooth=True)
+                    mesh = pyrender.Mesh.from_trimesh(mesh, material=material, smooth=data.get('smooth', True))
                 else:
                     mesh = trimesh.Trimesh(vert, faces, vertex_colors=data['colors'], process=False)
                     mesh.apply_transform(rot)
@@ -149,17 +149,12 @@ def plot_meshes(img, meshes, K, R, T, mode='image'):
 
 # 这个顺序是BGR的。虽然render的使用的是RGB的，但是由于和图像拼接了，所以又变成BGR的了
 colors = [
-    # (0.5, 0.2, 0.2, 1.),  # Defalut BGR
-    (.5, .5, .7, 1.),  # Pink BGR
-    (.44, .50, .98, 1.), # Red
-    (.7, .7, .6, 1.),  # Neutral
-    (.5, .5, .7, 1.),  # Blue
-    (.5, .55, .3, 1.),  # capsule
-    (.3, .5, .55, 1.),  # Yellow
-    # (.6, .6, .6, 1.), # gray
-    (.9, 1., 1., 1.),
-    (0.95, 0.74, 0.65, 1.),
-    (.9, .7, .7, 1.)
+    (94/255, 124/255, 226/255), # 青色
+    (255/255, 200/255, 87/255), # yellow
+    (74/255.,  189/255.,  172/255.), # green
+    (8/255, 76/255, 97/255), # blue
+    (219/255, 58/255, 52/255), # red
+    (77/255, 40/255, 49/255), # brown
 ]
 
 colors_table = {

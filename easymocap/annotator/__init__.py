@@ -10,7 +10,6 @@ from .basic_dataset import ImageFolder, MVBase
 from .basic_visualize import vis_point, vis_line, vis_bbox
 from .basic_visualize import plot_bbox_body, plot_skeleton, plot_text, vis_active_bbox, plot_bbox_factory
 from .basic_annotator import AnnotBase, AnnotMV
-from .chessboard import findChessboardCorners
 # bbox callbacks
 # create, delete, copy
 from .bbox_callback import create_bbox, delete_bbox, delete_all_bbox, copy_previous_bbox, copy_previous_missing

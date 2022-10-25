@@ -250,6 +250,42 @@ class MultiStage:
                 infos[key] = val.detach().cpu()
         return body_params
 
+    def fit_data(self, data, body_model):
+        infos = data.copy()
+        init_params = body_model.init_params(nFrames=infos['nFrames'], nPerson=infos.get('nPerson', 1))
+        # first initialize the model
+        for name, init_func in self.initialize.items():
+            if 'loss' in init_func.keys():
+                # fitting to initialize
+                init_params = self.fit_stage(body_model, init_params, infos, init_func, 0)
+            else:
+                # use initialize module
+                init_module = load_object(init_func.module, init_func.args)
+                init_params = init_module(body_model, init_params, infos)
+        # if there are multiple initialization params
+        # then fit each of them
+        if not isinstance(init_params, list):
+            init_params = [init_params]
+        results = []
+        for init_param in init_params:
+            # check the repeat params
+            body_params = init_param
+            for stage_name, stage in self.stages.items():
+                for irepeat in range(stage.get('repeat', 1)):
+                    with Timer('optimize {}'.format(stage_name), not self.monitor.timer):
+                        body_params = self.fit_stage(body_model, body_params, infos, stage, irepeat)
+            results.append(body_params)
+        # select the best results
+        if len(results) > 1:
+            # check the result
+            loss = load_object(self.check.module, self.check.args, **{key:infos[key] for key in self.check.infos})
+            metrics = [loss(body_model.keypoints(body_params, return_tensor=True).cpu()).item() for body_params in results]
+            best_idx = np.argmin(metrics)
+        else:
+            best_idx = 0
+        body_params = Params(**results[best_idx])
+        return body_params, infos
+
     def fit(self, body_model, dataset):
         batch_size = len(dataset) if self.batch_size == -1 else self.batch_size
         dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0, drop_last=False)
@@ -257,42 +293,10 @@ class MultiStage:
             dataloader = tqdm(dataloader, desc='optimizing')
         for data in dataloader:
             data = dataset.reshape_data(data)
-            infos = data.copy()
-            init_params = body_model.init_params(nFrames=infos['nFrames'], nPerson=infos.get('nPerson', 1))
-            # first initialize the model
-            for name, init_func in self.initialize.items():
-                if 'loss' in init_func.keys():
-                    # fitting to initialize
-                    init_params = self.fit_stage(body_model, init_params, infos, init_func, 0)
-                else:
-                    # use initialize module
-                    init_module = load_object(init_func.module, init_func.args)
-                    init_params = init_module(body_model, init_params, infos)
-            # if there are multiple initialization params
-            # then fit each of them
-            if not isinstance(init_params, list):
-                init_params = [init_params]
-            results = []
-            for init_param in init_params:
-                # check the repeat params
-                body_params = init_param
-                for stage_name, stage in self.stages.items():
-                    for irepeat in range(stage.get('repeat', 1)):
-                        with Timer('optimize {}'.format(stage_name), not self.monitor.timer):
-                            body_params = self.fit_stage(body_model, body_params, infos, stage, irepeat)
-                results.append(body_params)
-            # select the best results
-            if len(results) > 1:
-                # check the result
-                loss = load_object(self.check.module, self.check.args, **{key:infos[key] for key in self.check.infos})
-                metrics = [loss(body_model.keypoints(body_params, return_tensor=True).cpu()).item() for body_params in results]
-                best_idx = np.argmin(metrics)
-            else:
-                best_idx = 0
+            body_params, infos = self.fit_data(data, body_model)
             if 'sync_offset' in body_params.keys():
                 offset = body_params.pop('sync_offset')
                 dataset.write_offset(offset)
-            body_params = Params(**results[best_idx])
             if data['nFrames'] != body_params['poses'].shape[0]:
                 for key in body_params.keys():
                     if body_params[key].shape[0] == 1:continue

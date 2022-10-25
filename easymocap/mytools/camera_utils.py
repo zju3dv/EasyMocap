@@ -193,7 +193,7 @@ class Undistort:
         kpts = keypoints[:, None, :2]
         kpts = np.ascontiguousarray(kpts)
         kpts = cv2.undistortPoints(kpts, K, dist, P=K)
-        keypoints[:, :2] = kpts[:, 0]
+        keypoints = np.hstack([kpts[:, 0], keypoints[:, 2:]])
         return keypoints
     
     @staticmethod
@@ -221,7 +221,7 @@ class UndistortFisheye:
         kpts = keypoints[:, None, :2]
         kpts = np.ascontiguousarray(kpts)
         kpts = cv2.fisheye.undistortPoints(kpts, K, dist, P=Knew)
-        keypoints[:, :2] = kpts[:, 0]
+        keypoints = np.hstack([kpts[:, 0], keypoints[:, 2:]])
         return keypoints
     
     @staticmethod

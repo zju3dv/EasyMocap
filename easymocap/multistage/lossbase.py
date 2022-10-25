@@ -242,6 +242,8 @@ class AnySmooth(LossBase):
         return name
 
     def check_at_start(self, **kwargs):
+        if self.key not in kwargs.keys():
+            return 0
         value = kwargs[self.key]
         if value.shape[0] < len(self.weight):
             return 0
@@ -253,6 +255,8 @@ class AnySmooth(LossBase):
         return super().check_at_start(**kwargs)
 
     def check_at_end(self, **kwargs):
+        if self.key not in kwargs.keys():
+            return 0
         value = kwargs[self.key]
         if value.shape[0] < len(self.weight):
             return 0
@@ -587,3 +591,24 @@ class Keypoints2D(BaseKeypoints):
         header.append('after(pix)')
         contents.append(err_after.detach().cpu().numpy().tolist())
         print_table(header, contents)
+
+class DepthLoss(LossBase):
+    def __init__(self, K, Rc, Tc, depth, norm, norm_info, index_est=[]):
+        super().__init__()
+        P = torch.bmm(K, torch.cat([Rc, Tc], dim=-1))
+        self.register_buffer('P', P)
+        self.index_est = index_est
+        depth = BaseKeypoints.select(depth, self.index_est, [])
+        self.register_buffer('depth', depth)
+        self.einsum = 'fab,fnb->fna'
+        self.lossfunc = make_loss(norm, norm_info)
+    
+    def forward(self, kpts_est, **kwargs):
+        kpts_est = BaseKeypoints.select(kpts_est, self.index_est, [])
+        kpts_homo = torch.ones_like(kpts_est[..., -1:])
+        kpts_homo = torch.cat([kpts_est, kpts_homo], dim=-1)
+        point_cam = torch.einsum(self.einsum, self.P, kpts_homo)
+        depth = point_cam[..., -1]
+        conf = self.depth[..., 1]
+        loss = self.lossfunc(depth[..., None], self.depth[..., :1], conf)
+        return loss

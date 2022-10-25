@@ -3,7 +3,7 @@
   @ Author: Qing Shuai
   @ Mail: s_q@zju.edu.cn
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-07-11 22:20:44
+  @ LastEditTime: 2022-08-30 19:47:04
   @ FilePath: /EasyMocapPublic/easymocap/multistage/init_cnn.py
 '''
 import os
@@ -82,7 +82,10 @@ class InitSpin:
                     print('[WARN] not enough joints: {} in first frame'.format(imgname))
                 else:
                     print('[WARN] not enough joints: {}'.format(imgname))
-                    result = {'body_params': params_all[-1][pid]}
+                    if self.multi_person:
+                        result = {'body_params': params_all[-1][pid]}
+                    else:
+                        result = {'body_params': params_all[-1]}
                 params = result['body_params']
                 params['id'] = pid
                 params_current.append(params)

@@ -2,8 +2,8 @@
   @ Date: 2021-04-13 16:14:36
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-08-17 16:49:40
-  @ FilePath: /EasyMocapPublic/easymocap/annotator/chessboard.py
+  @ LastEditTime: 2022-10-25 20:56:26
+  @ FilePath: /EasyMocapRelease/easymocap/annotator/chessboard.py
 '''
 import numpy as np
 import cv2
@@ -101,14 +101,14 @@ def create_chessboard(path, keypoints3d, out='annots'):
             annots['keypoints3d'] = template['keypoints3d']
             save_json(annname, annots)
 
-ARUCO_DICT = {
-    "4X4_50": cv2.aruco.DICT_4X4_50,
-    "4X4_100": cv2.aruco.DICT_4X4_100,
-    "5X5_100": cv2.aruco.DICT_5X5_100,
-    "5X5_250": cv2.aruco.DICT_5X5_250,
-}
 
 def detect_charuco(image, aruco_type, long, short, squareLength, aruco_len):
+    ARUCO_DICT = {
+        "4X4_50": cv2.aruco.DICT_4X4_50,
+        "4X4_100": cv2.aruco.DICT_4X4_100,
+        "5X5_100": cv2.aruco.DICT_5X5_100,
+        "5X5_250": cv2.aruco.DICT_5X5_250,
+    }
     # 创建ChArUco标定板
     dictionary = cv2.aruco.getPredefinedDictionary(dict=ARUCO_DICT[aruco_type])
     board = cv2.aruco.CharucoBoard_create(
@@ -139,3 +139,95 @@ def detect_charuco(image, aruco_type, long, short, squareLength, aruco_len):
     else:
         retval = False
     return retval, keypoints2d, corners3d
+
+class CharucoBoard:
+    def __init__(self, long, short, squareLength, aruco_len, aruco_type) -> None:    
+        '''
+            short,long 分别表示短边、长边的格子数.
+            squareLength,aruco_len 分别表示棋盘格的边长与aruco的边长.
+            aruco_type 表示Aruco的类型 4X4表示aruco中的白色格子是4x4的 _50表示aruco字典中有多少种aruco.
+        '''
+        # 定义现有的Aruco类型
+        self.ARUCO_DICT = {
+            "4X4_50": cv2.aruco.DICT_4X4_50,
+            "4X4_100": cv2.aruco.DICT_4X4_100,
+            "5X5_100": cv2.aruco.DICT_5X5_100,
+            "5X5_250": cv2.aruco.DICT_5X5_250,
+        }
+        # 创建ChArUco标定板
+        dictionary = cv2.aruco.getPredefinedDictionary(dict=self.ARUCO_DICT[aruco_type])
+        board = cv2.aruco.CharucoBoard_create(
+            squaresY=long,
+            squaresX=short,
+            squareLength=squareLength,
+            markerLength=aruco_len,
+            dictionary=dictionary,
+        )
+        corners = board.chessboardCorners
+        # ATTN: exchange the XY
+        corners = corners[:, [1, 0, 2]]
+        self.template = {
+            'keypoints3d': corners,
+            'keypoints2d': np.zeros_like(corners),
+            'pattern': (long-1, short-1),
+            'grid_size': squareLength,
+            'visted': False
+        }
+        print(corners.shape)
+        self.dictionary = dictionary
+        self.board = board
+    
+    def detect(self, img_color, annots):
+        # 查找标志块的左上角点
+        corners, ids, _ = cv2.aruco.detectMarkers(
+            image=img_color, dictionary=self.dictionary, parameters=None
+        )
+        # 棋盘格黑白块内角点
+        if ids is not None:
+            retval, charucoCorners, charucoIds = cv2.aruco.interpolateCornersCharuco(
+                markerCorners=corners, markerIds=ids, image=img_color, board=self.board
+            )
+        else:
+            retval = False
+        if retval:
+            # 绘制棋盘格黑白块内角点
+            cv2.aruco.drawDetectedCornersCharuco(
+                img_color, charucoCorners, charucoIds, [0, 0, 255]
+            )
+            if False:
+                cv2.aruco.drawDetectedMarkers(
+                    image=img_color, corners=corners, ids=ids, borderColor=None
+                )
+
+            ids = charucoIds[:, 0]
+            pts = charucoCorners[:, 0]
+            annots['keypoints2d'][ids, :2] = pts
+            annots['keypoints2d'][ids, 2] = 1.
+            # if args.show:
+            #     img_color = cv2.resize(img_color, None, fx=0.5, fy=0.5)
+            #     cv2.imshow('vis', img_color)
+            #     cv2.waitKey(0)
+            # visname = imgname.replace(images, output)
+            # os.makedirs(os.path.dirname(visname), exist_ok=True)
+            # cv2.imwrite(visname, img_color)
+        else:
+            # mywarn('Cannot find in {}'.format(imgname))
+            pass
+        
+    def __call__(self, imgname, images='images', output='output'):
+        import os
+        from .file_utils import read_json, save_json
+        import copy
+        img_color = cv2.imread(imgname)
+        annotname = imgname.replace('images', 'chessboard').replace('.jpg', '.json')
+        if os.path.exists(annotname):
+            annots = read_json(annotname)
+            if annots['visited']:
+                return
+        else:
+            annots = copy.deepcopy(self.template)
+        annots['visited'] = True
+        self.detect(img_color, annots)
+        annots['keypoints2d'] = annots['keypoints2d'].tolist()
+        annots['keypoints3d'] = annots['keypoints3d'].tolist()
+        save_json(annotname, annots)

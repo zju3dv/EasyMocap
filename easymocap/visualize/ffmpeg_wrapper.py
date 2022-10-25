@@ -2,7 +2,7 @@
   @ Date: 2021-11-27 16:50:33
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-04-13 18:19:03
+  @ LastEditTime: 2022-10-19 21:37:49
   @ FilePath: /EasyMocapPublic/easymocap/visualize/ffmpeg_wrapper.py
 '''
 import shutil
@@ -41,7 +41,8 @@ class VideoMaker:
                 self.reorder = True
         if self.reorder:
             tmpdir = '/tmp/ffmpeg-tmp'
-            shutil.rmtree(tmpdir)
+            if os.path.exists(tmpdir):
+                shutil.rmtree(tmpdir)
             os.makedirs(tmpdir, exist_ok=True)
             for nf, imgname in tqdm(enumerate(imgnames), desc='copy to /tmp'):
                 tmpname = join(tmpdir, '{:06d}{}'.format(nf, self.ext))
