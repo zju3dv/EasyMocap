@@ -4,3 +4,4 @@ pytorch-lightning==1.5.0
 spconv-cu111
 lpips
 scikit-image
+torch_tb_profiler

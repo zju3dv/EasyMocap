@@ -2,14 +2,14 @@
   @ Date: 2021-03-02 16:53:55
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-04-14 16:20:10
-  @ FilePath: /EasyMocap/setup.py
+  @ LastEditTime: 2022-11-03 13:10:59
+  @ FilePath: /EasyMocapRelease/setup.py
 '''
 from setuptools import setup
 
 setup(
     name='easymocap',     
-    version='0.2',   #
+    version='0.2.1',   #
     description='Easy Human Motion Capture Toolbox',
     author='Qing Shuai', 
     author_email='s_q@zju.edu.cn',

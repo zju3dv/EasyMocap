@@ -2,7 +2,7 @@
  * @Date: 2021-01-13 20:32:12
  * @Author: Qing Shuai
  * @LastEditors: Qing Shuai
- * @LastEditTime: 2022-08-08 13:42:34
+ * @LastEditTime: 2022-11-03 13:09:58
  * @FilePath: /EasyMocapRelease/Readme.md
 -->
 
@@ -17,8 +17,9 @@
 
 ## News
 
+- :tada: Our SIGGRAPH 2022 [**Novel View Synthesis of Human Interactions From Sparse Multi-view Videos**](https://chingswy.github.io/easymocap-public-doc/works/multinb.html) is released! Check the [documentation](https://chingswy.github.io/easymocap-public-doc/works/multinb.html).
 - :tada: EasyMocap v0.2 is released! We support motion capture from Internet videos. Please check the [Quick Start](https://chingswy.github.io/easymocap-public-doc/quickstart/quickstart.html) for more details.
-- :tada: Our SIGGRAPH 2022 [**Novel View Synthesis of Human Interactions From Sparse Multi-view Videos**](https://chingswy.github.io/easymocap-public-doc/works/multinb.html) will be added to this repo soon.
+
 
 ---
 
@@ -147,11 +148,9 @@ If you would like to download the ZJU-Mocap dataset, please sign the [agreement]
     <sup>Annotator for bounding box, keypoints and mask</sup>
 </div>
 
-### Other
-- [Pose guided synchronization](./doc/todo.md) (comming soon)
-- [Exporting of multiple data formats(bvh, asf/amc, ...)](./doc/02_output.md)
 
 ## Updates
+- 11/03/2022: Support MultiNeuralBody.
 - 12/25/2021: Support mediapipe keypoints detector.
 - 08/09/2021: Add a colab demo [here](https://colab.research.google.com/drive/1Cyvu_lPFUajr2RKt6yJIfS3HQIIYl6QU?usp=sharing).
 - 06/28/2021: The **Multi-view Multi-person** part is released!
@@ -161,7 +160,7 @@ If you would like to download the ZJU-Mocap dataset, please sign the [agreement]
 
 ## Installation
 
-See [doc/install](./doc/installation.md) for more instructions.
+See [documentation](https://chingswy.github.io/easymocap-public-doc/install/install.html) for more instructions.
 
 ## Acknowledgements
 
@@ -169,12 +168,12 @@ Here are the great works this project is built upon:
 
 - SMPL models and layer are from MPII [SMPL-X model](https://github.com/vchoutas/smplx).
 - Some functions are borrowed from [SPIN](https://github.com/nkolot/SPIN), [VIBE](https://github.com/mkocabas/VIBE), [SMPLify-X](https://github.com/vchoutas/smplify-x)
-- The method for fitting 3D skeleton and SMPL model is similar to [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/), without using point clouds.
+- The method for fitting 3D skeleton and SMPL model is similar to [SMPLify-X](https://github.com/vchoutas/smplify-x)(with 3D keypoints loss), [TotalCapture](http://www.cs.cmu.edu/~hanbyulj/totalcapture/)(without using point clouds).
 - We integrate some easy-to-use functions for previous great work:
   - `easymocap/estimator/mediapipe_wrapper.py`: [MediaPipe](https://github.com/google/mediapipe)
   - `easymocap/estimator/SPIN`  : an SMPL estimator[^cao2018]
-  - `easymocap/estimator/YOLOv4`: an object detector[^kolotouros2019] (Coming soon)
-  - `easymocap/estimator/HRNet` : a 2D human pose estimator[^bochkovskiy2020] (Coming soon)
+  - `easymocap/estimator/YOLOv4`: an object detector[^kolotouros2019]
+  - `easymocap/estimator/HRNet` : a 2D human pose estimator[^bochkovskiy2020]
 
 ## Contact
 
@@ -189,7 +188,7 @@ We would like to thank Wenduo Feng, Di Huang, Yuji Chen, Hao Xu, Qing Shuai, Qi 
 
 ## Citation
 
-This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/), [Mirrored-Human](https://zju3dv.github.io/Mirrored-Human/), [mvpose](https://zju3dv.github.io/mvpose/) and [Neural Body](https://zju3dv.github.io/neuralbody/)
+This project is a part of our work [iMocap](https://zju3dv.github.io/iMoCap/), [Mirrored-Human](https://zju3dv.github.io/Mirrored-Human/), [mvpose](https://zju3dv.github.io/mvpose/), [Neural Body](https://zju3dv.github.io/neuralbody/), [MultiNeuralBody](https://chingswy.github.io/easymocap-public-doc/works/multinb.html), [enerf]().
 
 Please consider citing these works if you find this repo is useful for your projects.
 
@@ -199,6 +198,21 @@ Please consider citing these works if you find this repo is useful for your proj
     howpublished = {Github},  
     year = {2021},
     url = {https://github.com/zju3dv/EasyMocap}
+}
+
+@inproceedings{shuai2022multinb,
+  title={Novel View Synthesis of Human Interactions from Sparse
+Multi-view Videos},
+  author={Shuai, Qing and Geng, Chen and Fang, Qi and Peng, Sida and Shen, Wenhao and Zhou, Xiaowei and Bao, Hujun},
+  booktitle={SIGGRAPH Conference Proceedings},
+  year={2022}
+}
+
+@inproceedings{lin2022efficient,
+  title={Efficient Neural Radiance Fields for Interactive Free-viewpoint Video},
+  author={Lin, Haotong and Peng, Sida and Xu, Zhen and Yan, Yunzhi and Shuai, Qing and Bao, Hujun and Zhou, Xiaowei},
+  booktitle={SIGGRAPH Asia Conference Proceedings},
+  year={2022}
 }
 
 @inproceedings{dong2021fast,
