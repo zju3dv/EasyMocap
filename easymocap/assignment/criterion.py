@@ -76,6 +76,8 @@ class CritMinMax(BaseCrit):
     def __call__(self, keypoints3d, **kwargs):
         idx = keypoints3d[..., -1] > self.min_conf
         k3d = keypoints3d[idx, :3]
+        if sum(idx) == 0:
+            return False
         mink = np.min(k3d, axis=0)
         maxk = np.max(k3d, axis=0)
         length = max(np.abs(maxk - mink))
