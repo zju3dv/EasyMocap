@@ -2,13 +2,13 @@
   @ Date: 2021-03-02 16:12:59
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-08-10 16:27:17
+  @ LastEditTime: 2022-10-11 16:36:12
   @ FilePath: /EasyMocapPublic/apps/calibration/calib_intri.py
 '''
 # This script calibrate each intrinsic parameters
 import shutil
 import random
-from easymocap.mytools.debug_utils import mywarn
+from easymocap.mytools.debug_utils import log, mywarn
 from easymocap.mytools.vis_base import plot_points2d
 from easymocap.mytools import write_intri, read_json, Timer
 import numpy as np
@@ -81,6 +81,8 @@ def load_chessboards(chessnames, imagenames, max_image, sample_image=-1, out='de
         valid_idx = [valid_idx[i] for i in index_sample]
         k2ds_ = [k2ds_[i] for i in index_sample]
         k3ds_ = [k3ds_[i] for i in index_sample]
+    else:
+        log('[calibration] Load {} images'.format(len(k3ds_)))
     for ii, idx in enumerate(valid_idx):
         shutil.copyfile(imagenames[idx], join(out, '{:06d}.jpg'.format(ii)))
     return k3ds_, k2ds_
@@ -106,6 +108,16 @@ def calib_intri_share(path, image, ext):
                 'K': K,
                 'dist': dist  # dist: (1, 5)
             }
+        if True:
+            img = cv2.imread(imagenames[0])
+            h,  w = img.shape[:2]
+            newcameramtx, roi = cv2.getOptimalNewCameraMatrix(K, dist, (w,h), 1, (w,h))
+            mapx, mapy = cv2.initUndistortRectifyMap(K, dist, None, newcameramtx, (w,h), 5)
+            for imgname in tqdm(imagenames):
+                img = cv2.imread(imgname)
+                dst = cv2.remap(img, mapx, mapy, cv2.INTER_LINEAR)
+                outname = join(path, 'output', os.path.basename(imgname))
+                cv2.imwrite(outname, dst)
         write_intri(join(path, 'output', 'intri.yml'), cameras)
 
 def calib_intri(path, image, ext):
