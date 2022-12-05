@@ -2,8 +2,8 @@
   @ Date: 2021-12-05 15:26:40
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-12-05 15:28:57
-  @ FilePath: /EasyMocap/apps/calibration/create_blank_camera.py
+  @ LastEditTime: 2022-11-04 16:47:11
+  @ FilePath: /EasyMocapPublic/apps/calibration/create_blank_camera.py
 '''
 import os
 from os.path import join
@@ -25,7 +25,11 @@ if __name__ == '__main__':
     cameras = {}
     for sub in subs:
         if len(args.shape) == 0:
-            imgnames = sorted(glob(join(args.path, 'images', sub, '*.jpg')))
+            imgnames = sum([], 
+                sorted(glob(join(args.path, 'images', sub, '*.jpg'))) + \
+                sorted(glob(join(args.path, 'images', sub, '*.png')))
+            )
+
             imgname = imgnames[0]
             img = cv2.imread(imgname)
             height, width = img.shape[:2]

@@ -2,7 +2,7 @@
   @ Date: 2021-03-15 12:23:12
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-07-21 15:55:02
+  @ LastEditTime: 2022-11-08 21:43:37
   @ FilePath: /EasyMocapPublic/easymocap/mytools/file_utils.py
 '''
 import os
@@ -30,6 +30,23 @@ def save_json(file, data):
         os.makedirs(os.path.dirname(file))
     with open(file, 'w') as f:
         json.dump(data, f, indent=4)
+
+def save_numpy_dict(file, data):
+    if not os.path.exists(os.path.dirname(file)):
+        os.makedirs(os.path.dirname(file))
+    res = {}
+    for key, val in data.items():
+        res[key] = val.tolist()
+    with open(file, 'w') as f:
+        json.dump(res, f, indent=4)
+
+def read_numpy_dict(path):
+    assert os.path.exists(path), path
+    with open(path) as f:
+        data = json.load(f)
+    for key, val in data.items():
+        data[key] = np.array(val, dtype=np.float32)
+    return data
 
 def append_json(file, data):
     if not os.path.exists(os.path.dirname(file)):

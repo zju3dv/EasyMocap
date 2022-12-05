@@ -17,6 +17,7 @@ args:
   stages:
     camera:
       optimize: [Th, Rh]
+      repeat: 1
       before_after: {}
       loss:
         k2d:

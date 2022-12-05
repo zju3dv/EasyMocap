@@ -379,7 +379,7 @@ class Base(BaseData):
             else:
                 params = params.to_multiperson(self.pids)
 
-            if 'render' in self.writer.keys():
+            if 'render' in self.writer.keys() and self.writer.render.enable:
                 img = self.read_image(imgname)
                 vis_mesh = self.vis_body(body_model, params, img, camera, scale=self.writer.render.scale, mode=self.writer.render.mode)
                 meshname = join(self.out, self.writer['render']['root'], *splitname) + self.writer['render']['ext']
