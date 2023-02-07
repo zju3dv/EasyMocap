@@ -42,6 +42,10 @@ def get_allname(root0, subs, ranges, root, ext, **kwargs):
         else:
             _ranges = ranges
         nv = subs.index(sub)
+
+        if len(imgnames) < _ranges[1]:
+            raise ValueError('The number of images in {} is less than the range: {} vs {}'.format(join(root0, root, sub), len(imgnames), _ranges[1]))
+
         for nnf, nf in enumerate(range(*_ranges)):
             image_names.append({
                 'sub': sub,
