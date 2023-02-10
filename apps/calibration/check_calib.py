@@ -52,7 +52,7 @@ def load_cube():
         [1, 5],
         [2, 6],
         [3, 7]
-    ], dtype=np.int)
+    ], dtype=int)
     points3d = np.hstack((points3d, np.ones((points3d.shape[0], 1))))
     return points3d, lines
 
@@ -100,7 +100,7 @@ def load_axes():
         [0,1],
         [0,2],
         [0,3]
-    ], dtype=np.int)
+    ], dtype=int)
     points3d = np.hstack((points3d, np.ones((points3d.shape[0], 1))))
     return points3d, lines
 

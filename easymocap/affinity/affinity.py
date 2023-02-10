@@ -13,7 +13,7 @@ def getDimGroups(lDetections):
     dimGroups = [0]
     for data in lDetections:
         dimGroups.append(dimGroups[-1] + len(data))
-    views = np.zeros(dimGroups[-1], dtype=np.int)
+    views = np.zeros(dimGroups[-1], dtype=int)
     for nv in range(len(dimGroups) - 1):
         views[dimGroups[nv]:dimGroups[nv+1]] = nv
     return dimGroups, views

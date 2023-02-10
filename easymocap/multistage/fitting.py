@@ -208,7 +208,7 @@ class BaseBody:
         parents = body_model.parents[1:].cpu().numpy()
         child = np.arange(1, parents.shape[0]+1, dtype=np.int64)
         self.kintree = np.stack([parents, child], axis=1)
-        self.parents = np.zeros(parents.shape[0]+1, dtype=np.int) - 1
+        self.parents = np.zeros(parents.shape[0]+1, dtype=int) - 1
         self.parents[self.kintree[:, 1]] = self.kintree[:, 0]
         self.rootIdx = 0
         self.time = time()
@@ -490,7 +490,7 @@ class MyFilter:
             value_mean = (value_pre * conf_pre).sum(axis=0)/(conf_sum + 1e-5)
             self.x = value_mean
             self.x_conf = conf_sum
-            t_prev = np.zeros_like(self.x, dtype=np.int) - 1
+            t_prev = np.zeros_like(self.x, dtype=int) - 1
             t_prev[conf_sum>0] = self.counter
             self.t_prev = t_prev
             # 零速度初始化

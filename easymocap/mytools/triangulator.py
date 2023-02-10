@@ -385,7 +385,7 @@ def check_cluster(affinity, row, views, dimGroups, indices, p2dAssigned, visited
     return indices_all
 
 def views_from_dimGroups(dimGroups):
-    views = np.zeros(dimGroups[-1], dtype=np.int)
+    views = np.zeros(dimGroups[-1], dtype=int)
     for nv in range(len(dimGroups) - 1):
         views[dimGroups[nv]:dimGroups[nv+1]] = nv
     return views
@@ -462,11 +462,11 @@ class SimpleMatchAndTriangulator(SimpleTriangulator):
             sum1 += affinity[:, start:end].max(axis=-1)
         n2d = affinity.shape[0]
         nViews = len(dimGroups) - 1
-        idx_zero = np.zeros(nViews, dtype=np.int) - 1
+        idx_zero = np.zeros(nViews, dtype=int) - 1
         views = views_from_dimGroups(dimGroups)
         # the assigned results of each person
-        p2dAssigned = np.zeros(n2d, dtype=np.int) - 1
-        visited = np.zeros(n2d, dtype=np.int)
+        p2dAssigned = np.zeros(n2d, dtype=int) - 1
+        visited = np.zeros(n2d, dtype=int)
         sortidx = np.argsort(-sum1)
         pid = 0
         k3dresults = []
