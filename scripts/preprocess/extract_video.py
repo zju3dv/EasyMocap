@@ -32,7 +32,8 @@ def extract_video(videoname, path, start, end, step):
         if cnt < start:continue
         if cnt >= end:break
         if not ret:continue
-        cv2.imwrite(join(outpath, '{:06d}.jpg'.format(cnt)), frame)
+        if (cnt % step ==0):
+            cv2.imwrite(join(outpath, '{:06d}.jpg'.format(cnt)), frame)
     video.release()
     return base
 
