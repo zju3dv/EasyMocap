@@ -10,7 +10,7 @@ from ..mytools.reconstruction import batch_triangulate, projectN3
 from ..config import load_object
 
 def views_from_dimGroups(dimGroups):
-    views = np.zeros(dimGroups[-1], dtype=np.int)
+    views = np.zeros(dimGroups[-1], dtype=int)
     for nv in range(len(dimGroups) - 1):
         views[dimGroups[nv]:dimGroups[nv+1]] = nv
     return views
@@ -42,8 +42,8 @@ def simple_associate(annots, affinity, dimGroups, Pall, group, cfg):
         views_cnt[:, nv] = affinity[:, dimGroups[nv]:dimGroups[nv+1]].sum(axis=1)
     views_cnt = (views_cnt>0.5).sum(axis=1)
     sortidx = np.argsort(-views_cnt)
-    p2dAssigned = np.zeros(n2D, dtype=np.int) - 1
-    indices_zero = np.zeros((nViews), dtype=np.int) - 1
+    p2dAssigned = np.zeros(n2D, dtype=int) - 1
+    indices_zero = np.zeros((nViews), dtype=int) - 1
     for idx in sortidx:
         if p2dAssigned[idx] != -1:
             continue

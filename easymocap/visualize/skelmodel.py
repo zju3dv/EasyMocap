@@ -50,7 +50,7 @@ class SkelModel:
         self.body_type = body_type
         self.device = 'none'
         cur_dir = os.path.dirname(__file__)
-        faces = np.loadtxt(join(cur_dir, 'assets', 'sphere_faces_{}.txt'.format(res)), dtype=np.int)
+        faces = np.loadtxt(join(cur_dir, 'assets', 'sphere_faces_{}.txt'.format(res)), dtype=int)
         self.vertices = np.loadtxt(join(cur_dir, 'assets', 'sphere_vertices_{}.txt'.format(res)))
         # compose faces
         faces_all = []

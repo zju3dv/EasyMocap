@@ -26,7 +26,7 @@ def optimizeShape(body_model, body_params, keypoints3d,
     """
     device = body_model.device
     # 计算不同的骨长
-    kintree = np.array(kintree, dtype=np.int)
+    kintree = np.array(kintree, dtype=int)
     # limb_length: nFrames, nLimbs, 1
     limb_length = np.linalg.norm(keypoints3d[:, kintree[:, 1], :3] - keypoints3d[:, kintree[:, 0], :3], axis=2, keepdims=True)
     # conf: nFrames, nLimbs, 1
