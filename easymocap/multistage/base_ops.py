@@ -33,7 +33,7 @@ class SkipPoses(BeforeAfterBase):
     def before(self, body_params):
         poses = body_params['poses']
         poses_copy = torch.zeros_like(poses)
-        print(poses.shape)
+        # print(poses.shape)
         poses_copy[..., self.copy_index] = poses[..., self.copy_index]
         body_params['poses'] = poses_copy
         return body_params

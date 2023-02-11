@@ -18,6 +18,9 @@ from glob import glob
 from multiprocessing import Process
 
 def run_openpose(image_root, annot_root, config):
+    image_root = os.path.realpath(image_root)
+    annot_root = os.path.realpath(annot_root)
+
     os.makedirs(annot_root, exist_ok=True)
     pwd = os.getcwd()
     if os.name != 'nt':

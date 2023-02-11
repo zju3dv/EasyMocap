@@ -42,6 +42,10 @@ def get_allname(root0, subs, ranges, root, ext, **kwargs):
         else:
             _ranges = ranges
         nv = subs.index(sub)
+
+        if len(imgnames) < _ranges[1]:
+            raise ValueError('The number of images in {} is less than the range: {} vs {}'.format(join(root0, root, sub), len(imgnames), _ranges[1]))
+
         for nnf, nf in enumerate(range(*_ranges)):
             image_names.append({
                 'sub': sub,
@@ -230,7 +234,7 @@ class Base(BaseData):
         self.reader = reader
         self.writer = writer
         if camera != 'none':
-            if not os.path.isabs(camera):
+            if not os.path.exists(camera) and not os.path.isabs(camera):
                 camera = join(self.root, camera)
             if os.path.exists(camera):
                 cameras = read_cameras(camera)
@@ -464,7 +468,10 @@ class ImageFolder(Base):
                         data[key] = Undistort.points(data[key], K, dist)
                         data[key+'_unproj'] = unproj(data[key], invK)
                     for _key in [key, key+'_distort', key+'_unproj']:
-                        self.cache_shape[_key] = np.zeros_like(data[_key])
+                        try:
+                            self.cache_shape[_key] = np.zeros_like(data[_key])
+                        except KeyError:
+                            print(f"missed key: {_key}")
         if self.loadmp:
             data['annots'] = data['annots']['annots']
             # compose the data
