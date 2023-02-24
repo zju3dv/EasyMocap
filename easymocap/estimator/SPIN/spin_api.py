@@ -288,12 +288,15 @@ class SPIN:
             p, _ = cv2.Rodrigues(rotmat[i])
             poses[0, 3*i:3*i+3] = p[:, 0]
         results['poses'] = poses
-        body_params = {
-            'Rh': poses[:, :3],
-            'poses': poses[:, 3:],
-            'shapes': results['shapes'],
-        }
-        results = body_params
+        if use_rh_th:
+            body_params = {
+                'Rh': poses[:, :3].copy(),
+                'poses': poses[:, 3:],
+                'shapes': results['shapes'],
+                'Th': np.zeros((1, 3))
+            }
+            body_params['Th'][0, 2] = 5
+            results = body_params
         return results
     
     def __call__(self, body_model, img, bbox, kpts, camera, ret_vertices=True):
