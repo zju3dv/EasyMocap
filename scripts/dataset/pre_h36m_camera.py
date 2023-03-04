@@ -65,10 +65,13 @@ def process_camera(xml_path, seq, act, cams):
         K[1, 1] = f[1]
         K[0, 2] = c[0]
         K[1, 2] = c[1]
+        # camera center
+        T = t.reshape(3, 1) / 1000
+        T = -np.dot(rt, T)
         cameras[cam] = {
             'K': K,
             'R': rt,
-            'T': t.reshape(3, 1)/1000,
+            'T': T,
             'dist': k.reshape(1, 5)
         }
     return cameras
