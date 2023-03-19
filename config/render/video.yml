@@ -1,0 +1,8 @@
+make_video: True
+
+video_module: easymocap.visualize.ffmpeg_wrapper.VideoMaker
+video_args:
+  restart: True
+  remove_images: False
+  fps_in: 50
+  fps_out: 50

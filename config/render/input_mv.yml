@@ -1,0 +1,9 @@
+input_module: 'easymocap.visualize.render_base.Images'
+input_args:
+  path: none
+  subs: []
+  image_args:
+    scale: 1.
+    undis: True
+    tgt_shape: [-1, -1]
+    ext: .jpg

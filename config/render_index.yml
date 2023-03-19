@@ -1,0 +1,60 @@
+skel:
+  alias: skel
+  result: config/render/result_skel.yml
+  images: config/render/input_mv.yml
+  output: config/render/output_repro.yml
+  video: config/render/video.yml
+mesh:
+  alias: mesh
+  result: config/render/result_smpl.yml
+  images: config/render/input_mv.yml
+  output: config/render/output_image.yml
+  video: config/render/video.yml
+ground+skel:
+  alias: ground
+  result: config/render/result_skel.yml
+  images: config/render/input_mv.yml
+  output: config/render/output_ground.yml
+  video: config/render/video.yml
+ground+mesh:
+  alias: ground
+  result: config/render/result_smpl.yml
+  images: config/render/input_mv.yml
+  output: config/render/output_ground.yml
+  video: config/render/video.yml
+ground+mesh+object:
+  alias: ground
+  result: config/render/result_smpl_object.yml
+  images: config/render/input_mv.yml
+  output: config/render/output_ground.yml
+  video: config/render/video.yml
+mesh-view:
+  alias: mesh
+  result: config/render/result_smpl.yml
+  images: config/render/input_mv.yml
+  output: config/render/output_image.yml
+  video: config/render/video.yml
+  opts: [output_args.merge, False]
+mask:
+  exp: mesh
+  alias: mask
+  opts: [output_args.mode, mask]
+depth:
+  exp: mesh
+  alias: depth
+  opts: [output_args.mode, depth, output_args.merge, False]
+mimoinstance:
+  alias: instance
+  result: config/render/result_smpl.yml
+  images: config/render/input_mv.yml
+  output: config/render/output_image.yml
+  video: config/render/video.yml
+  opts: [output_args.mode, instance-mask]
+instance-d0.05:
+  alias: instance
+  exp: mimoinstance
+  opts: [result_args.operation, dilation:0.05]
+instance-d0.1:
+  alias: instance
+  exp: mimoinstance
+  opts: [result_args.operation, dilation:0.1]
