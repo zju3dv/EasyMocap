@@ -94,7 +94,7 @@ This part is the basic code for fitting SMPL[^loper2015] with 2D keypoints estim
 
 <div align="center">
     <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/nvs_mp_soccer1_6_rgb.gif" width="80%"><br/>
-    <sup>Novel view synthesis for human interaction(coming soon)</sup>
+    <sup>Novel view synthesis for human interaction</sup>
 </div>
 
     
@@ -105,14 +105,21 @@ With our proposed method, we release two large dataset of human motion: LightSta
 If you would like to download the ZJU-Mocap dataset, please sign the [agreement](https://pengsida.net/project_page_assets/files/ZJU-MoCap_Agreement.pdf), and email it to Qing Shuai (s_q@zju.edu.cn) and cc Xiaowei Zhou (xwzhou@zju.edu.cn) to request the download link.
 
 <div align="center">
-    <img src="doc/assets/ZJU-MoCap-lightstage.jpg" width="80%"><br/>
+<div align="center" width="40%">
+    <img src="doc/assets/ZJU-MoCap-lightstage.jpg" width="40%"><br/>
     <sup>LightStage: captured with LightStage system</sup>
 </div>
-
-<div align="center">
-    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/mirrored-human.jpg" width="80%"><br/>
+<div align="center" width="40%">
+    <img src="https://raw.githubusercontent.com/chingswy/Dataset-Demo/main/EasyMocap/mirrored-human.jpg" width="40%"><br/>
     <sup>Mirrored-Human: collected from the Internet</sup>
 </div>
+</div>
+
+Many works have achieved wonderful results based on our dataset:
+
+- [Real-time volumetric rendering of dynamic humans](https://real-time-humans.github.io/)
+- [CVPR2022: HumanNeRF: Free-viewpoint Rendering of Moving People from Monocular Video](https://grail.cs.washington.edu/projects/humannerf/)
+- [ECCV2022: KeypointNeRF: Generalizing Image-based Volumetric Avatars using Relative Spatial Encoding of Keypoints](https://markomih.github.io/KeypointNeRF/)
 
 ## Other features
 
