@@ -2,34 +2,38 @@
   @ Date: 2021-05-26 13:19:12
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-07-17 15:21:46
-  @ FilePath: /EasyMocap/apps/annotation/annot_calib.py
+  @ LastEditTime: 2022-09-26 20:13:53
+  @ FilePath: /EasyMocapPublic/apps/annotation/annot_calib.py
 '''
-from easymocap.annotator.basic_visualize import plot_text, resize_to_screen, vis_line
+from easymocap.annotator.basic_visualize import plot_text, resize_to_screen, vis_bbox, vis_line
+from easymocap.mytools.debug_utils import mywarn
 from easymocap.mytools.vis_base import plot_point
 from easymocap.annotator import ImageFolder
 from easymocap.annotator import vis_point
 from easymocap.annotator import AnnotBase
-from easymocap.annotator.file_utils import getFileList
 from easymocap.mytools import read_json, save_json
 from easymocap.mytools import plot_cross, plot_line, get_rgb
 import numpy as np
+import cv2
 from tqdm import tqdm
 from os.path import join
 import os
-from easymocap.annotator.chessboard import get_lines_chessboard
+from easymocap.annotator.chessboard import get_lines_chessboard, colors_chessboard_bar, create_chessboard
 from easymocap.annotator.vanish_callback import calc_vanishpoint
 
 class Matcher:
     def __init__(self, path, mode, args) -> None:
         if mode == 'chessboard':
             pattern = args.pattern
-            lines, lines_color = get_lines_chessboard((9, 6))
+            lines, lines_color = get_lines_chessboard(pattern)
             self.nJoints = pattern[0]*pattern[1]
         else:
             annots = read_json(join(path, 'calib.json'))
             lines = annots['lines']
-            lines_color = annots['lines_color']
+            if 'lines_color' in annots.keys():
+                lines_color = annots['lines_color']
+            else:
+                lines_color = [colors_chessboard_bar[i%len(colors_chessboard_bar)] for i in range(len(lines))]
             keypoints3d = np.array(annots['keypoints3d'])
             create_chessboard(path, keypoints3d, out=args.annot)
             self.nJoints = len(keypoints3d)
@@ -43,8 +47,13 @@ class Matcher:
         self.cnt = (self.cnt + 1)%self.nJoints
         print('>>> label point {}'.format(self.cnt))
         
+    def back(self, annotator, param, conf=1.):
+        "switch to previous points"
+        self.cnt -= 2
+        self.hint()
+
     def add(self, annotator, param, conf=1.):
-        "add matched points"
+        "switch to next points"
         click = param['click']
         if click is not None:
             param['annots']['keypoints2d'][self.cnt] = [click[0], click[1], conf]
@@ -92,6 +101,12 @@ class Matcher:
         param['annots']['keypoints2d'][self.cnt][2] = 0.
 
     def vis(self, img, annots, **kwargs):
+        border = 100
+        text_size = 2
+        width = 5
+        cv2.putText(img, 'Current {}: {:.0f}'.format(self.cnt, annots['keypoints2d'][self.cnt][2]), (border, border), cv2.FONT_HERSHEY_SIMPLEX, text_size, (0, 0, 255), width)
+        if kwargs['click'] is not None:
+            return img
         lw = max(int(round(img.shape[0]/500)), 1)
         width = lw * 5
         k2d = np.array(annots['keypoints2d'])
@@ -104,45 +119,67 @@ class Matcher:
                 plot_line(img, k2d[i], k2d[j], lw, self.lines_color[nl])
         for i, (x, y, c) in enumerate(k2d):
             if c > 0:
-                plot_cross(img, x, y, self.lines_color[min(len(self.lines)-1, i+1)], width=width, lw=lw)
-                plot_point(img, x, y, r=lw*2, col=self.lines_color[min(len(self.lines)-1, i+1)], pid=i)
+                plot_cross(img, x, y, self.lines_color[min(len(self.lines)-1, i)], width=width, lw=lw)
+                plot_point(img, x, y, r=lw*2, col=self.lines_color[min(len(self.lines)-1, i)], pid=i)
             if i == self.cnt:
                 plot_point(img, x, y, r=lw*16, col=(127, 127, 255), pid=-1, circle_type=lw*2)
         return img
 
     def print(self, annotator, **kwargs):
         print(self.annots)
+    
+    def detect(self, annotator, param):
+        "detect chessboard"
+        start = param['start']
+        end = param['end']
+        if start is None:
+            return 0
+        import cv2
+        crop = param['img0'][start[1]:end[1], start[0]:end[0]]
+        from easymocap.annotator.chessboard import findChessboardCorners
+        pattern = args.pattern
+        annots = {'visited':False, 'keypoints2d':np.zeros((pattern[0]*pattern[1], 3))}
+        print('Redetect the chessboard...')
+        if False:
+            show = findChessboardCorners(crop, annots, args.pattern, debug=True)
+        else:
+            self.detect_charuco(crop, annots)
+        k2d = annots['keypoints2d']
+        for i in range(self.nJoints):
+            param['annots']['keypoints2d'][i][0] = k2d[i][0] + start[0]
+            param['annots']['keypoints2d'][i][1] = k2d[i][1] + start[1]
+            param['annots']['keypoints2d'][i][2] = k2d[i][2]
+        
+    def detect_charuco(self, crop, annots):
+        cfg = {
+            'long': 6, 
+            'short': 4, 
+            'squareLength': 0.128,
+            'aruco_len': 0.1, 
+            'aruco_type': '4X4_50'
+        }
+        from easymocap.annotator.chessboard import CharucoBoard
+        board = CharucoBoard(**cfg)
+        board.detect(crop, annots)
 
-def create_chessboard(path, keypoints3d, out='annots'):
-    keypoints2d = np.zeros((keypoints3d.shape[0], 3))
-    imgnames = getFileList(path, ext='.jpg')
-    template = {
-        'keypoints3d': keypoints3d.tolist(),
-        'keypoints2d': keypoints2d.tolist(),
-        'visited': False
-    }
-    for imgname in tqdm(imgnames, desc='create template chessboard'):
-        annname = imgname.replace('images', out).replace('.jpg', '.json')
-        annname = join(path, annname)
-        if not os.path.exists(annname):
-            save_json(annname, template)
-        elif True:
-            annots = read_json(annname)
-            annots['keypoints3d'] = template['keypoints3d']
-            save_json(annname, annots)
-
-def annot_example(path, args):
+def annot_example(path, sub, args):
     # define datasets
     calib = Matcher(path, mode=args.mode, args=args)
-    dataset = ImageFolder(path, annot=args.annot)
+    dataset = ImageFolder(path, image=args.image, sub=sub, 
+        annot=args.annot, no_annot=False, ext=args.ext,
+        share_annot=True,
+        max_per_folder=-1)
     # define visualize
-    vis_funcs = [vis_point, vis_line, calib.vis, resize_to_screen, plot_text]
+    vis_funcs = [vis_point, vis_line, vis_bbox, calib.vis, resize_to_screen, plot_text]
     key_funcs = {
         ' ': calib.add,
+        'b': calib.back,
         'z': calib.add_conf,
         'p': calib.add_point_by_2lines,
         'c': calib.clear_point,
         'C': calib.clear,
+        'x': calib.clear,
+        'e': calib.detect,
     }
     # construct annotations
     annotator = AnnotBase(
@@ -159,5 +196,8 @@ if __name__ == "__main__":
         help='The pattern of the chessboard', default=(9, 6))
     parser.add_argument('--mode', type=str, default='chessboard')
     args = parse_parser(parser)
-
-    annot_example(args.path, args)
+    mywarn('[annot_calib] The default patter is {}'.format(args.pattern))
+    if len(args.sub) == 0:
+        args.sub = ['']
+    for sub in args.sub:
+        annot_example(args.path, sub, args)
