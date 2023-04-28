@@ -120,6 +120,7 @@ Many works have achieved wonderful results based on our dataset:
 - [Real-time volumetric rendering of dynamic humans](https://real-time-humans.github.io/)
 - [CVPR2022: HumanNeRF: Free-viewpoint Rendering of Moving People from Monocular Video](https://grail.cs.washington.edu/projects/humannerf/)
 - [ECCV2022: KeypointNeRF: Generalizing Image-based Volumetric Avatars using Relative Spatial Encoding of Keypoints](https://markomih.github.io/KeypointNeRF/)
+- [SIGGRAPH 2022 paper Drivable Volumetric Avatars using Texel-Aligned Features](https://github.com/facebookresearch/dva)
 
 ## Other features
 
