@@ -1,0 +1,28 @@
+network_module: easymocap.neuralbody.model.nerfplus.NeRFGroundShadow
+network_args:
+  embed:
+    mode: mlp
+    shape: [300, 32]
+    D: 0
+    W: 32
+  shadow:
+    D: 2
+    W: 128
+  nerf:
+    sample_args:
+      method: uniform
+      N_samples: 16
+    D: 4
+    D_rgb: 1
+    W: 256
+    dim_pts: 3
+    dim_dir: 3
+    xyz_res: 10
+    view_res: 4
+    skips: [4]
+    use_viewdirs: True
+    use_occupancy: True
+    linear_func: 'Linear'
+    act_fn: expsoftplus
+    init_bias: 3.
+    pts_to_rgb: False

@@ -1,0 +1,19 @@
+parents:
+  - config/neuralbody/utils/trainer_base.yml
+
+trainer_args:
+  loss:
+    entropy:
+      weight: 0.01
+      module: easymocap.neuralbody.renderer.render_loss.LossEntropyInstance
+      args:
+        norm: "l2"
+        start: 0
+        end: 10000
+    sparse:
+      weight: 0.001
+      module: easymocap.neuralbody.renderer.render_loss.LossSparseEntropy
+      args:
+        norm: "l2"
+        start: 10000
+        end: 999999

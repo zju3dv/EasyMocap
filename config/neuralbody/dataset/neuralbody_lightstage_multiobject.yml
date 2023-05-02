@@ -1,0 +1,81 @@
+# This config defines the custom neuralbody + background of lightstage
+parents:
+  - config/neuralbody/dataset/neuralbody_custom.yml
+
+data_share_args:
+  image_args:
+    mask_bkgd: False
+    unsync: output-smpl-3d/time_offset.json
+  sample_args:
+    nrays: 8192
+  object_args:
+    allhuman:
+      pids: [0]
+      model: neuralbody-smplmask
+      rate: 1
+      args:
+        pid: -1
+        use_param_foreachview: True
+        rate_body: 0.95
+        reader:
+          _no_merge_: True
+          smpl:
+            root: output-smpl-3d/smpl
+          vertices:
+            root: output-smpl-3d/vertices
+            padding: 0.1
+          mask:
+            root: output-smpl-3d/instance
+            undis: False # don't undis as it is rendered by KRT
+          label:
+            root: output-keypoints3d/label
+            undis: False # don't undis as it is rendered by undistorted
+    allball:
+      model: trajbbox
+      rate: 10.
+      pids: []
+      args:
+        root: output-object3d/keypoints3d
+        # scale: [0.12, 0.12, 0.12]
+        scale: [0.15, 0.15, 0.15]
+    background:
+      model: cylinder
+      rate: 0.1
+      args:
+        center: [0., 0., 0.]
+        # radius: [3., 5.]
+        # zranges: [0.01, 3.]
+        radius: [2.8, 5.]
+        zranges: [-0.05, 3.]
+    ground:
+      model: plane
+      rate: 0.1
+      args:
+        center: [0., 0., 0.]
+        radius: 5.
+        # zranges: [-0.05, 0.01]
+        zranges: [-0.05, 0.02]
+
+data_val_args:
+  subs: ['07', '09', '12', '20']
+  object_args:
+    allhuman:
+      args:
+        use_param_foreachview: True
+        reader:
+          smpl:
+            root: output-smpl-3d/smpl
+          mask:
+            root: output-smpl-3d/instance
+            undis: False # don't undis as it is rendered by KRT
+          vertices:
+            root: output-smpl-3d/vertices
+            padding: 0.1
+
+data_demo_args:
+  split: demo
+  camera_args:
+    method: mean
+    H: 1024
+    W: 1024
+    allstep: 300

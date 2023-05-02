@@ -1,0 +1,53 @@
+network_module: easymocap.neuralbody.model.compose.ComposedModel
+network_args:
+  models:
+    background: # 背景假设基本保持静态的
+      _parent_: config/neuralbody/network/nerf.yml
+      network_args:
+        sample_args:
+          method: uniform
+          N_samples: 16
+        D: 4
+        D_rgb: 1
+        skips: []
+    ground: # 地面假设动态不强
+      _parent_: config/neuralbody/network/nerf_shadowground.yml
+    allhuman: # 降低人的动态性能
+      _parent_: config/neuralbody/network/neuralbodypp.yml
+      pids: [0]
+      # network_args:
+      #   embed_time:
+      #     mode: mlp
+      #     shape: [300, 32]
+      #     D: 0
+      #     W: 32
+      #   embed_vert: [6890, 16]
+      #   voxel_pad: [0.1, 0.1, 0.1]
+      #   sparse:
+      #     dims: [16, 32, 64, 128]
+      #   nerf:
+      #     sample_args:
+      #       method: uniform
+      #       N_samples: 64
+      #     D: 3
+      #     skips: []
+      #     D_rgb: 3
+      #     pts_to_density: False
+      #     pts_to_rgb: True
+    allball:
+      _parent_: config/neuralbody/network/DCNerf.yml
+      pids: []
+      network_args:
+        opt_traj_step: 10000
+        share_view: True
+        embed:
+          mode: mlp
+          shape: [300, 32]
+          res: 32
+          D: 0
+          W: 32
+        nerf:
+          init_bias: 3.
+          sample_args:
+            method: uniform
+            N_samples: 16
