@@ -1,0 +1,147 @@
+module: myeasymocap.stages.basestage.MultiStage
+args:
+  output: output/sv1p # 指定输出路径
+  at_step:
+    detect:
+      module: myeasymocap.backbone.yolo.yolo.YoloWithTrack
+      key_from_data: [images, imgnames]
+      args:
+        model: yolov5m
+        name: person
+    keypoints2d:
+      module: myeasymocap.backbone.hrnet.myhrnet.MyHRNet
+      key_from_data: [images, imgnames]
+      key_from_previous: [bbox]
+      key_keep: []
+      args:
+        ckpt: /nas/home/shuaiqing/Code/EasyMocapPublic/data/models/pose_hrnet_w48_384x288.pth
+    vis2d:
+      module: myeasymocap.io.vis.Vis2D
+      skip: False
+      key_from_data: [images]
+      key_from_previous: [keypoints, bbox]
+      args:
+        name: vis_keypoints2d
+        scale: 0.5
+    infer: # 这个模块给定图片和检测的框，直接返回crop系下的人体姿态
+      module: myeasymocap.backbone.pare.pare.MyPARE
+      key_from_data: [images, imgnames] # 从数据集中读入的bbox、图片、图片名，图片名用于保存结果
+      key_from_previous: [bbox]
+      key_keep: [cameras, imgnames] # 将这些参数都保留到最后的输出中
+      args:
+        ckpt: 3dpw # 指定使用3dpw的预训练模型
+  at_final:
+    load_body_model: # 载入SMPL模型
+      module: myeasymocap.io.model.SMPLLoader
+      args:
+        model_path: models/pare/data/body_models/smpl/SMPL_NEUTRAL.pkl
+        regressor_path: models/J_regressor_body25.npy
+    init_translation: # 给定crop系下的姿态、2D关键点、相机参数，返回世界系下的人体姿态
+      module: myeasymocap.operations.init.InitTranslation
+      key_from_data: [keypoints, cameras, params] # 读入关键点、相机参数、SMPL参数
+      key_from_previous: [body_model] # 读入SMPL模型进行关键点计算
+      args:
+        solve_T: True
+        solve_R: False
+    smooth: # 对初始化的结果进行平滑
+      module: myeasymocap.operations.smooth.SmoothPoses
+      key_from_data: [params]
+      args:
+        window_size: 2
+    mean_param: # Mean shapes
+      module: myeasymocap.operations.init.MeanShapes
+      key_from_data: [params]
+      args:
+        keys: ['shapes']
+    init_RT:
+      module: myeasymocap.operations.optimizer.Optimizer
+      key_from_data: [keypoints, cameras]
+      key_from_previous: [model, params]
+      args:
+        optimizer_args: {optim_type: lbfgs}
+        optimize_keys: [Th, Rh]
+        loss:
+          repro:
+            weight: 100.
+            module: myeasymocap.operations.loss.Keypoints2D
+            key_from_output: [keypoints]
+            key_from_infos: [keypoints, cameras]
+            args:
+              norm: l2
+              index_est: [2, 5, 9, 12]
+              index_gt: [2, 5, 9, 12]
+          smooth:
+            weight: 1.
+            module: myeasymocap.operations.loss.Smooth
+            key_from_output: [Rh, Th]
+            key_from_infos: [cameras] # TODO: 根据2D的置信度来计算smooth权重
+            args:
+              keys: [Th, Th]
+              smooth_type: [Linear, Depth] # 这个depth似乎需要相机参数进行转换
+              norm: [l2, l2]
+              order: [2, 2]
+              weights: [100., 1000.]
+              window_weight: [0.5, 0.3, 0.1, 0.1]
+    refine_poses:
+      repeat: 2
+      module: myeasymocap.operations.optimizer.Optimizer
+      key_from_data: [keypoints, cameras]
+      key_from_previous: [model, params]
+      args:
+        optimizer_args: {optim_type: lbfgs}
+        optimize_keys: [poses, Rh, Th]
+        loss:
+          repro:
+            weight: 100.
+            module: myeasymocap.operations.loss.Keypoints2D
+            key_from_output: [keypoints]
+            key_from_infos: [keypoints, cameras]
+            args:
+              norm: gm
+              norm_info: 0.02
+          smooth:
+            weight: 1.
+            module: myeasymocap.operations.loss.Smooth
+            key_from_output: [poses, Rh, Th, keypoints]
+            key_from_infos: [cameras] # TODO: 根据2D的置信度来计算smooth权重
+            args:
+              keys: [Th, Th, poses, keypoints]
+              smooth_type: [Linear, Depth, Linear, Linear] # 这个depth似乎需要相机参数进行转换
+              norm: [l2, l2, l2, l2]
+              order: [2, 2, 2, 2]
+              weights: [100., 1000., 50., 100.]
+              window_weight: [0.5, 0.3, 0.1, 0.1]
+          init:
+            weight: 1.
+            module: myeasymocap.operations.loss.Init
+            key_from_output: [poses]
+            key_from_infos: [init_poses]
+            args:
+              keys: [poses]
+              norm: l2
+              weights: [1.]
+          prior:
+            weight: 0.1
+            module: easymocap.multistage.gmm.GMMPrior
+            key_from_output: [poses]
+            key_from_infos: []
+            args:
+              start: 0
+              end: 69
+    write:
+      module: myeasymocap.io.write.WriteSMPL
+      key_from_data: [meta]
+      key_from_previous: [params, model]
+      args:
+        name: smpl
+    render:
+      module: myeasymocap.io.vis3d.Render
+      key_from_data: [cameras, imgnames]
+      key_from_previous: [params, body_model]
+      args:
+        backend: pyrender
+    make_video:
+      module: myeasymocap.io.video.MakeVideo
+      args:
+        fps: 30
+        keep_image: False

@@ -112,5 +112,7 @@ data/**
 .DS*
 code_deprecate
 code
-neuralbody
+# neuralbody
 lightning_logs
+models
+yolov5m.pt

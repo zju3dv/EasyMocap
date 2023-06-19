@@ -6,5 +6,7 @@ yacs
 tabulate
 termcolor
 chumpy
-mediapipe
+mediapipe==0.10.0
 func_timeout
+ultralytics
+gdown

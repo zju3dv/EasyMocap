@@ -1,0 +1,16 @@
+module: myeasymocap.datasets.mv1p.MVDataset
+args:
+  root: TO_BE_FILLED
+  subs: []  # used views, default all views
+  subs_vis: ['01'] # visualized views
+  ranges: [0, 10000, 1]
+  read_image: True
+  reader:
+    images:
+      root: images
+      ext: .jpg
+    image_shape:
+      root: images
+      ext: .jpg
+    cameras:
+      root: ''

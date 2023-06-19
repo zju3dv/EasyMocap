@@ -21,8 +21,19 @@ setup(
         'easymocap.pyfitting',
         'easymocap.mytools', 
         'easymocap.annotator',
-        'easymocap.estimator'
+        'easymocap.estimator',
+        'myeasymocap'
     ],
+    entry_points={
+        'console_scripts': [
+            'emc=apps.mocap.run:main_entrypoint',
+            # 'easymocap_calib=easymocap.mytools.entry:calib',
+            # 'easymocap_tools=easymocap.mytools.entry:main',
+            # 'extract_keypoints=easymocap.mytools.cmdtools.extract_keypoints:main'
+        ],
+    },
     install_requires=[],
     data_files = []
 )
+
+emc = "apps.mocap.run:main_entrypoint"

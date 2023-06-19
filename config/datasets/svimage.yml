@@ -1,0 +1,13 @@
+module: myeasymocap.datasets.sv1p.SVDataset
+args:
+  root: TO_BE_FILLED
+  subs: ['video'] # 指定路径下的其中一个文件夹
+  ranges: [0, 10000, 1] # 指定使用的数据的范围
+  read_image: True # 后面会使用CNN来进行SMPL参数估计，所以需要读入图片
+  reader:
+    images:
+      root: images
+      ext: .jpg
+    image_shape:
+      root: images
+      ext: .jpg

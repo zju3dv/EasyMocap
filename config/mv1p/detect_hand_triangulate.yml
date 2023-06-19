@@ -1,0 +1,50 @@
+module: myeasymocap.stages.basestage.MultiStage
+args:
+  output: output/detect_hand_triangulate
+  at_step:
+    detect:
+      module: myeasymocap.backbone.mediapipe.hand.MediaPipe
+      key_from_data: [images, imgnames]
+      args:
+        ckpt: models/mediapipe/hand_landmarker.task
+    vis2d:
+      module: myeasymocap.io.vis.Vis2D
+      skip: False
+      key_from_data: [images]
+      key_from_previous: [keypoints]
+      args:
+        name: vis_keypoints2d
+        scale: 0.5
+    triangulate:
+      module: myeasymocap.operations.triangulate.SimpleTriangulate
+      key_from_data: [cameras]
+      key_from_previous: [keypoints]
+      key_keep: [cameras] # 用于最后的一起优化
+      args:
+        mode: iterative # [naive, iterative]
+    visualize:
+      module: myeasymocap.io.vis.Vis3D
+      key_from_data: [images, cameras]
+      key_from_previous: [keypoints3d] # 用于最后的一起优化
+      args:
+        scale: 1.
+        mode: crop
+        mode_args:
+          - [0, 720, 100, 820]
+          - [0, 720, 100, 820]
+          - [0, 720, 400, 1120]
+  at_final:
+    smooth:
+      module: myeasymocap.operations.smooth.Smooth
+      key_from_data: [keypoints3d]
+      args:
+        window_size: 5
+    write:
+      module: myeasymocap.io.write.Write
+      key_from_data: [keypoints3d]
+      args: {}
+    make_video:
+      module: myeasymocap.io.video.MakeVideo
+      args:
+        fps: 60
+        keep_image: False

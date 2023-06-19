@@ -1,0 +1,166 @@
+smooth: &smooth_keypoints
+  weight: 1.
+  module: myeasymocap.operations.loss.Smooth
+  key_from_output: [keypoints, poses]
+  key_from_infos: [] # TODO: 根据2D的置信度来计算smooth权重
+  args:
+    keys: [poses, keypoints]
+    smooth_type: [Linear, Linear] # 这个depth似乎需要相机参数进行转换
+    norm: [l2, l2]
+    order: [2, 2]
+    weights: [10., 1000.]
+    window_weight: [0.5, 0.3, 0.1, 0.1]
+
+k3dtorso: &k3dtorso
+  weight: 100.
+  module: myeasymocap.operations.loss.Keypoints3D
+  key_from_output: [keypoints]
+  key_from_infos: [keypoints3d]
+  args:
+    norm: l2
+    index_est: [0, 5, 9, 13, 17]
+    index_gt: [0, 5, 9, 13, 17]
+
+module: myeasymocap.stages.basestage.MultiStage
+args:
+  output: output/detect_hand_triangulate_fitMANO
+  at_step:
+    detect:
+      module: myeasymocap.backbone.mediapipe.hand.MediaPipe
+      key_from_data: [images, imgnames]
+      key_keep: [imgnames]
+      args:
+        ckpt: models/mediapipe/hand_landmarker.task
+    vis2d:
+      module: myeasymocap.io.vis.Vis2D
+      skip: False
+      key_from_data: [images]
+      key_from_previous: [keypoints]
+      args:
+        name: vis_keypoints2d
+        scale: 0.5
+    triangulate:
+      module: myeasymocap.operations.triangulate.SimpleTriangulate
+      key_from_data: [cameras]
+      key_from_previous: [keypoints]
+      key_keep: [cameras] # 用于最后的一起优化
+      args:
+        mode: iterative # [naive, iterative]
+    visualize:
+      module: myeasymocap.io.vis.Vis3D
+      key_from_data: [images, cameras]
+      key_from_previous: [keypoints3d] # 用于最后的一起优化
+      args:
+        scale: 0.5
+        mode: center
+  at_final:
+    load_hand_model: # 载入身体模型
+      module: myeasymocap.io.model.MANOLoader
+      args:
+        cfg_path: config/model/manol.yml
+        model_path: models/manov1.2/MANO_LEFT.pkl #models/handmesh/data/MANO_RIGHT.pkl # load mano model
+        regressor_path: models/manov1.2/J_regressor_mano_LEFT.txt #models/handmesh/data/J_regressor_mano_RIGHT.txt
+        num_pca_comps: 45
+        use_pca: True
+        use_flat_mean: False
+    init_params:
+      module: myeasymocap.operations.init.InitParams
+      key_from_data: [keypoints3d]
+      args:
+        num_poses: 45
+        num_shapes: 10
+    fitShape:
+      module: myeasymocap.operations.optimizer.Optimizer
+      key_from_data: [keypoints3d]
+      key_from_previous: [model, params] 
+      args:
+        optimizer_args: {optim_type: lbfgs}
+        optimize_keys: [shapes]
+        loss:
+          k3d:
+            weight: 10000.
+            module: myeasymocap.operations.loss.LimbLength
+            key_from_output: [keypoints]
+            key_from_infos: [keypoints3d]
+            args:
+              kintree: [[ 1,  0], [ 2,  1], [ 3,  2], [ 4,  3], [ 5,  0], [ 6,  5], [ 7,  6], [ 8,  7], [ 9,  0], [10,  9], [11, 10], [12, 11], [13,  0], [14, 13], [15, 14], [16, 15], [17,  0], [18, 17], [19, 18], [20, 19]]
+          regshape:
+            weight: 0.1
+            module: myeasymocap.operations.loss.RegLoss
+            key_from_output: [shapes]
+            key_from_infos: []
+            args:
+              key: shapes
+              norm: l2
+    init_T:
+      module: myeasymocap.operations.optimizer.Optimizer
+      key_from_data: [keypoints3d]
+      key_from_previous: [model, params]
+      args:
+        optimizer_args: {optim_type: lbfgs}
+        optimize_keys: [Th]
+        loss:
+          k3d: *k3dtorso
+          smooth: *smooth_keypoints
+    init_R:
+      module: myeasymocap.operations.optimizer.Optimizer
+      key_from_data: [keypoints3d]
+      key_from_previous: [model, params]
+      args:
+        optimizer_args: {optim_type: lbfgs}
+        optimize_keys: [Rh]
+        loss:
+          k3d: *k3dtorso
+          smooth: *smooth_keypoints
+    refine_poses:
+      repeat: 2
+      module: myeasymocap.operations.optimizer.Optimizer
+      key_from_data: [keypoints3d]
+      key_from_previous: [model, params]
+      args:
+        optimizer_args: {optim_type: lbfgs}
+        optimize_keys: [poses, Rh, Th]
+        loss:
+          k3d:
+            weight: 1000000.
+            module: myeasymocap.operations.loss.Keypoints3D
+            key_from_output: [keypoints]
+            key_from_infos: [keypoints3d]
+            args:
+              norm: l2
+              norm_info: 0.02
+          smooth: *smooth_keypoints
+          regpose:
+            weight: 0.1
+            module: myeasymocap.operations.loss.RegLoss
+            key_from_output: [poses]
+            key_from_infos: []
+            args:
+              key: poses
+              norm: l2
+    write:
+      module: myeasymocap.io.write.WriteSMPL
+      key_from_data: [meta]
+      key_from_previous: [params, model]
+      args:
+        name: smpl
+    render:
+      module: myeasymocap.io.vis3d.Render_multiview
+      key_from_data: [cameras, imgnames]
+      key_from_previous: [params, hand_model]
+      args:
+        model_name: hand_model
+        backend: pyrender
+        view_list: [1, 0, 2]
+        scale: 1.
+        render_mode: image
+        mode: crop
+        mode_args:
+          - [0, 720, 100, 820]
+          - [0, 720, 100, 820]
+          - [0, 720, 400, 1120]
+    make_video:
+      module: myeasymocap.io.video.MakeVideo
+      args:
+        fps: 60
+        keep_image: False
