@@ -5,8 +5,11 @@ opencv-python
 yacs
 tabulate
 termcolor
-chumpy
+git+https://github.com/mattloper/chumpy.git
 mediapipe==0.10.0
 func_timeout
 ultralytics
 gdown
+setuptools==59.5.0
+tensorboard==2.8.0
+pytorch-lightning==1.5.0
