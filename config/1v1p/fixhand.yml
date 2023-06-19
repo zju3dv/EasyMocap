@@ -26,7 +26,8 @@ args:
       key_from_previous: [bbox]
       args:
         # ckpt: /nas/public/EasyMocapModels/hrnetv2_w18_coco_wholebody_hand_256x256-1c028db7_20210908.pth
-        ckpt: /nas/public/EasyMocapModels/hand/resnet_kp2d_clean.pt
+        ckpt: models/hand_resnet_kp2d_clean.pt
+        url: 1LTK7e9oAS6B3drmQyXwTZild6k87fEZa
         mode: resnet
     vis2d:
       module: myeasymocap.io.vis.Vis2D
@@ -42,13 +43,14 @@ args:
       key_from_previous: [bbox]
       key_keep: [meta, cameras, imgnames] # 将这些参数都保留到最后的输出中
       args:
-        ckpt: models/manol_pca45_noflat.ckpt
+        ckpt: models/hand_manol_pca45_noflat.ckpt
+        url: '1KTi_oJ_udLRK3WZ3xyHzBUd6vKAApfT8'
     # TODO: add visualize for Init MANO
   at_final:
     load_hand_model: # 载入身体模型
       module: myeasymocap.io.model.MANOLoader
       args:
-        cfg_path: config/model/mano.yml
+        cfg_path: config/model/manol.yml
         model_path: models/manov1.2/MANO_LEFT.pkl #models/handmesh/data/MANO_RIGHT.pkl # load mano model
         regressor_path: models/manov1.2/J_regressor_mano_LEFT.txt #models/handmesh/data/J_regressor_mano_RIGHT.txt
         num_pca_comps: 45

@@ -239,3 +239,10 @@ def get_preds_from_heatmaps(batch_heatmaps):
     coords = coords.astype(np.float32) * 4
     pred = np.dstack((coords, maxvals))
     return pred
+
+def gdown_models(ckpt, url):
+    print('Try to download model from {} to {}'.format(url, ckpt))
+    os.makedirs(os.path.dirname(ckpt), exist_ok=True)
+    cmd = 'gdown "{}" -O {}'.format(url, ckpt)
+    print('\n', cmd, '\n')
+    os.system(cmd)

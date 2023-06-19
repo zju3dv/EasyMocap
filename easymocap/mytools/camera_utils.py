@@ -33,11 +33,13 @@ class FileStorage(object):
             self._write('  rows: {}'.format(value.shape[0]))
             self._write('  cols: {}'.format(value.shape[1]))
             self._write('  dt: d')
-            self._write('  data: [{}]'.format(', '.join(['{:.3f}'.format(i) for i in value.reshape(-1)])))
+            self._write('  data: [{}]'.format(', '.join(['{:.6f}'.format(i) for i in value.reshape(-1)])))
         elif dt == 'list':
             self._write('{}:'.format(key))
             for elem in value:
                 self._write('  - "{}"'.format(elem))
+        elif dt == 'int':
+            self._write('{}: {}'.format(key, value))
 
     def read(self, key, dt='mat'):
         if dt == 'mat':
@@ -52,6 +54,8 @@ class FileStorage(object):
                 if val != 'none':
                     results.append(val)
             output = results
+        elif dt == 'int':
+            output = int(self.fs.getNode(key).real())
         else:
             raise NotImplementedError
         return output
@@ -114,6 +118,13 @@ def read_camera(intri_name, extri_name, cam_names=[]):
         cams[cam] = {}
         cams[cam]['K'] = intri.read('K_{}'.format( cam))
         cams[cam]['invK'] = np.linalg.inv(cams[cam]['K'])
+        H = intri.read('H_{}'.format(cam), dt='int')
+        W = intri.read('W_{}'.format(cam), dt='int')
+        if H is None or W is None:
+            print('[camera] no H or W for {}'.format(cam))
+            H, W = -1, -1
+        cams[cam]['H'] = H
+        cams[cam]['W'] = W
         Rvec = extri.read('R_{}'.format(cam))
         Tvec = extri.read('T_{}'.format(cam))
         assert Rvec is not None, cam
@@ -129,6 +140,10 @@ def read_camera(intri_name, extri_name, cam_names=[]):
         cams[cam]['P'] = P[cam]
 
         cams[cam]['dist'] = intri.read('dist_{}'.format(cam))
+        if cams[cam]['dist'] is None:
+            cams[cam]['dist'] = intri.read('D_{}'.format(cam))
+            if cams[cam]['dist'] is None:
+                print('[camera] no dist for {}'.format(cam))
     cams['basenames'] = cam_names
     return cams
 
@@ -155,6 +170,9 @@ def write_camera(camera, path):
         key = key_.split('.')[0]
         intri.write('K_{}'.format(key), val['K'])
         intri.write('dist_{}'.format(key), val['dist'])
+        if 'H' in val.keys() and 'W' in val.keys():
+            intri.write('H_{}'.format(key), val['H'], dt='int')
+            intri.write('W_{}'.format(key), val['W'], dt='int')
         if 'Rvec' not in val.keys():
             val['Rvec'] = cv2.Rodrigues(val['R'])[0]
         extri.write('R_{}'.format(key), val['Rvec'])
@@ -174,7 +192,7 @@ def camera_from_img(img):
 class Undistort:
     distortMap = {}
     @classmethod
-    def image(cls, frame, K, dist, sub=None):
+    def image(cls, frame, K, dist, sub=None, interp=cv2.INTER_NEAREST):
         if sub is None:
             return cv2.undistort(frame, K, dist, None)
         else:
@@ -183,7 +201,7 @@ class Undistort:
                 mapx, mapy = cv2.initUndistortRectifyMap(K, dist, None, K, (w,h), 5)
                 cls.distortMap[sub] = (mapx, mapy)
             mapx, mapy = cls.distortMap[sub]
-            img = cv2.remap(frame, mapx, mapy, cv2.INTER_NEAREST)
+            img = cv2.remap(frame, mapx, mapy, interp)
             return img
 
     @staticmethod
@@ -201,6 +219,21 @@ class Undistort:
         keypoints = np.array([[bbox[0], bbox[1], 1], [bbox[2], bbox[3], 1]])
         kpts = Undistort.points(keypoints, K, dist)
         bbox = np.array([kpts[0, 0], kpts[0, 1], kpts[1, 0], kpts[1, 1], bbox[4]])
+        return bbox
+
+class Distort:
+    @staticmethod
+    def points(keypoints, K, dist):
+        pass
+
+    @staticmethod
+    def bbox(bbox, K, dist):
+        keypoints = np.array([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], dtype=np.float32)
+        k3d = cv2.convertPointsToHomogeneous(keypoints)
+        k3d = (np.linalg.inv(K) @ k3d[:, 0].T).T[:, None]
+        k2d, _ = cv2.projectPoints(k3d, np.zeros((3,)), np.zeros((3,)), K, dist)
+        k2d = k2d[:, 0]
+        bbox = np.array([k2d[0,0], k2d[0,1], k2d[1, 0], k2d[1, 1], bbox[-1]])
         return bbox
 
 def unproj(kpts, invK):

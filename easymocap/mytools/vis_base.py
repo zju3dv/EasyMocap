@@ -2,14 +2,15 @@
   @ Date: 2020-11-28 17:23:04
   @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2022-08-12 21:50:56
+  @ LastEditTime: 2022-10-27 15:13:56
   @ FilePath: /EasyMocapPublic/easymocap/mytools/vis_base.py
 '''
 import cv2
 import numpy as np
 import json
 
-def generate_colorbar(N = 20, cmap = 'jet', rand=True):
+def generate_colorbar(N = 20, cmap = 'jet', rand=True, 
+    ret_float=False, ret_array=False, ret_rgb=False):
     bar = ((np.arange(N)/(N-1))*255).astype(np.uint8).reshape(-1, 1)
     colorbar = cv2.applyColorMap(bar, cv2.COLORMAP_JET).squeeze()
     if False:
@@ -22,7 +23,12 @@ def generate_colorbar(N = 20, cmap = 'jet', rand=True):
         rgb = colorbar[index, :]
     else:
         rgb = colorbar
-    rgb = rgb.tolist()
+    if ret_rgb:
+        rgb = rgb[:, ::-1]
+    if ret_float:
+        rgb = rgb/255.
+    if not ret_array:
+        rgb = rgb.tolist()
     return rgb
 
 # colors_bar_rgb = generate_colorbar(cmap='hsv')
@@ -69,9 +75,11 @@ def get_rgb(index):
         # elif index == 0:
         #     return (245, 150, 150)
         col = list(colors_bar_rgb[index%len(colors_bar_rgb)])[::-1]
-    else:
+    elif isinstance(index, str):
         col = colors_table.get(index, (1, 0, 0))
         col = tuple([int(c*255) for c in col[::-1]])
+    else:
+        raise TypeError('index should be int or str')
     return col
 
 def get_rgb_01(index):
@@ -150,14 +158,16 @@ def plot_keypoints(img, points, pid, config, vis_conf=False, use_limb_color=True
                 cv2.putText(img, '{:.1f}'.format(c), (int(x), int(y)), 
                 cv2.FONT_HERSHEY_SIMPLEX, text_size, col, 2)
 
-def plot_keypoints_auto(img, points, pid, vis_conf=False, use_limb_color=True, scale=1, lw=-1):
+def plot_keypoints_auto(img, points, pid, vis_conf=False, use_limb_color=True, scale=1, lw=-1, config_name=None, lw_factor=1):
     from ..dataset.config import CONFIG
-    config_name = {25: 'body25', 21: 'hand', 42:'handlr', 17: 'coco', 1:'points', 67:'bodyhand', 137: 'total', 79:'up'}[len(points)]
+    if config_name is None:
+        config_name = {25: 'body25', 15: 'body15', 21: 'hand', 42:'handlr', 17: 'coco', 1:'points', 67:'bodyhand', 137: 'total', 79:'up',
+            19:'ochuman'}[len(points)]
     config = CONFIG[config_name]
     if lw == -1:
         lw = img.shape[0]//200
     if config_name == 'hand':
-        lw = img.shape[0]//1000
+        lw = img.shape[0]//100
     lw = max(lw, 1)
     for ii, (i, j) in enumerate(config['kintree']):
         if i >= len(points) or j >= len(points):
@@ -169,9 +179,9 @@ def plot_keypoints_auto(img, points, pid, vis_conf=False, use_limb_color=True, s
             col = get_rgb(config['colors'][ii])
         else:
             col = get_rgb(pid)
-        if pt1[0] < 0 or pt1[1] < 0 or pt1[0] > 10000 or pt1[1] > 10000:
+        if pt1[0] < -10000 or pt1[1] < -10000 or pt1[0] > 10000 or pt1[1] > 10000:
             continue
-        if pt2[0] < 0 or pt2[1] < 0 or pt2[0] > 10000 or pt2[1] > 10000:
+        if pt2[0] < -10000 or pt2[1] < -10000 or pt2[0] > 10000 or pt2[1] > 10000:
             continue
         if pt1[-1] > 0.01 and pt2[-1] > 0.01:
             image = cv2.line(
@@ -191,12 +201,13 @@ def plot_keypoints_auto(img, points, pid, vis_conf=False, use_limb_color=True, s
         if c > 0.01:
             col = get_rgb(pid)
             if len(points) == 1:
-                cv2.circle(img, (int(x+0.5), int(y+0.5)), lw*10, col, lw*2)
-                plot_cross(img, int(x+0.5), int(y+0.5), width=lw*5, col=col, lw=lw*2)
+                _lw = max(0, int(lw * lw_factor))
+                cv2.circle(img, (int(x+0.5), int(y+0.5)), _lw*2, col, lw*2)
+                plot_cross(img, int(x+0.5), int(y+0.5), width=_lw, col=col, lw=lw*2)
             else:
                 cv2.circle(img, (int(x+0.5), int(y+0.5)), lw*2, col, -1)
             if vis_conf:
-                cv2.putText(img, '{:.1f}'.format(c), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 1, col, 2)
+                cv2.putText(img, '{:.1f}'.format(c), (int(x), int(y)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, col, 2)
 
 def plot_keypoints_total(img, annots, scale, pid_offset=0):
     _lw = img.shape[0] // 150
