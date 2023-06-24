@@ -14,7 +14,7 @@ args:
       key_from_previous: [bbox]
       key_keep: []
       args:
-        ckpt: /nas/home/shuaiqing/Code/EasyMocapPublic/data/models/pose_hrnet_w48_384x288.pth
+        ckpt: data/models/pose_hrnet_w48_384x288.pth
     vis2d:
       module: myeasymocap.io.vis.Vis2D
       skip: False
