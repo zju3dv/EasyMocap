@@ -81,8 +81,21 @@ if __name__ == '__main__':
             p = create_pcd(points, colors=data[:, 3:])
             grids.append(p)
         elif pcd.endswith('.ply'):
+            print('Load pcd: ', pcd)
             p = o3d.io.read_point_cloud(pcd)
+            print(p)
             grids.append(p)
+        elif pcd.endswith('.pkl'):
+            p = o3d.io.read_triangle_mesh(pcd)
+            grids.append(p)
+        elif pcd.endswith('.obj'):
+            p = o3d.io.read_triangle_mesh(pcd)
+            vertices = np.asarray(p.vertices)
+            print(vertices.shape)
+            print(vertices.min(axis=0))
+            print(vertices.max(axis=0))
+            grids.append(p)
+        
     center = o3d.geometry.TriangleMesh.create_coordinate_frame(
         size=1, origin=[0, 0, 0])
     grids.append(center)
@@ -91,6 +104,7 @@ if __name__ == '__main__':
     for ic, (cam, camera) in enumerate(cameras.items()):
         if len(args.subs) > 0 and cam not in args.subs:continue
         center = - camera['R'].T @ camera['T']
+        print('{}: {}'.format(cam, center.T[0]))
         camera_locations.append(center)
         center = o3d.geometry.TriangleMesh.create_coordinate_frame(
                 size=0.5, origin=[center[0, 0], center[1, 0], center[2, 0]])
