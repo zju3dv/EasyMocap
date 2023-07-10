@@ -1,10 +1,5 @@
-import os
-import numpy as np
 import math
-import cv2
-import torch
-from ..basetopdown import BaseTopDownModelCache
-from .hrnet import HRNet
+import numpy as np
 
 def get_max_preds(batch_heatmaps):
     '''
@@ -50,30 +45,12 @@ def coco17tobody25(points2d):
     # kpts = kpts[:, :, [1,0,2]]
     return kpts
 
-class MyHRNet(BaseTopDownModelCache):
-    def __init__(self, ckpt, single_person=True, num_joints=17, name='keypoints2d'):
-        super().__init__(name, bbox_scale=1.25, res_input=[288, 384])
-        # 如果启用，那么将每个视角最多保留一个，并且squeeze and stack
-        self.single_person = single_person
-        model = HRNet(48, num_joints, 0.1)
-        self.num_joints = num_joints
-        if not os.path.exists(ckpt) and ckpt.endswith('pose_hrnet_w48_384x288.pth'):
-            url = "11ezQ6a_MxIRtj26WqhH3V3-xPI3XqYAw"
-            text = '''Download `models/pytorch/pose_coco/pose_hrnet_w48_384x288.pth` from (OneDrive)[https://1drv.ms/f/s!AhIXJn_J-blW231MH2krnmLq5kkQ],
-            And place it into {}'''.format(os.path.dirname(ckpt))
-            print(text)
-            os.makedirs(os.path.dirname(ckpt), exist_ok=True)
-            cmd = 'gdown "{}" -O {}'.format(url, ckpt)
-            print('\n', cmd, '\n')
-            os.system(cmd)
-        assert os.path.exists(ckpt), f'{ckpt} not exists'
-        checkpoint = torch.load(ckpt, map_location='cpu')
-        model.load_state_dict(checkpoint)
-        model.eval()
-        self.model = model
-        self.device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-        self.model.to(self.device)
+def coco23tobody25(points2d):
+    kpts = coco17tobody25(points2d[:, :17])
+    kpts[:, [19, 20, 21, 22, 23, 24]] = points2d[:, [17, 18, 19, 20, 21, 22]]
+    return kpts
 
+class BaseKeypoints():
     @staticmethod
     def get_max_preds(batch_heatmaps):
         coords, maxvals = get_max_preds(batch_heatmaps)
@@ -99,38 +76,19 @@ class MyHRNet(BaseTopDownModelCache):
         coords = coords.astype(np.float32) * 4
         pred = np.dstack((coords, maxvals))
         return pred
-
-    def __call__(self, bbox, images, imgnames):
-        squeeze = False
-        if not isinstance(images, list):
-            images = [images]
-            imgnames = [imgnames]
-            bbox = [bbox]
-            squeeze = True
-        nViews = len(images)
-        kpts_all = []
-        for nv in range(nViews):
-            _bbox = bbox[nv]
-            if _bbox.shape[0] == 0:
-                if self.single_person:
-                    kpts = np.zeros((1, self.num_joints, 3))
-                else:
-                    kpts = np.zeros((_bbox.shape[0], self.num_joints, 3))
-            else:
-                img = images[nv]
-                # TODO: add flip test
-                out = super().__call__(_bbox, img, imgnames[nv])
-                output = out['params']['output']
-                kpts = self.get_max_preds(output)
-                kpts_ori = self.batch_affine_transform(kpts, out['params']['inv_trans'])
-                kpts = np.concatenate([kpts_ori, kpts[..., -1:]], axis=-1)
-            kpts = coco17tobody25(kpts)
-            kpts_all.append(kpts)
-        if self.single_person:
-            kpts_all = [k[0] for k in kpts_all]
-            kpts_all = np.stack(kpts_all)
-        if squeeze:
-            kpts_all = kpts_all[0]
-        return {
-            'keypoints': kpts_all
-        }
+    
+    @staticmethod
+    def batch_affine_transform(points, trans):
+        # points: (Bn, J, 2), trans: (Bn, 2, 3)
+        points = np.dstack((points[..., :2], np.ones((*points.shape[:-1], 1))))
+        out = np.matmul(points, trans.swapaxes(-1, -2))
+        return out
+    
+    @staticmethod
+    def coco17tobody25(points2d):
+        return coco17tobody25(points2d)
+    
+    @staticmethod
+    def coco23tobody25(points2d):
+        return coco23tobody25(points2d)
+    

@@ -49,6 +49,37 @@ def gen_trans_from_patch_cv(c_x, c_y, src_width, src_height, dst_width, dst_heig
 
     return trans, inv_trans
 
+# TODO: add UDP
+def get_warp_matrix(theta, size_input, size_dst, size_target):
+    """Calculate the transformation matrix under the constraint of unbiased.
+    Paper ref: Huang et al. The Devil is in the Details: Delving into Unbiased
+    Data Processing for Human Pose Estimation (CVPR 2020).
+
+    Args:
+        theta (float): Rotation angle in degrees.
+        size_input (np.ndarray): Size of input image [w, h].
+        size_dst (np.ndarray): Size of output image [w, h].
+        size_target (np.ndarray): Size of ROI in input plane [w, h].
+
+    Returns:
+        np.ndarray: A matrix for transformation.
+    """
+    theta = np.deg2rad(theta)
+    matrix = np.zeros((2, 3), dtype=np.float32)
+    scale_x = size_dst[0] / size_target[0]
+    scale_y = size_dst[1] / size_target[1]
+    matrix[0, 0] = math.cos(theta) * scale_x
+    matrix[0, 1] = -math.sin(theta) * scale_x
+    matrix[0, 2] = scale_x * (-0.5 * size_input[0] * math.cos(theta) +
+                              0.5 * size_input[1] * math.sin(theta) +
+                              0.5 * size_target[0])
+    matrix[1, 0] = math.sin(theta) * scale_y
+    matrix[1, 1] = math.cos(theta) * scale_y
+    matrix[1, 2] = scale_y * (-0.5 * size_input[0] * math.sin(theta) -
+                              0.5 * size_input[1] * math.cos(theta) +
+                              0.5 * size_target[1])
+    return matrix
+
 def generate_patch_image_cv(cvimg, c_x, c_y, bb_width, bb_height, patch_width, patch_height, do_flip, scale, rot):
 
     trans, inv_trans = gen_trans_from_patch_cv(c_x, c_y, bb_width, bb_height, patch_width, patch_height, scale, rot, inv=False)
@@ -75,8 +106,8 @@ def get_single_image_crop_demo(image, bbox, scale=1.2, crop_size=224,
     )
     if fliplr:
         crop_image = cv2.flip(crop_image, 1)
-    # cv2.imwrite('debug_crop.jpg', crop_image)
-    # import ipdb; ipdb.set_trace()
+    # cv2.imwrite('debug_crop.jpg', crop_image[:,:,::-1])
+    # cv2.imwrite('debug_crop_full.jpg', image[:,:,::-1])
     crop_image = crop_image.transpose(2,0,1)
     mean1=np.array(mean, dtype=np.float32).reshape(3,1,1)
     std1= np.array(std, dtype=np.float32).reshape(3,1,1)
@@ -123,6 +154,14 @@ class BaseTopDownModel(nn.Module):
             squeeze = True
         # TODO: 兼容多张图片的
         bbox = xyxy2ccwh(bbox)
+        # convert the bbox to the aspect of input bbox
+        aspect_ratio = self.crop_size[1] / self.crop_size[0]
+        w, h = bbox[:, 2], bbox[:, 3]
+        # 如果height大于w*ratio，那么增大w
+        flag = h > aspect_ratio * w
+        bbox[flag, 2] = h[flag] / aspect_ratio
+        # 否则增大h
+        bbox[~flag, 3] = w[~flag] * aspect_ratio
         inputs = []
         inv_trans_ = []
         for i in range(bbox.shape[0]):
@@ -141,6 +180,15 @@ class BaseTopDownModel(nn.Module):
             )
             inputs.append(norm_img)
             inv_trans_.append(inv_trans)
+        if False:
+            vis = np.hstack(inputs)
+            mean, std = np.array(self.mean), np.array(self.std)
+            mean = mean.reshape(3, 1, 1)
+            std = std.reshape(3, 1, 1)
+            vis = (vis * std) + mean
+            vis = vis.transpose(1, 2, 0)
+            vis = (vis[:, :, ::-1] * 255).astype(np.uint8)
+            cv2.imwrite('debug_crop.jpg', vis)
         inputs = np.stack(inputs)
         inv_trans_ = np.stack(inv_trans_)
         inputs = torch.FloatTensor(inputs).to(self.device)
@@ -168,17 +216,30 @@ class BaseTopDownModelCache(BaseTopDownModel):
         super().__init__(**kwargs)
         self.name = name
     
-    def __call__(self, bbox, images, imgname, flips=None):
+    def cachename(self, imgname):
         basename = os.sep.join(imgname.split(os.sep)[-2:])
         cachename = join(self.output, self.name, basename.replace('.jpg', '.pkl'))
+        return cachename
+
+    def dump(self, cachename, output):
         os.makedirs(os.path.dirname(cachename), exist_ok=True)
+        with open(cachename, 'wb') as f:
+            pickle.dump(output, f)
+        return output
+    
+    def load(self, cachename):
+        with open(cachename, 'rb') as f:
+            output = pickle.load(f)
+        return output
+
+    def __call__(self, bbox, images, imgname, flips=None):
+        cachename = self.cachename(imgname)
         if os.path.exists(cachename):
-            with open(cachename, 'rb') as f:
-                output = pickle.load(f)
+            output = self.load(cachename)
         else:
             output = self.infer(images, bbox, to_numpy=True, flips=flips)
-            with open(cachename, 'wb') as f:
-                pickle.dump(output, f)
+            output = self.dump(cachename, output)
+
         ret = {
             'params': output
         }

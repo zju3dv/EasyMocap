@@ -145,6 +145,21 @@ class YoloWithTrack(BaseYOLOv5):
         self.track_cache[sub]['bbox'].append(select)
         return select
 
+class MultiPerson(BaseYOLOv5):
+    def __init__(self, min_length, max_length, **kwargs):
+        super().__init__(**kwargs)
+        self.min_length = min_length
+        self.max_length = max_length
+        print('[{}] Only keep the bbox in [{}, {}]'.format(self.__class__.__name__, min_length, max_length))
+
+    def select_bbox(self, select, imgname):
+        if select.shape[0] == 0:
+            return select
+        # 判断一下面积
+        area = np.sqrt((select[:, 2] - select[:, 0])*(select[:, 3]-select[:, 1]))
+        valid = (area > self.min_length) & (area < self.max_length)
+        return select[valid]
+
 class DetectToPelvis:
     def __init__(self, key) -> None:
         self.key = key
