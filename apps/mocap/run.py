@@ -35,10 +35,14 @@ def update_exp_by_args(cfg_exp, args):
                 opts_alias.append(cfg_exp.alias[args.opt_exp[i*2]])
                 opts_alias.append(args.opt_exp[i*2+1])
         cfg_exp.merge_from_list(opts_alias)
-    if args.skip_vis:
+    if args.skip_vis or args.skip_vis_step:
         for key, val in cfg_exp.args.at_step.items():
             if key.startswith('vis'):
                 val.skip = True
+    if args.skip_vis or args.skip_vis_final:
+        for key, val in cfg_exp.args.at_final.items():
+            if key.startswith('vis'):
+                val.skip = True    
 
 def load_cfg_from_file(cfg, args):
     cfg = Config.load(cfg)
@@ -71,6 +75,8 @@ def main_entrypoint():
     parser.add_argument('--cameras', type=str, default=None, help='Camera file path')
     parser.add_argument('--out', type=str, default=None)
     parser.add_argument('--skip_vis', action='store_true')
+    parser.add_argument('--skip_vis_step', action='store_true')
+    parser.add_argument('--skip_vis_final', action='store_true')
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
 
