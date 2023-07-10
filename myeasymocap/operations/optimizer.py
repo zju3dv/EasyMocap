@@ -98,6 +98,7 @@ class Optimizer:
         for key, val in loss.items():
             self.used_infos.extend(val.key_from_infos)
         self.used_infos = list(set(self.used_infos))
+        self.iter = 0
 
     def log_loss(self, iter_, closure, print_loss=False):
         if iter_ % 10 == 0 or print_loss:
@@ -138,10 +139,13 @@ class Optimizer:
         infos_used = {key: infos[key] for key in self.used_infos if key in infos.keys()}
         infos_used = dict_of_numpy_to_tensor(infos_used, device=device)
         
-        log('[{}] Optimize {}'.format(self.__class__.__name__, self.optimize_keys))
+        optimize_keys = self.optimize_keys
+        if isinstance(optimize_keys[0], list):
+            optimize_keys = optimize_keys[self.iter]
+        log('[{}] Optimize {}'.format(self.__class__.__name__, optimize_keys))
         log('[{}] Loading {}'.format(self.__class__.__name__, self.used_infos))
         opt_params = {}
-        for key in self.optimize_keys:
+        for key in optimize_keys:
             if key in infos.keys(): # 优化的参数
                 opt_params[key] = infos_used[key]
             elif key in params.keys():
@@ -160,7 +164,7 @@ class Optimizer:
         ret = {
             'params': params
         }
-        for key in self.optimize_keys:
+        for key in optimize_keys:
             if key in infos.keys():
                 ret[key] = opt_params[key]
         ret = dict_of_tensor_to_numpy(ret)

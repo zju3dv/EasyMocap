@@ -43,8 +43,11 @@ class SMPLLoader:
             'body_model': self.smplmodel, 
             'model': self.forward}
     
-    def forward(self, params):
-        keypoints = self.smplmodel.keypoints(params, return_tensor=True)
+    def forward(self, params, ret_vertices=False):
+        if ret_vertices:
+            keypoints = self.smplmodel.vertices(params, return_tensor=True)
+        else:
+            keypoints = self.smplmodel.keypoints(params, return_tensor=True)
         ret = {
             'keypoints': keypoints
         }

@@ -57,13 +57,12 @@ class VisBase:
         self.count += 1
 
 class Vis3D(VisBase):
-    def __init__(self, scale, lw_factor=1, name='repro', **kwargs) -> None:
+    def __init__(self, scale, lw_factor=1, name='vis_repro', **kwargs) -> None:
         super().__init__(scale, lw_factor, name, **kwargs)
     
     def __call__(self, images, cameras, keypoints3d=None, results=None):
         # keypoints3d: (nJoints, 4)
         undist = False
-        cameras['dist'] = np.zeros_like(cameras['dist'])
         vis_all = []
         for nv in range(len(images)):
             if isinstance(images[nv], str): continue
@@ -77,25 +76,28 @@ class Vis3D(VisBase):
             if results is None:
                 if len(keypoints3d.shape) == 2:
                     keypoints_repro, depth = projectPoints(keypoints3d, {key:cameras[key][nv] for key in ['R', 'T', 'K', 'dist']})
-                    plot_keypoints_auto(vis, keypoints_repro, pid=0, use_limb_color=False)
+                    plot_keypoints_auto(vis, keypoints_repro, pid=0, use_limb_color=True)
                 else:
                     for pid in range(keypoints3d.shape[0]):
                         keypoints_repro, depth = projectPoints(keypoints3d[pid], {key:cameras[key][nv] for key in ['R', 'T', 'K', 'dist']})
-                        plot_keypoints_auto(vis, keypoints_repro, pid=pid, use_limb_color=False)
+                        if (depth < 0.5).all():
+                            continue
+                        plot_keypoints_auto(vis, keypoints_repro, pid=pid, use_limb_color=True)
             else:
                 for res in results:
                     k3d = res['keypoints3d']
+                    k3d_rt = np.dot(k3d[:, :3], camera['R'].T) + camera['T'].T
                     keypoints_repro, depth = projectPoints(k3d, camera)
+                    depth = k3d_rt[..., -1]
                     if k3d.shape[0] == 1:
                         x, y = keypoints_repro[0,0], keypoints_repro[0,1]
-                        # if res['id'] == 6:
                         plot_cross(vis, x, y, col=get_rgb(res['id']), lw=self.lw, width=self.lw * 5)
                     elif k3d.shape[0] == 2: # limb
                         x1, y1 = keypoints_repro[0,0], keypoints_repro[0,1]
                         x2, y2 = keypoints_repro[1,0], keypoints_repro[1,1]
                         cv2.line(vis, (int(x1), int(y1)), (int(x2), int(y2)), get_rgb(res['id']), self.lw)
                     else:
-                        plot_keypoints_auto(vis, keypoints_repro, pid=res['id'], use_limb_color=False, lw_factor=self.lw)
+                        plot_keypoints_auto(vis, keypoints_repro, pid=res['id'], use_limb_color=True, lw_factor=self.lw)
                     cv2.putText(vis, '{}'.format(res['id']), (int(keypoints_repro[0,0]), int(keypoints_repro[0,1])), 
                                 cv2.FONT_HERSHEY_SIMPLEX, 2, get_rgb(res['id']), self.lw)
             vis_all.append(vis)
@@ -255,6 +257,8 @@ class Vis2D(VisBase):
                         plot_bbox(vis_, bbox[nv], 0)
             else:
                 for pid in range(k2d.shape[0]):
-                    plot_keypoints_auto(vis_, k2d[pid], pid=pid, use_limb_color=False)
+                    plot_keypoints_auto(vis_, k2d[pid], pid=pid, use_limb_color=True)
+                    if bbox is not None:
+                        plot_bbox(vis_, bbox[nv][pid], pid=pid)
             vis.append(vis_)
         self.merge_and_write(vis)

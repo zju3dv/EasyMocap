@@ -26,6 +26,8 @@ class MultiStage:
     def load_final(self):
         at_finals = {}
         for key, val in self._at_final.items():
+            if 'module' not in val.keys():
+                continue
             if val['module'] == 'skip':
                 mywarn('Stage {} is not used'.format(key))
                 continue
@@ -35,7 +37,7 @@ class MultiStage:
             at_finals[key] = model
         self.model_finals = at_finals
 
-    def __init__(self, output, at_step, at_final) -> None:
+    def __init__(self, output, at_step, at_final, keys_keep=[], timer=True) -> None:
         log('[{}] writing the results to {}'.format(self.__class__.__name__, output))
         at_steps = {}
         for key, val in at_step.items():
@@ -50,12 +52,15 @@ class MultiStage:
         self.model_steps = at_steps
         self._at_step = at_step
         self._at_final = at_final
-        self.timer = Timer(at_steps, verbose=False)
+        self.keys_keep = keys_keep
+        self.timer = Timer(at_steps, verbose=timer)
 
     def at_step(self, data, index):
         ret = {}
         if 'meta' in data:
             ret['meta'] = data['meta']
+        for key in self.keys_keep:
+            ret[key] = data[key]
         timer = {}
         for key, model in self.model_steps.items():
             for k in self._at_step[key].get('key_keep', []):
@@ -104,6 +109,7 @@ class MultiStage:
         for key, model in self.model_finals.items():
             for iter_ in range(self._at_final[key].get('repeat', 1)):
                 inputs = {}
+                model.iter = iter_
                 for k in self._at_final[key].get('key_from_data', []):
                     inputs[k] = data[k]
                 for k in self._at_final[key].get('key_from_previous', []):
@@ -116,6 +122,7 @@ class MultiStage:
                 if output is not None:
                     ret.update(output)
         return ret
+
 
 class StageForFittingEach:
     def __init__(self, stages, keys_keep) -> None:
@@ -132,6 +139,7 @@ class StageForFittingEach:
     
     def __call__(self, results, **ret):
         for pid, result in results.items():
+            print('[{}] Optimize person {} with {} frames'.format(self.__class__.__name__, pid, len(result['frames'])))
             ret0 = {}
             ret0.update(ret)
             for key, stage in self.stages.items():

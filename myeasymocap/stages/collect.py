@@ -26,8 +26,9 @@ class CheckFramePerson:
         }
 
 class CollectMultiPersonMultiFrame:
-    def __init__(self, key) -> None:
+    def __init__(self, key, min_frame=10) -> None:
         self.key = key
+        self.min_frame = min_frame
     
     def __call__(self, keypoints3d, pids):
         records = {}
@@ -41,6 +42,12 @@ class CollectMultiPersonMultiFrame:
                     }
                 records[pid]['frames'].append(frame)
                 records[pid]['keypoints3d'].append(keypoints3d[frame][i])
+        remove_id = []
         for pid, record in records.items():
+            print('[{}] Collect person {} with {} frames'.format(self.__class__.__name__, pid, len(record['frames'])))
             record['keypoints3d'] = np.stack(record['keypoints3d']).astype(np.float32)
+            if len(record['frames']) < self.min_frame:
+                remove_id.append(pid)
+        for pid in remove_id:
+            records.pop(pid)
         return {'results': records}

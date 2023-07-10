@@ -38,7 +38,7 @@ class Render(VisBase):
             self.merge_and_write([ret])
 
 class Render_multiview(VisBase):
-    def __init__(self, view_list=[], name='render', model_name='body_model', render_mode='image', backend='pyrender', shape=[-1,-1], scale=1., **kwargs):
+    def __init__(self, view_list=[], name='vis_render', model_name='body_model', render_mode='image', backend='pyrender', shape=[-1,-1], scale=1., **kwargs):
         self.scale3d = scale
         super().__init__(name=name, scale=1., **kwargs)
         self.view_list = view_list
@@ -46,65 +46,65 @@ class Render_multiview(VisBase):
         self.model_name = model_name
         self.shape = shape
 
-    def render_(self, vertices, faces, cameras, imgnames):
-        for nf, img in enumerate(tqdm(imgnames, desc=self.name)):
-            mv_ret = []
-            if not isinstance(img, list):
-                img = [img]
-            for nv in self.view_list:
-                basename = os.path.basename(img[nv])
-                assert os.path.exists(img[nv]), img[nv]
-                vis = cv2.imread(img[nv])
-                vis = cv2.resize(vis, None, fx=self.scale3d, fy=self.scale3d)
-                vert = vertices[nf]
-                meshes = {}
-                if vert.ndim == 2:
-                    meshes[0] = {
-                        'vertices': vert,
+    def render_frame(self, imgname, vert, faces, cameras, pids=[]):
+        mv_ret = []
+        if not isinstance(imgname, list):
+            imgname = [imgname]
+        for nv in self.view_list:
+            basename = os.path.basename(imgname[nv])
+            assert os.path.exists(imgname[nv]), imgname[nv]
+            vis = cv2.imread(imgname[nv])
+            vis = cv2.resize(vis, None, fx=self.scale3d, fy=self.scale3d)
+            meshes = {}
+            if vert.ndim == 2:
+                meshes[0] = {
+                    'vertices': vert,
+                    'faces': faces,
+                    'id': 0,
+                    'name': 'human_{}'.format(0)
+                }
+            elif vert.ndim == 3:
+                if len(pids) == 0:
+                    pids = list(range(vert.shape[0]))
+                for ipid, pid in enumerate(pids):
+                    meshes[pid] = {
+                        'vertices': vert[ipid],
                         'faces': faces,
-                        'id': 0,
-                        'name': 'human_{}'.format(0)
+                        'id': pid,
+                        'name': 'human_{}'.format(pid)
                     }
-                elif vert.ndim == 3:
-                    for pid in range(vert.shape[0]):
-                        meshes[pid] = {
-                            'vertices': vert[pid],
-                            'faces': faces,
-                            'id': pid,
-                            'name': 'human_{}'.format(pid)
-                        }
-                if cameras['K'].ndim == 4:
-                    K = cameras['K'][nf][nv].copy()
-                    K[:2, :] *= self.scale
-                    R = cameras['R'][nf][nv]
-                    T = cameras['T'][nf][nv]
-                else:
-                    K = cameras['K'][nv].copy()
-                    K[:2, :] *= self.scale3d
-                    R = cameras['R'][nv]
-                    T = cameras['T'][nv]
-                # add ground
-                if self.render_mode == 'ground':
-                    from easymocap.visualize.geometry import create_ground
-                    ground = create_ground(
-                        center=[0, 0, -0.05], xdir=[1, 0, 0], ydir=[0, 1, 0], # 位置
-                        step=1, xrange=10, yrange=10, # 尺寸
-                        white=[1., 1., 1.], black=[0.5,0.5,0.5], # 颜色
-                        two_sides=True
-                    )
-                    meshes[1001] = ground
-                    vis = np.zeros((self.shape[0], self.shape[1], 3), dtype=np.uint8) + 255
-                    focal = min(self.shape) * 1.2
-                    K = np.array([
-                        [focal,0,vis.shape[0]/2],
-                        [0,focal,vis.shape[1]/2],
-                        [0,0,1]])
-                    ret = plot_meshes(vis, meshes, K, R, T, mode='rgb')
-                else:
-                    ret = plot_meshes(vis, meshes, K, R, T, mode=self.render_mode)
-                ret = add_logo(ret)
-                mv_ret.append(ret)
-            self.merge_and_write(mv_ret)
+            K = cameras['K'][nv].copy()
+            K[:2, :] *= self.scale3d
+            R = cameras['R'][nv]
+            T = cameras['T'][nv]
+            # add ground
+            if self.render_mode == 'ground':
+                from easymocap.visualize.geometry import create_ground
+                ground = create_ground(
+                    center=[0, 0, -0.05], xdir=[1, 0, 0], ydir=[0, 1, 0], # 位置
+                    step=1, xrange=10, yrange=10, # 尺寸
+                    white=[1., 1., 1.], black=[0.5,0.5,0.5], # 颜色
+                    two_sides=True
+                )
+                meshes[1001] = ground
+                vis = np.zeros((self.shape[0], self.shape[1], 3), dtype=np.uint8) + 255
+                focal = min(self.shape) * 1.2
+                K = np.array([
+                    [focal,0,vis.shape[0]/2],
+                    [0,focal,vis.shape[1]/2],
+                    [0,0,1]])
+                ret = plot_meshes(vis, meshes, K, R, T, mode='rgb')
+            else:
+                ret = plot_meshes(vis, meshes, K, R, T, mode=self.render_mode)
+            ret = add_logo(ret)
+            mv_ret.append(ret)
+        self.merge_and_write(mv_ret)
+
+    def render_(self, vertices, faces, cameras, imgnames, pids=[]):
+        for nf, imgname in enumerate(tqdm(imgnames, desc=self.name)):
+            vert = vertices[nf]
+            camera_ = {cam: val[nf] for cam, val in cameras.items()}
+            self.render_frame(imgname, vert, faces, camera_, pids=pids)
 
     def __call__(self, params, cameras, imgnames, **kwargs):
         body_model = kwargs[self.model_name]
@@ -112,6 +112,33 @@ class Render_multiview(VisBase):
         faces = body_model.faces
         self.render_(vertices, faces, cameras, imgnames)
 
+class RenderAll_multiview(Render_multiview):
+    def __call__(self, results, cameras, imgnames, meta, **kwargs):
+        body_model = kwargs[self.model_name]
+        for index in tqdm(meta['index'], desc=self.name):
+            results_frame = []
+            for pid, result in results.items():
+                if index >= result['frames'][0] and index <= result['frames'][-1]:
+                    frame_rel = result['frames'].index(index)
+                    results_frame.append({
+                        'id': pid,
+                    })
+                    for key in ['Rh', 'Th', 'poses', 'shapes']:
+                        if result['params'][key].shape[0] == 1:
+                            results_frame[-1][key] = result['params'][key]
+                        else:
+                            results_frame[-1][key] = result['params'][key][frame_rel:frame_rel+1]
+            params = {}
+            for key in results_frame[0].keys():
+                if key != 'id':
+                    params[key] = np.concatenate([res[key] for res in results_frame], axis=0)
+            pids = [res['id'] for res in results_frame]
+            vertices = body_model.vertices(params, return_tensor=False)
+            camera_ = {cam: val[index] for cam, val in cameras.items()}
+            self.render_frame(imgnames[index], vertices, body_model.faces, camera_, pids=pids)
+            # self.render_frame(vertices, body_model.faces, camera_, imgnames[index], pids=pids)
+            # self.render_frame(vertices, body_model.faces, camera_, imgnames[index], pids=pids)
+    
 class Render_nocam:
     def __init__(self, scale=0.5, backend='pyrender',view_list=[0]) -> None:
         self.name = 'render'

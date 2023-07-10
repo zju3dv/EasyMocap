@@ -174,6 +174,11 @@ class MVDataset(ImageDataBase):
         self.filter = filter
         if len(self.subs) == 0:
             self.subs = self.meta['subs']
+        if len(self.subs_vis) == 1:
+            if self.subs_vis[0] == '_all_':
+                self.subs_vis = self.subs
+            elif self.subs_vis[0] == '_sample_4_':
+                self.subs_vis = [self.subs[0], self.subs[len(self.subs)//3], self.subs[(len(self.subs)*2//3)], self.subs[-1]]
         self.check_frames_length()
     
     @staticmethod
@@ -265,6 +270,11 @@ class MVDataset(ImageDataBase):
 
     def check(self, index):
         raise NotImplementedError
+    
+    def __str__(self) -> str:
+        pre = super().__str__()
+        pre += '''    subs_vis: {}'''.format(self.subs_vis)
+        return pre
 
 class MVMP(MVDataset):
     def read_annots(self, annotnames):

@@ -26,7 +26,7 @@ class ImageDataBase:
     def try_to_extract_images(self, root, value):
         if not os.path.exists(os.path.join(root, value['root'])) and os.path.exists(os.path.join(root, 'videos')):
             print('[{}] Cannot find the images but find the videos, try to extract it'.format(self.__class__.__name__))
-            for videoname in os.listdir(os.path.join(root, 'videos')):
+            for videoname in sorted(os.listdir(os.path.join(root, 'videos'))):
                 videoext = '.' + videoname.split('.')[-1]
                 outdir = join(root, value['root'], videoname.replace(videoext, ''))
                 os.makedirs(outdir, exist_ok=True)
