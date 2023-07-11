@@ -23,6 +23,7 @@ exp_opts:
             dist_max: 25 # pixel
             dist_track: 100 # 100mm；
         cfg_track:
+          max_person: 6
           final_ranges: [[-5, -5, 0.], [5, 5, 5.]] # 最终的输出的range，仅用于输出的时候的筛选
           final_max_person: 6
   at_final:
@@ -36,8 +37,8 @@ exp_opts:
             args:
               loss:
                 smooth:
-                  weight: 1.
+                  weight: 5.
     vis_render:
       args:
-        view_list: [0, 2, 4, 6]
-        scale: 0.5
+        view_list: [2]
+        scale: 1.

@@ -107,6 +107,8 @@ class MultiStage:
         log('Keep keys: {}'.format(list(data.keys())))
         ret = {}
         for key, model in self.model_finals.items():
+            if self._at_final[key].get('skip', False):
+                continue
             for iter_ in range(self._at_final[key].get('repeat', 1)):
                 inputs = {}
                 model.iter = iter_

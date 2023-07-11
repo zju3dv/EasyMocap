@@ -6,6 +6,7 @@ from os.path import join
 import numpy as np
 from easymocap.datasets.base import add_logo
 from easymocap.mytools.vis_base import merge, plot_bbox
+from easymocap.mytools.camera_utils import Undistort
 from .vis import VisBase
 
 class Render(VisBase):
@@ -54,6 +55,9 @@ class Render_multiview(VisBase):
             basename = os.path.basename(imgname[nv])
             assert os.path.exists(imgname[nv]), imgname[nv]
             vis = cv2.imread(imgname[nv])
+            # undistort the images
+            if cameras['dist'] is not None:
+                vis = Undistort.image(vis, cameras['K'][nv], cameras['dist'][nv], sub=os.path.basename(os.path.dirname(imgname[nv])))
             vis = cv2.resize(vis, None, fx=self.scale3d, fy=self.scale3d)
             meshes = {}
             if vert.ndim == 2:
@@ -96,7 +100,6 @@ class Render_multiview(VisBase):
                 ret = plot_meshes(vis, meshes, K, R, T, mode='rgb')
             else:
                 ret = plot_meshes(vis, meshes, K, R, T, mode=self.render_mode)
-            ret = add_logo(ret)
             mv_ret.append(ret)
         self.merge_and_write(mv_ret)
 

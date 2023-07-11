@@ -3,7 +3,7 @@ import cv2
 from easymocap.mytools.camera_utils import Undistort
 from easymocap.mytools.debug_utils import log, mywarn, myerror
 from .iterative_triangulate import iterative_triangulate
-from easymocap.mytools.triangulator import project_points
+from easymocap.mytools.triangulator import project_points, batch_triangulate
 from easymocap.mytools.timer import Timer
 
 class DistanceBase:
@@ -265,8 +265,13 @@ class MatchBase:
                 pass
         return indices, proposals
 
-    def _check_indices(self, indices):
-        return (indices > -1).sum() >= self.cfg.triangulate.min_view_body
+    def _check_indices(self, indices, keypoints3d=None):
+        flag_ind = (indices > -1).sum() >= self.cfg.triangulate.min_view_body
+        if keypoints3d is not None:
+            conf = keypoints3d[:, 3]
+            flag_3d = (conf > self.cfg.triangulate.min_conf_3d).sum() > self.cfg.min_joints
+            flag_ind = flag_ind & flag_3d
+        return flag_ind
 
     def _simple_associate2d_triangulate(self, affinity, keypoints, cameras, assigned=None):
         # sum1 = affinity.sum(axis=1)
@@ -292,7 +297,7 @@ class MatchBase:
             log('[Tri] First try to triangulate of {}'.format(indices))
             indices_origin = indices.copy()
             result, indices = self.try_to_triangulate(keypoints, cameras, indices)
-            if not self._check_indices(indices):
+            if not self._check_indices(indices, result['keypoints3d']):
                 # if the proposals is valid
                 if len(proposals) > 0:
                     proposals.sort(key=lambda x:-x[2])
@@ -301,7 +306,7 @@ class MatchBase:
                         indices[nviews] = select_id
                         log('[Tri] Max fail, then try to triangulate of {}'.format(indices))
                         result, indices = self.try_to_triangulate(keypoints, cameras, indices)
-                        if self._check_indices(indices):
+                        if self._check_indices(indices, result['keypoints3d']):
                             break
                     else:
                         # overall proposals, not find any valid
@@ -346,21 +351,23 @@ class MatchBase:
             indices_origin = indices.copy()
             result, indices = self.try_to_triangulate(keypoints, cameras, indices, previous=keypoints3d[idx3d])
             
-            if not (self._check_indices(indices) and self._check_speed(keypoints3d[idx3d], result['keypoints3d'])):
+            if not (self._check_indices(indices, result['keypoints3d']) and self._check_speed(keypoints3d[idx3d], result['keypoints3d'])):
                 # if the proposals is valid
                 previous = keypoints3d[idx3d]
                 # select the best keypoints of each view
                 previous_proj = project_points(previous, cameras['P'])
                 dist_all = np.zeros((previous_proj.shape[0],)) + 999.
                 indices_all = np.zeros((previous_proj.shape[0],), dtype=int)
+                keypoints_all = np.zeros_like(previous_proj)
                 for nv in range(previous_proj.shape[0]):
                     dist = np.linalg.norm(previous_proj[nv, :, :2][None] - keypoints[nv][:, :, :2], axis=-1)
                     conf = (previous[..., -1] > 0.1)[None] & (keypoints[nv][:, :, -1] > 0.1)
                     dist_mean = (dist * conf).sum(axis=-1) / (1e-5 + conf.sum(axis=-1))
                     dist_all[nv] = dist_mean.min()
                     indices_all[nv] = dist_mean.argmin()
+                    keypoints_all[nv] = keypoints[nv][indices_all[nv]]
                 want_view = dist_all.argsort()[:self.cfg.triangulate.min_view_body]
-                # TODO: add proposal
+                # TODO: add more proposal instead of the top K
                 proposal = (want_view, indices_all[want_view], -dist_all[want_view])
                 proposals = [proposal]
                 if len(proposals) > 0:
@@ -370,12 +377,33 @@ class MatchBase:
                         indices[nv] = select_id
                         log('[Tri] Max fail, then try to triangulate of {}'.format(indices))
                         result, indices = self.try_to_triangulate(keypoints, cameras, indices, previous=keypoints3d[idx3d])
-                        if (self._check_indices(indices) and self._check_speed(keypoints3d[idx3d], result['keypoints3d'])):
+                        if (self._check_indices(indices, result['keypoints3d']) and self._check_speed(keypoints3d[idx3d], result['keypoints3d'])):
+                            # 检测合格了，需要计算一下所有的view里面，那些是合格的，再一起计算
+                            k2d_repro = project_points(result['keypoints3d'], cameras['P'])
+                            dist = np.linalg.norm(k2d_repro[..., :2] - keypoints_all[..., :2], axis=-1)
+                            conf = (result['keypoints3d'][:, -1][None] > 0.1) & (keypoints_all[..., 2] > 0.1)
+                            dist[~conf] = 0.
+                            valid_2d = dist < self.cfg.triangulate.dist_max
+                            valid_ratio_view = valid_2d.mean(axis=-1)
+                            valid_view = np.where(valid_ratio_view > 0.4)[0]
+                            indices_new = np.zeros_like(indices_origin) - 1
+                            indices_new[valid_view] = indices_all[valid_view]
+                            keypoints_all[~valid_2d] = 0.
+                            k3d_new = batch_triangulate(keypoints_all, cameras['P'], min_view=3)
+                            result = {
+                                'keypoints3d': k3d_new,
+                                'indices': indices_new,
+                                'keypoints2d': keypoints_all
+                            }
+                            log('[Tri] Max success, Refine the indices to {}'.format(indices))
+                            # result, indices = self.try_to_triangulate(keypoints, cameras, indices_new, previous=result['keypoints3d'])
                             break
+                        else:
+                            log('[Tri] triangulation failed')
+                            self._check_speed(keypoints3d[idx3d], result['keypoints3d'], verbo=True)
                     else:
                         # overall proposals, not find any valid
-                        mywarn('[Tri] {} Track fail after {} proposal'.format(idx3d, len(proposals)))
-                        import ipdb; ipdb.set_trace()
+                        mywarn('[Tri] {} Track fail after {} proposal'.format(self.prev_ids[idx3d], len(proposals)))
                         continue
                 else:
                     mywarn('[Tri] Track fail {}'.format(indices))
@@ -483,6 +511,7 @@ class TrackBase:
     def add_track(self, res):
         # add a new track
         pid = self.max_id
+        mywarn('[Track] add new person {}'.format(pid))
         res['id'] = pid
         self.record[pid] = {
             'frames': [self.current_frame],

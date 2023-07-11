@@ -40,3 +40,7 @@ exp_opts:
               loss:
                 smooth:
                   weight: 5.
+    vis_render:
+      args:
+        view_list: [6]
+        scale: 1.

@@ -5,7 +5,7 @@ data_opts:
   # subs: ['01', '03', '05', '07', '09', '11', '13', '15', '17', '19', '21', '23']
   subs: ['01', '04', '07', '10', '13', '16', '19', '22'] # Use 8 cameras
   subs_vis: ['01', '07', '13', '19'] # Visualize 4 cameras
-  ranges: [0, 200, 1]
+  ranges: [0, 300, 1]
 exp_opts:
   output: output/boxing
   at_step:
@@ -39,5 +39,5 @@ exp_opts:
                   weight: 1.
     vis_render:
       args:
-        view_list: [3]
+        view_list: [2]
         scale: 1.

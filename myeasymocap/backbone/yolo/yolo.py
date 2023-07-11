@@ -32,6 +32,17 @@ class BaseYOLOv5:
         self.multiview = multiview
         self.name = name
     
+    def dump(self, cachename, output):
+        os.makedirs(os.path.dirname(cachename), exist_ok=True)
+        with open(cachename, 'wb') as f:
+            pickle.dump(output, f)
+        return output
+    
+    def load(self, cachename):
+        with open(cachename, 'rb') as f:
+            output = pickle.load(f)
+        return output
+
     def check_cache(self, imgname):
         basename = os.path.basename(imgname)
         imgext = '.' + basename.split('.')[-1]
@@ -39,7 +50,7 @@ class BaseYOLOv5:
         cachename = join(self.output, self.name, nv, basename.replace(imgext, '.npy'))
         os.makedirs(os.path.dirname(cachename), exist_ok=True)
         if os.path.exists(cachename):
-            output = np.load(cachename, allow_pickle=True)
+            output = self.load(cachename)
             return True, output, cachename
         else:
             return False, None, cachename
@@ -60,19 +71,24 @@ class BaseYOLOv5:
         image = self.check_image(imgname)
         results = self.model(image) #RGB images[:,:,::-1]
         arrays = np.array(results.pandas().xyxy[0])
-        np.save(cachename, arrays)
-        return arrays
+        res = {
+            'results': arrays,
+            'image_shape': image.shape,
+        }
+        self.dump(cachename, res)
+        return res
     
     @staticmethod
     def select_class(results, name):
         select = []
-        for i, res in enumerate(results):
+        for i, res in enumerate(results['results']):
             classname = res[6]
             if classname != name:
                 continue
             box = res[:5]
             select.append(box)
-        return select
+        select = np.stack(select)
+        return select, results
 
     def select_bbox(self, select, imgname):
         if select.shape[0] == 0:
@@ -90,13 +106,13 @@ class BaseYOLOv5:
         detects = {'bbox': [[] for _ in range(len(images))]}
         for nv in range(len(images)):
             res = self.detect(images[nv], imgnames[nv])            
-            select = self.select_class(res, self.name)
+            select, res = self.select_class(res, self.name)
             if len(select) == 0:
                 select = np.zeros((0,5), dtype=np.float32)
             else:
                 select = np.stack(select).astype(np.float32)
             # TODO: add track here
-            select = self.select_bbox(select, imgnames[nv])
+            select = self.select_bbox(select, res, imgnames[nv])
             detects['bbox'][nv] = select
         if squeeze:
             detects['bbox'] = detects['bbox'][0]
@@ -124,14 +140,14 @@ class YoloWithTrack(BaseYOLOv5):
         over = (w*h)/(area_pre+area_now-w*h)
         return over
 
-    def select_bbox(self, select, imgname):
+    def select_bbox(self, select, results, imgname):
         if select.shape[0] == 0:
             return select
         sub = os.path.basename(os.path.dirname(imgname))
         frame = int(os.path.basename(imgname).split('.')[0])
         if sub not in self.track_cache:
             # select the best
-            select = super().select_bbox(select, imgname)
+            select = super().select_bbox(select, results, imgname)
             self.track_cache[sub] = {
                 'frame': [frame],
                 'bbox': [select]
@@ -152,12 +168,15 @@ class MultiPerson(BaseYOLOv5):
         self.max_length = max_length
         print('[{}] Only keep the bbox in [{}, {}]'.format(self.__class__.__name__, min_length, max_length))
 
-    def select_bbox(self, select, imgname):
+    def select_bbox(self, select, results, imgname):
         if select.shape[0] == 0:
             return select
         # 判断一下面积
         area = np.sqrt((select[:, 2] - select[:, 0])*(select[:, 3]-select[:, 1]))
         valid = (area > self.min_length) & (area < self.max_length)
+        height, width, _ = results['image_shape']
+        # set the limit of left and right
+        valid = valid & (select[:, 2] > self.min_length * 1.5) & (select[:, 0] < width - self.min_length * 1.5)
         return select[valid]
 
 class DetectToPelvis:
