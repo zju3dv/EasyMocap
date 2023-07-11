@@ -1,0 +1,107 @@
+init_params: # 初始化姿态
+  module: myeasymocap.operations.init.InitParams
+  key_from_data: [keypoints3d]
+  args:
+    num_poses: 69
+    num_shapes: 10
+fitShape: # 这一步需要根据骨长优化一下SMPL的shape参数
+  module: myeasymocap.operations.optimizer.Optimizer
+  key_from_data: [keypoints3d]
+  key_from_previous: [model, params] # 这一步优化所使用的model，是一个可调用的函数，负责把params的输入变成输出，而不用考虑其他，与SMPL model是不一样的
+  args:
+    optimizer_args: {optim_type: lbfgs}
+    optimize_keys: [shapes]
+    loss:
+      k3d:
+        weight: 1000.
+        module: myeasymocap.operations.loss.LimbLength
+        key_from_output: [keypoints]
+        key_from_infos: [keypoints3d]
+        args:
+          kintree: [[8, 1], [2, 5], [2, 3], [5, 6], [3, 4], [6, 7], [2, 3], [5, 6], [3, 4], [6, 7], [2, 3], [5, 6], [3, 4], [6, 7], [1, 0], [9, 12], [9, 10], [10, 11], [12, 13],[13, 14]]
+      regshape:
+        weight: 0.1
+        module: myeasymocap.operations.loss.RegLoss
+        key_from_output: [shapes]
+        key_from_infos: [] # TODO: 根据2D的置信度来计算smooth权重
+        args:
+          key: shapes
+          norm: l2
+init_RT: # 这一步中，首先将SMPL参数的shape参数进行整段平均。重新优化更新RT参数
+  module: myeasymocap.operations.optimizer.Optimizer
+  key_from_data: [keypoints3d]
+  key_from_previous: [model, params] # 这一步优化所使用的model，是一个可调用的函数，负责把params的输入变成输出，而不用考虑其他，与SMPL model是不一样的
+  # 这样设计的目的是对于一些不只是SMPL本身的模型，可以在外面套一层接口
+  # model是一个纯函数，用来进行可视化
+  args:
+    optimizer_args: {optim_type: lbfgs}
+    optimize_keys: [Th, Rh]
+    loss:
+      k3d:
+        weight: 100.
+        module: myeasymocap.operations.loss.Keypoints3D
+        key_from_output: [keypoints]
+        key_from_infos: [keypoints3d]
+        args:
+          norm: l2
+          index_est: [2, 5, 9, 12]
+          index_gt: [2, 5, 9, 12]
+      smooth:
+        weight: 1.
+        module: myeasymocap.operations.loss.Smooth
+        key_from_output: [Th, keypoints]
+        key_from_infos: [] # TODO: 根据2D的置信度来计算smooth权重
+        args:
+          keys: [keypoints, Th]
+          smooth_type: [Linear, Linear] # 这个depth似乎需要相机参数进行转换
+          norm: [l2, l2]
+          order: [2, 2]
+          weights: [10., 100.]
+          window_weight: [0.5, 0.3, 0.1, 0.1]
+refine_poses:
+  repeat: 2
+  module: myeasymocap.operations.optimizer.Optimizer
+  key_from_data: [keypoints3d]
+  key_from_previous: [model, params]
+  args:
+    optimizer_args: {optim_type: lbfgs}
+    optimize_keys: [[poses, Rh, Th], [poses, shapes, Rh, Th]]
+    loss:
+      k3d:
+        weight: 1000.
+        module: myeasymocap.operations.loss.Keypoints3D
+        key_from_output: [keypoints]
+        key_from_infos: [keypoints3d]
+        args:
+          norm: l2
+          norm_info: 0.02
+          ranges_est: [0, 25]
+          ranges_gt: [0, 25]
+      smooth:
+        weight: 1.
+        module: myeasymocap.operations.loss.Smooth
+        key_from_output: [poses, Th, keypoints]
+        key_from_infos: [] # TODO: 根据2D的置信度来计算smooth权重
+        args:
+          keys: [Th, poses, keypoints]
+          smooth_type: [Linear, Linear, Linear] # 这个depth似乎需要相机参数进行转换
+          norm: [l2, l2, l2]
+          order: [2, 2, 2]
+          weights: [10., 10., 10.,]
+          window_weight: [0.5, 0.3, 0.1, 0.1]
+      prior:
+        weight: 0.1
+        module: easymocap.multistage.gmm.GMMPrior
+        key_from_output: [poses]
+        key_from_infos: []
+        args:
+          start: 0
+          end: 69
+      regshape:
+        weight: 0.1
+        module: myeasymocap.operations.loss.RegLoss
+        key_from_output: [shapes]
+        key_from_infos: [] # TODO: 根据2D的置信度来计算smooth权重
+        args:
+          key: shapes
+          norm: l2

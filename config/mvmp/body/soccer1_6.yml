@@ -1,0 +1,43 @@
+data: config/datasets/mvimage.yml
+exp: config/mvmp/detect_match_triangulate_fitSMPL.yml
+data_opts:
+  root: TO_BE_FILLED
+  subs: []
+  subs_vis: ['1', '3', '5', '7']
+  ranges: [0, 600, 1]
+exp_opts:
+  output: output/soccer1_6
+  at_step:
+    detect:
+      args:
+        min_length: 100
+        max_length: 1000
+    match:
+      args:
+        cfg_match:
+          distance:
+            threshold_track: 0.05
+          triangulate:
+            min_view: 3 # at least 3 views to triangulate
+            min_view_body: 3 # at least 5 views to triangulate
+            dist_max: 25 # pixel
+            dist_track: 100 # 100mm；
+        cfg_track:
+          final_ranges: [[-5, -5, 0.], [5, 5, 5.]] # 最终的输出的range，仅用于输出的时候的筛选
+          final_max_person: 6
+  at_final:
+    collect:
+      args:
+        min_frame: 100
+    fitting_each_person:
+      args:
+        stages:
+          refine_poses:
+            args:
+              loss:
+                smooth:
+                  weight: 1.
+    vis_render:
+      args:
+        view_list: [0, 2, 4, 6]
+        scale: 0.5

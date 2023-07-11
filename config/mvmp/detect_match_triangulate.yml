@@ -1,0 +1,87 @@
+module: myeasymocap.stages.basestage.MultiStage
+args:
+  output: output/detect_match_triangulate
+  keys_keep: [cameras, imgnames]
+  at_step:
+    detect:
+      module: myeasymocap.backbone.yolo.yolo.MultiPerson # Use YOLO to detect multi-person
+      key_from_data: [images, imgnames]
+      args:
+        model: yolov5m
+        name: person
+        min_length: 150 # this two threshold control the wanted bboxes
+        max_length: 1000
+    # keypoints2d:
+    #   module: myeasymocap.backbone.hrnet.myhrnet.MyHRNet
+    #   key_from_data: [images, imgnames]
+    #   key_from_previous: [bbox]
+    #   key_keep: []
+    #   args:
+    #     ckpt: data/models/pose_hrnet_w48_384x288.pth
+    #     single_person: False # This flag controls the function to detect all keypoints
+    keypoints2d:
+      module: myeasymocap.backbone.vitpose.vit_moe.MyViT
+      key_from_data: [images, imgnames]
+      key_from_previous: [bbox]
+      key_keep: []
+      args:
+        ckpt: data/models/vitpose+_base.pth
+        single_person: False # This flag controls the function to detect all keypoints
+    vis_2d:
+      module: myeasymocap.io.vis.Vis2D
+      skip: False
+      key_from_data: [images]
+      key_from_previous: [keypoints, bbox]
+      args:
+        name: vis_keypoints2d
+        scale: 0.5
+    match:
+      module: myeasymocap.operations.match_base.MatchAndTrack
+      key_from_data: [cameras, meta]
+      key_from_previous: [keypoints]
+      args:
+        cfg_match:
+          min_conf: 0.3
+          min_joints: 9
+          distance:
+            mode: epipolar
+            threshold: 0.05 # 用于控制匹配的内点阈值
+            threshold_track: 0.05 # track的匹配的内点阈值
+            min_common_joints: 9
+            cfg_svt:
+              debug: 0
+              maxIter: 10
+              w_sparse: 0.1
+              w_rank: 50
+              tol: 0.0001
+              aff_min: 0.3
+          triangulate:
+            min_view: 3 # min view when triangulate each points
+            min_view_body: 3 # min visible view of the body
+            min_conf_3d: 0.1
+            dist_max: 50 # pixel
+            dist_track: 100 # mm
+        cfg_track:
+          max_person: 100
+          max_missing: 3 # 最多丢失3帧就要删除
+          final_ranges: [[-10000, -10000, -10000], [10000, 10000, 10000]] # 最终的输出的range，仅用于输出的时候的筛选
+          final_max_person: 100
+          kintree: [[2, 3], [5, 6], [3, 4], [6, 7], [11, 22], [22, 23], [11, 24], [14, 19], [19, 20], [14, 21]]
+    vis_kpts3d:
+      module: myeasymocap.io.vis.Vis3D
+      key_from_data: [images, cameras]
+      key_from_previous: [results] # 用于最后的一起优化
+      args:
+        scale: 0.5
+        lw_factor: 10
+  at_final:
+    write_raw: # write the raw 3d keypoints
+      module: myeasymocap.io.write.WriteAll
+      key_from_data: [results, meta]
+      args:
+        name: keypoints3d_raw
+    make_video:
+      module: myeasymocap.io.video.MakeVideo
+      args:
+        fps: 60
+        keep_image: False

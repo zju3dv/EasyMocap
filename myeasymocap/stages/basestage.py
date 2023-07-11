@@ -145,6 +145,7 @@ class StageForFittingEach:
             for key, stage in self.stages.items():
                 for iter_ in range(self.stages_args[key].get('repeat', 1)):
                     inputs = {}
+                    stage.iter = iter_
                     for k in self.stages_args[key].get('key_from_data', []):
                         inputs[k] = result[k]
                     for k in self.stages_args[key].get('key_from_previous', []):

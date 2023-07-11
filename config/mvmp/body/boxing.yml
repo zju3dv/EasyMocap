@@ -1,0 +1,43 @@
+data: config/datasets/mvimage.yml
+exp: config/mvmp/detect_match_triangulate_fitSMPL.yml
+data_opts:
+  root: TO_BE_FILLED
+  # subs: ['01', '03', '05', '07', '09', '11', '13', '15', '17', '19', '21', '23']
+  subs: ['01', '04', '07', '10', '13', '16', '19', '22'] # Use 8 cameras
+  subs_vis: ['01', '07', '13', '19'] # Visualize 4 cameras
+  ranges: [0, 200, 1]
+exp_opts:
+  output: output/boxing
+  at_step:
+    detect:
+      args:
+        min_length: 200
+        max_length: 1000
+    match:
+      args:
+        cfg_match:
+          distance:
+            threshold_track: 0.05
+          triangulate:
+            min_view: 3 # at least 3 views to triangulate
+            min_view_body: 4 # at least 5 views to triangulate
+            dist_max: 25 # pixel
+            dist_track: 50 # 100mm；
+        cfg_track:
+          final_ranges: [[-3, -3, 0.], [3, 3, 3.]] # 最终的输出的range，仅用于输出的时候的筛选
+  at_final:
+    collect:
+      args:
+        min_frame: 100
+    fitting_each_person:
+      args:
+        stages:
+          refine_poses:
+            args:
+              loss:
+                smooth:
+                  weight: 1.
+    vis_render:
+      args:
+        view_list: [3]
+        scale: 1.
