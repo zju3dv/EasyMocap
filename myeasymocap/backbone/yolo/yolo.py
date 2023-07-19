@@ -90,7 +90,7 @@ class BaseYOLOv5:
         select = np.stack(select)
         return select, results
 
-    def select_bbox(self, select, imgname):
+    def select_bbox(self, select, results, imgname):
         if select.shape[0] == 0:
             return select
         # Naive: select the best
