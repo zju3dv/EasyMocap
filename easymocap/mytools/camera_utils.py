@@ -173,6 +173,7 @@ def write_camera(camera, path):
         if 'H' in val.keys() and 'W' in val.keys():
             intri.write('H_{}'.format(key), val['H'], dt='int')
             intri.write('W_{}'.format(key), val['W'], dt='int')
+        assert val['R'].shape == (3, 3), f"{val['R'].shape} must == (3, 3)"
         if 'Rvec' not in val.keys():
             val['Rvec'] = cv2.Rodrigues(val['R'])[0]
         extri.write('R_{}'.format(key), val['Rvec'])

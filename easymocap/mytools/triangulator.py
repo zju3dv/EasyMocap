@@ -11,7 +11,7 @@ def batch_triangulate(keypoints_, Pall, min_view=2):
 
     Args:
         keypoints_ (nViews, nJoints, 3): 2D detections
-        Pall (nViews, 3, 4): projection matrix of each view
+        Pall (nViews, 3, 4) | (nViews, nJoints, 3, 4): projection matrix of each view
         min_view (int, optional): min view for visible points. Defaults to 2.
 
     Returns:
@@ -25,9 +25,14 @@ def batch_triangulate(keypoints_, Pall, min_view=2):
     keypoints = keypoints_[:, valid_joint]
     conf3d = keypoints[:, :, -1].sum(axis=0)/v[valid_joint]
     # P2: P矩阵的最后一行：(1, nViews, 1, 4)
-    P0 = Pall[None, :, 0, :]
-    P1 = Pall[None, :, 1, :]
-    P2 = Pall[None, :, 2, :]
+    if len(Pall.shape) == 3:
+        P0 = Pall[None, :, 0, :]
+        P1 = Pall[None, :, 1, :]
+        P2 = Pall[None, :, 2, :]
+    else:
+        P0 = Pall[:, :, 0, :].swapaxes(0, 1)
+        P1 = Pall[:, :, 1, :].swapaxes(0, 1)
+        P2 = Pall[:, :, 2, :].swapaxes(0, 1)
     # uP2: x坐标乘上P2: (nJoints, nViews, 1, 4)
     uP2 = keypoints[:, :, 0].T[:, :, None] * P2
     vP2 = keypoints[:, :, 1].T[:, :, None] * P2
@@ -44,9 +49,17 @@ def batch_triangulate(keypoints_, Pall, min_view=2):
     result[valid_joint, 3] = conf3d #* (conf[..., 0].sum(axis=-1)>min_view)
     return result
 
-def project_points(keypoints, RT, einsum='vab,kb->vka'):
+def project_points(keypoints, RT, einsum=None):
     homo = np.concatenate([keypoints[..., :3], np.ones_like(keypoints[..., :1])], axis=-1)
-    kpts2d = np.einsum(einsum, RT, homo)
+    if einsum is None:
+        if len(homo.shape) == 2 and len(RT.shape) == 3:
+            kpts2d = np.einsum('vab,kb->vka', RT, homo)
+        elif len(homo.shape) == 2 and len(RT.shape) == 4:
+            kpts2d = np.einsum('vkab,kb->vka', RT, homo)
+        else:
+            import ipdb; ipdb.set_trace()
+    else:
+        kpts2d = np.einsum(einsum, RT, homo)
     kpts2d[..., :2] /= kpts2d[..., 2:]
     return kpts2d
 
@@ -240,17 +253,20 @@ class BaseTriangulator:
 
 class SimpleTriangulator(BaseTriangulator):
     def __init__(self, keys, debug, config,
-        pid=0) -> None:
+        pid=0, disable_previous=False) -> None:
         super().__init__(config, debug, keys)
         self.results = []
         self.infos = []
         self.dim_name = ['_joints', '_views']
         self.pid = pid
+        self.disable_previous = disable_previous
 
     def __call__(self, data, results=None):
         info = {}
         if results is None:
             results = self.results
+        if self.disable_previous:
+            results = []
         new = {'id': self.pid}
         for key in self.keys:
             if key not in data.keys(): continue
@@ -385,7 +401,7 @@ def check_cluster(affinity, row, views, dimGroups, indices, p2dAssigned, visited
     return indices_all
 
 def views_from_dimGroups(dimGroups):
-    views = np.zeros(dimGroups[-1], dtype=int)
+    views = np.zeros(dimGroups[-1], dtype=np.int)
     for nv in range(len(dimGroups) - 1):
         views[dimGroups[nv]:dimGroups[nv+1]] = nv
     return views
@@ -445,6 +461,7 @@ class SimpleMatchAndTriangulator(SimpleTriangulator):
         lines0 = lines0.reshape(pts0.shape)
         lines1 = lines1.reshape(pts1.shape)
         # dist: (D_v0, D_v1, nJoints)
+        # TODO: / sqrt(A^2 + B^2)
         dist01 = np.abs(np.sum(lines0[:, None, :, :2] * pts1[None, :, :, :2], axis=-1) + lines0[:, None, :, 2])
         conf = pts0[:, None, :, 2] * pts1[None, :, :, 2]
         dist10 = np.abs(np.sum(lines1[:, None, :, :2] * pts0[None, :, :, :2], axis=-1) + lines1[:, None, :, 2])
@@ -462,11 +479,11 @@ class SimpleMatchAndTriangulator(SimpleTriangulator):
             sum1 += affinity[:, start:end].max(axis=-1)
         n2d = affinity.shape[0]
         nViews = len(dimGroups) - 1
-        idx_zero = np.zeros(nViews, dtype=int) - 1
+        idx_zero = np.zeros(nViews, dtype=np.int) - 1
         views = views_from_dimGroups(dimGroups)
         # the assigned results of each person
-        p2dAssigned = np.zeros(n2d, dtype=int) - 1
-        visited = np.zeros(n2d, dtype=int)
+        p2dAssigned = np.zeros(n2d, dtype=np.int) - 1
+        visited = np.zeros(n2d, dtype=np.int)
         sortidx = np.argsort(-sum1)
         pid = 0
         k3dresults = []
@@ -523,7 +540,8 @@ class SimpleMatchAndTriangulator(SimpleTriangulator):
         k3dresults.sort(key=lambda x: -x['keypoints2d'][..., -1].sum())
         return k3dresults
 
-    def _calculate_affinity_MxM(self, dims, dimGroups, data, key):
+    @staticmethod
+    def calculate_affinity_MxM(dims, dimGroups, data, key, DIST_MAX):
         M = dimGroups[-1]
         distance = np.zeros((M, M), dtype=np.float32)
         nViews = len(dims)
@@ -535,24 +553,28 @@ class SimpleMatchAndTriangulator(SimpleTriangulator):
                 if dims[v0] == 0 or dims[v1] == 0:
                     continue
                 if True:
-                    pts0 = data[key][v0]
-                    pts1 = data[key][v1]
-                    K0, K1 = data['K'][v0], data['K'][v1]
+                    pts0 = data[key][v0] # (nPerson0, nKeypoints, 3)
+                    pts1 = data[key][v1] # (nPerson1, nKeypoints, 3)
+                    K0, K1 = data['K'][v0], data['K'][v1] # K0, K1: (3, 3)
                     R0, T0 = data['Rc'][v0], data['Tc'][v0]
                     R1, T1 = data['Rc'][v1], data['Tc'][v1]
-                    dist = self.distance_by_epipolar(pts0, pts1, K0, K1, R0, T0, R1, T1)
+                    dist = SimpleMatchAndTriangulator.distance_by_epipolar(pts0, pts1, K0, K1, R0, T0, R1, T1)
                     dist /= (K0[0, 0] + K1[0, 0])/2
                 else:
                     dist = self.distance_by_ray(pts0, pts1, R0, T0, R1, T1)
                 distance[dimGroups[v0]:dimGroups[v0+1], dimGroups[v1]:dimGroups[v1+1]] = dist
                 distance[dimGroups[v1]:dimGroups[v1+1], dimGroups[v0]:dimGroups[v0+1]] = dist.T
-        DIST_MAX = self.cfg_track.track_dist_max
+
         for nv in range(nViews):
             distance[dimGroups[nv]:dimGroups[nv+1], dimGroups[nv]:dimGroups[nv+1]] = DIST_MAX
         distance -= np.eye(M) * DIST_MAX
         aff = (DIST_MAX - distance)/DIST_MAX
         aff = np.clip(aff, 0, 1)
         return aff
+
+    def _calculate_affinity_MxM(self, dims, dimGroups, data, key):
+        DIST_MAX = self.cfg_track.track_dist_max
+        return self.calculate_affinity_MxM(dims, dimGroups, data, key, DIST_MAX=DIST_MAX)
 
     def _calculate_affinity_MxN(self, dims, dimGroups, data, key, results):
         M = dimGroups[-1]
@@ -599,7 +621,6 @@ class SimpleMatchAndTriangulator(SimpleTriangulator):
             plt.vlines([i-0.5 for i in dimGroups[1:]], -0.5, M-0.5, 'w')
             plt.ioff()
             plt.show()
-            import ipdb;ipdb.set_trace()
         return aff_svt
 
     def _track_add(self, res):
@@ -744,3 +765,21 @@ class SimpleMatchAndTriangulator(SimpleTriangulator):
         results.sort(key=lambda x:x['id'])
         self.people = results
         return results
+
+def simple_match(data):
+    key = 'keypoints2d'
+    dims = [d.shape[0] for d in data[key]]
+    dimGroups = np.cumsum([0] + dims)
+    affinity = SimpleMatchAndTriangulator.calculate_affinity_MxM(dims, dimGroups, data, key, DIST_MAX=0.1)
+    import pymatchlr
+    observe = np.ones_like(affinity)
+    cfg_svt = {
+        'debug': 1,
+        'maxIter': 10,
+        'w_sparse': 0.1,
+        'w_rank': 50,
+        'tol': 0.0001,
+        'aff_min': 0.3,
+    }
+    affinity = pymatchlr.matchSVT(affinity, dimGroups, SimpleConstrain(dimGroups), observe, cfg_svt)
+    return affinity, dimGroups
