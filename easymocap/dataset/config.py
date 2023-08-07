@@ -2,12 +2,17 @@
  * @ Date: 2020-09-26 16:52:55
  * @ Author: Qing Shuai
   @ LastEditors: Qing Shuai
-  @ LastEditTime: 2021-05-27 14:33:03
-  @ FilePath: /EasyMocap/easymocap/dataset/config.py
+  @ LastEditTime: 2022-09-30 15:45:07
+  @ FilePath: /EasyMocapPublic/easymocap/dataset/config.py
 '''
 import numpy as np
 
-CONFIG = {}
+CONFIG = {
+    'points': {
+        'nJoints': 1,
+        'kintree': []
+    }
+}
 
 CONFIG['smpl'] = {'nJoints': 24, 'kintree': 
     [
@@ -62,6 +67,97 @@ CONFIG['smpl'] = {'nJoints': 24, 'kintree':
         'RHandIndex1', # 23
     ]
 }
+
+CONFIG['smplh'] = {'nJoints': 52, 'kintree': 
+    [
+       [         1,          0],
+       [         2,          0],
+       [         3,          0],
+       [         4,          1],
+       [         5,          2],
+       [         6,          3],
+       [         7,          4],
+       [         8,          5],
+       [         9,          6],
+       [        10,          7],
+       [        11,          8],
+       [        12,          9],
+       [        13,          9],
+       [        14,          9],
+       [        15,         12],
+       [        16,         13],
+       [        17,         14],
+       [        18,         16],
+       [        19,         17],
+       [        20,         18],
+       [        21,         19],
+       [        22,         20],
+       [        23,         22],
+       [        24,         23],
+       [        25,         20],
+       [        26,         25],
+       [        27,         26],
+       [        28,         20],
+       [        29,         28],
+       [        30,         29],
+       [        31,         20],
+       [        32,         31],
+       [        33,         32],
+       [        34,         20],
+       [        35,         34],
+       [        36,         35],
+       [        37,         21],
+       [        38,         37],
+       [        39,         38],
+       [        40,         21],
+       [        41,         40],
+       [        42,         41],
+       [        43,         21],
+       [        44,         43],
+       [        45,         44],
+       [        46,         21],
+       [        47,         46],
+       [        48,         47],
+       [        49,         21],
+       [        50,         49],
+       [        51,         50]
+    ], 
+    'joint_names': [
+        'MidHip',            # 0
+        'LUpLeg',       # 1
+        'RUpLeg',      # 2
+        'spine',           # 3
+        'LLeg',         # 4
+        'RLeg',        # 5
+        'spine1',          # 6
+        'LFoot',        # 7
+        'RFoot',       # 8
+        'spine2',          # 9
+        'LToeBase',     # 10
+        'RToeBase',    # 11
+        'neck',            # 12
+        'LShoulder',    # 13
+        'RShoulder',   # 14
+        'head',            # 15
+        'LArm',         # 16
+        'RArm',        # 17
+        'LForeArm',     # 18
+        'RForeArm',    # 19
+        'LHand',        # 20
+        'RHand',       # 21
+        'LHandIndex1',  # 22
+        'RHandIndex1', # 23
+    ]
+}
+
+CONFIG['coco'] = {
+    'nJoints': 17,
+    'kintree': [
+        [0, 1], [0, 2], [1, 3], [2, 4], [0, 5], [0, 6], [5, 6], [5, 7], [6, 8], [7, 9], [8, 10], [5, 11], [5, 12], [11, 12], [11, 13], [12, 14], [13, 15], [14, 16]
+    ],
+}
+
+CONFIG['coco_17'] = CONFIG['coco']
 
 CONFIG['body25'] = {'nJoints': 25, 'kintree':
    [[ 1,  0],
@@ -145,7 +241,55 @@ CONFIG['body25']['skeleton'] = \
     (11, 24): {'mean': 0.044, 'std': 0.009}, # RAnkle   ->RHeel    
 }
 
-CONFIG['body15'] = {'nJoints': 15, 'kintree':
+CONFIG['body25vis'] = {
+    'nJoints': 25,
+    'kintree': [
+        [8, 1], # 躯干放在最前面
+        [8, 9],
+        [8, 12],
+        [9, 10],
+        [12, 13],
+        [10, 11],
+        [13, 14],
+        [11, 22],
+        [14, 19],
+        [1, 2],
+        [1, 5],
+        [2, 3],
+        [3, 4],
+        [5, 6],
+        [6, 7],
+        [1, 0]]
+}
+
+CONFIG['handvis'] = {
+    'nJoints': 21,
+    'kintree': [
+       [0, 1],
+       [0, 5],
+       [0, 9],
+       [0, 13],
+       [0, 17],
+       [1, 2],
+       [2, 3],
+       [3, 4],
+        [5, 6],
+        [6, 7],
+        [7, 8],
+        [9, 10],
+        [10, 11],
+        [11, 12],
+        [13, 14],
+        [14, 15],
+        [15, 16],
+        [17, 18],
+        [18, 19],
+        [19, 20]
+    ]
+}
+
+CONFIG['body15'] = {'nJoints': 15, 'root': 8,
+                    'kintree':
    [[ 1,  0],
     [ 2,  1],
     [ 3,  2],
@@ -159,18 +303,89 @@ CONFIG['body15'] = {'nJoints': 15, 'kintree':
     [11, 10],
     [12,  8],
     [13, 12],
-    [14, 13],]}
+    [14, 13]], 'root': 8,}
 CONFIG['body15']['joint_names'] = CONFIG['body25']['joint_names'][:15]
 CONFIG['body15']['skeleton'] = {key: val for key, val in CONFIG['body25']['skeleton'].items() if key[0] < 15 and key[1] < 15}
 CONFIG['body15']['kintree_order'] = CONFIG['body25']['kintree_order'][:14]
 CONFIG['body15']['colors'] = CONFIG['body25']['colors'][:15]
 
+CONFIG['body19'] = {'nJoints': 19, 'kintree': [[i, j] for (i, j) in CONFIG['body25']['kintree'] if i < 19 and j < 19]}
+CONFIG['body19']['skeleton'] = {key: val for key, val in CONFIG['body25']['skeleton'].items() if key[0] < 19 and key[1] < 19}
+
 CONFIG['panoptic'] = {
     'nJoints': 19,
-    'joint_names': ['Neck', 'Nose', 'MidHip', 'LShoulder', 'LElbow', 'LWrist', 'LHip', 'LKnee', 'LAnkle', 'RShoulder','RElbow', 'RWrist', 'RHip','RKnee', 'RAnkle', 'LEye', 'LEar', 'REye', 'REar']
+    'joint_names': ['Neck', 'Nose', 'MidHip', 'LShoulder', 'LElbow', 'LWrist', 'LHip', 'LKnee', 'LAnkle', 'RShoulder','RElbow', 'RWrist', 'RHip','RKnee', 'RAnkle', 'LEye', 'LEar', 'REye', 'REar'],
+    'kintree': [[0, 1],
+         [0, 2],
+         [0, 3],
+         [3, 4],
+         [4, 5],
+         [0, 9],
+         [9, 10],
+         [10, 11],
+         [2, 6],
+         [2, 12],
+         [6, 7],
+         [7, 8],
+         [12, 13],
+         [13, 14]],
+    'colors': ['b' for _ in range(19)]
 }
 
-CONFIG['hand'] = {'kintree':
+CONFIG['panoptic15'] = {
+    'nJoints': 15,
+    'root': 2,
+    'joint_names': CONFIG['panoptic']['joint_names'][:15],
+    'kintree': [[i, j] for (i, j) in CONFIG['panoptic']['kintree'] if i < 15 and j < 15],
+    'limb_mean': [0.1129,0.4957,0.1382,0.2547,0.2425,0.1374,0.2549,0.2437,0.1257,0.1256, 0.4641,0.4580,0.4643,0.4589],
+    'limb_std': [0.0164,0.0333,0.0078,0.0237,0.0233,0.0085,0.0233,0.0237,0.0076,0.0076, 0.0273,0.0247,0.0272,0.0242],
+    'colors': CONFIG['panoptic']['colors'][:15]
+}
+
+CONFIG['mpii_16'] = {
+    'nJoints': 16,
+    'joint_names': ['rankle', 'rknee', 'rhip', 'lhip', 'lknee', 'lankle', 'pelvis', 'thorax', 'upper_neck', 'head_top', 'rwrist', 'relbow', 'rshoulder', 'lshoulder', 'lelbow', 'lwrist'],
+    'kintree': [[0, 1], [1, 2], [2, 6], [6, 3], [3, 4], [4, 5], [6, 7], [7, 8], [8, 9], [10, 11], [11, 12], [12, 7], [13, 14], [14, 15], [13, 7]],
+    'colors': ['b' for _ in range(16)]
+}
+
+CONFIG['ochuman_19'] = {
+    'nJoints': 19,
+    'joint_names': ["right_shoulder", "right_elbow", "right_wrist",
+                     "left_shoulder", "left_elbow", "left_wrist",
+                     "right_hip", "right_knee", "right_ankle",
+                     "left_hip", "left_knee", "left_ankle",
+                     "head", "neck"] + ['right_ear', 'left_ear', 'nose', 'right_eye', 'left_eye'],
+    'kintree': [
+        [0, 1], [1, 2], [3, 4], [4, 5],
+        [6, 7], [7, 8], [9, 10], [10, 11],
+        [13, 0], [13, 3], [0, 3], [6, 9],
+        [12, 16], [16, 13], [16, 17], [16, 18], [18, 15], [17, 14],
+    ],
+    'colors': ['b' for _ in range(19)]
+}
+
+
+CONFIG['chi3d_25'] = {
+    'nJoints': 25,
+    'joint_names': [],
+    'kintree': [[10, 9], [9, 8], [8, 11], [8, 14], [11, 12], [14, 15], [12, 13], [15, 16],
+                    [8, 7], [7, 0], [0, 1], [0, 4], [1, 2], [4, 5], [2, 3], [5, 6],
+                    [13, 21], [13, 22], [16, 23], [16, 24], [3, 17], [3, 18], [6, 19], [6, 20]],
+    'colors': ['b' for _ in range(25)]
+}
+
+CONFIG['chi3d_17'] = {
+    'nJoints': 17,
+    'joint_names': [],
+    'kintree': [[10, 9], [9, 8], [8, 11], [8, 14], [11, 12], [14, 15], [12, 13], [15, 16],
+                    [8, 7], [7, 0], [0, 1], [0, 4], [1, 2], [4, 5], [2, 3], [5, 6],
+                ],
+    'colors': ['b' for _ in range(17)]
+}
+
+
+CONFIG['hand'] = {'nJoints': 21, 'kintree':
       [[ 1,  0],
        [ 2,  1],
        [ 3,  2],
@@ -192,13 +407,24 @@ CONFIG['hand'] = {'kintree':
        [19, 18],
        [20, 19]],
     'colors': [
-        'k', 'k', 'k', 'k', 'r', 'r', 'r', 'r', 
-        'g', 'g', 'g', 'g', 'b', 'b', 'b', 'b', 
-        'y', 'y', 'y', 'y']
+        '_k', '_k', '_k', '_k', '_r', '_r', '_r', '_r', 
+        '_g', '_g', '_g', '_g', '_b', '_b', '_b', '_b', 
+        '_y', '_y', '_y', '_y'],
+    'colorsrhand': [
+        '_pink', '_pink', '_pink', '_pink', '_mint', '_mint', '_mint', '_mint', 
+        '_orange', '_orange', '_orange', '_orange', '_mint2', '_mint2', '_mint2', '_mint2', 
+        'purple', 'purple', 'purple', 'purple'],
+    'joint_names':[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 }
 
 CONFIG['handl'] = CONFIG['hand']
 CONFIG['handr'] = CONFIG['hand']
+CONFIG['handlr'] = {
+    'nJoints': 42,
+    'colors': CONFIG['hand']['colors'] + CONFIG['hand']['colorsrhand'],
+    'joint_names': CONFIG['hand']['joint_names'] + CONFIG['hand']['joint_names'],
+    'kintree': np.vstack((np.array(CONFIG['hand']['kintree']), np.array(CONFIG['hand']['kintree'])+21)).tolist()
+}
 
 CONFIG['bodyhand'] = {'kintree':
    [[ 1,  0],
@@ -267,6 +493,7 @@ CONFIG['bodyhand'] = {'kintree':
     [66, 65]
     ],
     'nJoints': 67,
+    'colors': CONFIG['body25']['colors'] + CONFIG['hand']['colors'] + CONFIG['hand']['colors'],
     'skeleton':{
     ( 0,  1): {'mean': 0.251, 'std': 0.050}, 
     ( 1,  2): {'mean': 0.169, 'std': 0.034}, 
@@ -612,7 +839,8 @@ face_kintree_without_contour = [[ 0,  1],
        [49, 50],
        [50, 43]]
 
-CONFIG['face'] = {'kintree':[ [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,12],[12,13],[13,14],[14,15],[15,16], #outline (ignored)
+CONFIG['face'] = {'nJoints': 70,
+    'kintree':[ [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],[10,11],[11,12],[12,13],[13,14],[14,15],[15,16], #outline (ignored)
                 [17,18],[18,19],[19,20],[20,21], #right eyebrow
                 [22,23],[23,24],[24,25],[25,26], #left eyebrow
                 [27,28],[28,29],[29,30],   #nose upper part
@@ -648,12 +876,27 @@ CONFIG['h36m'] = {
     ],
     'nJoints': 17}
 
+CONFIG['h36m_17'] = CONFIG['h36m']
+
 NJOINTS_BODY = 25
 NJOINTS_HAND = 21
 NJOINTS_FACE = 70
 NLIMBS_BODY = len(CONFIG['body25']['kintree'])
 NLIMBS_HAND = len(CONFIG['hand']['kintree'])
 NLIMBS_FACE = len(CONFIG['face']['kintree'])
+
+def compose(names):
+    kintrees = []
+    nJoints = 0
+    for name in names:
+        kintrees.append(np.array(CONFIG[name]['kintree']) + nJoints)
+        nJoints += CONFIG[name]['nJoints']
+    kintrees = np.vstack(kintrees)
+    cfg = {
+        'kintree': kintrees.tolist(),
+        'nJoints': nJoints
+    }
+    return cfg
 
 def getKintree(name='total'):
     if name == 'total':
@@ -670,13 +913,99 @@ def getKintree(name='total'):
         kintree[NLIMBS_BODY:NLIMBS_BODY + NLIMBS_HAND] += NJOINTS_BODY
         kintree[NLIMBS_BODY + NLIMBS_HAND:NLIMBS_BODY + 2*NLIMBS_HAND] += NJOINTS_BODY + NJOINTS_HAND
     return kintree
-CONFIG['total'] = {}
-CONFIG['total']['kintree'] = getKintree('total')
-CONFIG['total']['nJoints'] = 137
 
+CONFIG['total'] = compose(['body25', 'hand', 'hand', 'face'])
 COCO17_IN_BODY25 = [0,16,15,18,17,5,2,6,3,7,4,12,9,13,10,14,11]
 
 CONFIG['bodyhandface']['joint_names'] = CONFIG['body25']['joint_names']
+# default to body25
+CONFIG['keypoints2d'] = CONFIG['body25']
+CONFIG['handl2d'] = CONFIG['hand']
+CONFIG['handr2d'] = CONFIG['hand']
+CONFIG['face2d'] = CONFIG['face']
+
+# set mediapipe
+CONFIG['mpbody'] = {}
+CONFIG['mpbody']['kintree'] = [
+    (0, 1),
+    (0, 4),
+    (1, 2),
+    (2, 3),
+    (3, 7),
+    (4, 5),
+    (5, 6),
+    (6, 8),
+    (9, 10),
+    (11, 12),
+    (11, 13),
+    (11, 23),
+    (12, 14),
+    (12, 24),
+    (13, 15),
+    (14, 16),
+    (15, 17),
+    (15, 19),
+    (15, 21),
+    (16, 18),
+    (16, 20),
+    (16, 22),
+    (17, 19),
+    (18, 20),
+    (23, 24),
+    (23, 25),
+    (24, 26),
+    (25, 27),
+    (26, 28),
+    (27, 29),
+    (27, 31),
+    (28, 30),
+    (28, 32),
+    (29, 31),
+    (30, 32)
+]
+CONFIG['mpbody']['nJoints'] = 33
+CONFIG['mpbody']['colors'] = ['b', 'r', 'b', 'b', 'b', 'r', 'r', 'r', 'k', 'k', 'b', 'b', 'r', 'r', 'b', 'r', 
+    'y', 'r', 'y', 'g', 'b', 'g', 'y', 'g', 'k', 'b', 'r', 'b', 'r', 'b', 'b', 'r', 'r', 'b', 'b']
+
+CONFIG['mpface'] = {}
+CONFIG['mpface']['kintree'] = [(270, 409), (176, 149), (37, 0), (84, 17), (318, 324), (293, 334), (386, 385), (7, 163), (33, 246), (17, 314), (374, 380), (251, 389), (390, 373), (267, 269), (295, 285), (389, 356), (173, 133), (33, 7), (377, 152), (158, 157), (405, 321), (54, 103), (263, 466), (324, 308), (67, 109), (409, 291), (157, 173), (454, 323), (388, 387), (78, 191), (148, 176), (311, 310), (39, 37), (249, 390), (144, 145), (402, 318), (80, 81), (310, 415), (153, 154), (384, 398), (397, 365), (234, 127), (103, 67), (282, 295), (338, 297), (378, 400), (127, 162), (321, 375), (375, 291), (317, 402), (81, 82), (154, 155), (91, 181), (334, 296), (297, 332), (269, 270), (150, 136), (109, 10), (356, 454), (58, 132), (312, 311), (152, 148), (415, 308), (161, 160), (296, 336), (65, 55), (61, 146), (78, 95), (380, 381), (398, 362), (361, 288), (246, 161), (162, 21), (0, 267), (82, 13), (132, 93), (314, 405), (10, 338), (178, 87), (387, 386), (381, 382), (70, 63), (61, 185), (14, 317), (105, 66), (300, 293), (382, 362), (88, 178), (185, 40), (46, 53), (284, 251), (400, 377), (136, 172), (323, 361), (13, 312), (21, 54), (172, 58), (373, 374), (163, 144), (276, 283), (53, 52), (365, 379), (379, 378), (146, 91), (263, 249), (283, 282), (87, 14), (145, 153), (155, 133), (93, 234), (66, 107), (95, 88), (159, 158), (52, 65), (332, 284), (40, 39), (191, 80), (63, 105), (181, 84), (466, 388), (149, 150), (288, 397), (160, 159), (385, 384)]
+CONFIG['mpface']['nJoints'] = 468
+
+CONFIG['mptotal'] = compose(['mpbody', 'hand', 'hand', 'mpface'])
+CONFIG['bodyhandmpface'] = compose(['body25', 'hand', 'hand', 'mpface'])
+
+CONFIG['iris'] = {
+    'nJoints': 10,
+    'kintree': [[0, 1], [1, 2], [2, 3], [3, 4]]
+}
+
+CONFIG['onepoint'] = {
+    'nJoints': 1,
+    'kintree': []
+}
+
+CONFIG['up'] = {
+    'nJoints': 79,
+    'kintree': []
+}
+
+CONFIG['ochuman'] = {
+    'nJoints': 19,
+    'kintree': [[0, 1], [1, 2], [3, 4], [4, 5], [6, 7], [7, 8], [9, 10], [10, 11], [12, 13], [14, 17], [15, 18], [17, 16], [18, 16]]
+}
+
+CONFIG['mpii'] = {
+    'nJoints': 16,
+    'kintree': [[0, 1], [1, 2], [3, 4], [4, 5], [2, 6], [3, 6], [6, 7], [7, 8], [8, 9], [10, 11], [11, 12], [7, 12], [7, 13], \
+        [13, 14], [14, 15]],
+    'joint_names': ['rank', 'rkne', 'rhip', 'lhip', 'lkne', 'lank', 'pelv', 'thrx', 'neck', 'head', 'rwri', 'relb', 'rsho', 'lsho', 'lelb', 'lwri'],
+}
+
+CONFIG['h36mltri_17'] = {
+    'kintree': [(0, 1), (1, 2), (2, 6), (5, 4), (4, 3), (3, 6), (6, 7), (7, 8), (8, 16), (9, 16), (8, 12), (11, 12), (10, 11), (8, 13), (13, 14), (14, 15)],
+    'color': ['r', 'r', 'r', 'g', 'g', 'g', 'k', 'k', 'k', 'k', 'g', 'g', 'g', 'r', 'r', 'r'],
+    'joint_names': CONFIG['mpii']['joint_names'] + ['Neck/Nose'],
+    'nJoints': 17}
 
 def coco17tobody25(points2d):
     dim = 3
@@ -699,3 +1028,5 @@ for skeltype, config in CONFIG.items():
         torsoid = [config['joint_names'].index(name) if name in config['joint_names'] else None for name in ['LShoulder', 'RShoulder', 'LHip', 'RHip']]
         torsoid = [i for i in torsoid if i is not None]
         config['torso'] = torsoid
+    if 'colors' not in config.keys():
+        config['colors'] = ['b' for _ in range(len(config['kintree']))]
