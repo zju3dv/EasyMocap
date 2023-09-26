@@ -216,7 +216,7 @@ A window will be shown for checking.
 
 **Check the results with a cube.**
 ```bash
-python3 apps/calibration/check_calib.py ${extri} --out ${extri}/output --cube
+python3 apps/calibration/check_calib.py ${data} --out ${data}/output --mode cube --write
 ```
 
 You'll get results in `$data/output/cube`. 
