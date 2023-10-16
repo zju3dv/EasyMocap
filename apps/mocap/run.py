@@ -3,14 +3,27 @@ import os
 from easymocap.config import Config, load_object
 from tqdm import tqdm
 
-def process(dataset, model):
+def process(dataset, model, args):
     ret_all = []
     print('[Run] dataset has {} samples'.format(len(dataset)))
-    for i in tqdm(range(len(dataset)), desc='[Run]'):
-        data = dataset[i]
-        ret = model.at_step(data, i)
-        ret_all.append(ret)
-    ret_all = model.at_final(ret_all)
+    if args.num_workers == -1:
+        for i in tqdm(range(len(dataset)), desc='[Run]'):
+            data = dataset[i]
+            ret = model.at_step(data, i)
+            ret_all.append(ret)
+    else:
+        import torch
+        dataloader = torch.utils.data.DataLoader(dataset, 
+            batch_size=1, num_workers=args.num_workers, shuffle=False, collate_fn=lambda x:x, drop_last=False)
+        index = 0
+        for data in tqdm(dataloader, desc='[Run]'):
+            data = data[0]
+            ret = model.at_step(data, index)
+            if not args.skip_final:
+                ret_all.append(ret)
+            index += 1
+    if not args.skip_final:
+        ret_all = model.at_final(ret_all)
 
 def update_data_by_args(cfg_data, args):
     if args.root is not None:
@@ -23,7 +36,7 @@ def update_data_by_args(cfg_data, args):
         cfg_data.args.ranges = args.ranges
     if args.cameras is not None:
         cfg_data.args.reader.cameras.root = args.cameras
-    if args.skip_vis:
+    if args.skip_vis or args.skip_vis_step:
         cfg_data.args.subs_vis = []
     return cfg_data
 
@@ -41,7 +54,7 @@ def update_exp_by_args(cfg_exp, args):
                 val.skip = True
     if args.skip_vis or args.skip_vis_final:
         for key, val in cfg_exp.args.at_final.items():
-            if key.startswith('vis'):
+            if key.startswith('vis') or key == 'make_video':
                 val.skip = True    
 
 def load_cfg_from_file(cfg, args):
@@ -74,9 +87,11 @@ def main_entrypoint():
     parser.add_argument('--ranges', type=int, default=None, nargs=3)
     parser.add_argument('--cameras', type=str, default=None, help='Camera file path')
     parser.add_argument('--out', type=str, default=None)
+    parser.add_argument('--num_workers', type=int, default=-1)
     parser.add_argument('--skip_vis', action='store_true')
     parser.add_argument('--skip_vis_step', action='store_true')
     parser.add_argument('--skip_vis_final', action='store_true')
+    parser.add_argument('--skip_final', action='store_true')
     parser.add_argument('--debug', action='store_true')
     args = parser.parse_args()
 
@@ -96,7 +111,7 @@ def main_entrypoint():
     print(dataset)
 
     model = load_object(cfg_exp.module, cfg_exp.args)
-    process(dataset, model)
+    process(dataset, model, args)
 
 if __name__ == '__main__':
     main_entrypoint()

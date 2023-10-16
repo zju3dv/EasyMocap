@@ -1,0 +1,4 @@
+module: easymocap.bodymodel.smpl.SMPLModel
+args:
+  model_path: data/bodymodels/FLAME2020/FLAME_NEUTRAL.pkl
+  device: cuda

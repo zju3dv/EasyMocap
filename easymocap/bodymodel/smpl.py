@@ -85,12 +85,13 @@ class SMPLModel(Model):
         self.lbs = lbs
         self.data = load_model_data(model_path)
         self.register_any_lbs(self.data)
-
         # keypoints regressor
         if regressor_path is not None and use_joints:
             X_regressor = load_regressor(regressor_path)
             X_regressor = torch.cat((self.J_regressor, X_regressor), dim=0)
             self.register_any_keypoints(X_regressor)
+        elif regressor_path is None:
+            self.register_any_keypoints(self.J_regressor)
         if not self.use_root_rot:
             self.NUM_POSES -= 3 # remove first 3 dims
         self.to(self.device)
@@ -169,7 +170,9 @@ class SMPLModel(Model):
 
     def forward(self, return_verts=True, return_tensor=True, 
         return_smpl_joints=False, 
-        only_shape=False, pose2rot=True, **params):
+        only_shape=False, pose2rot=True,
+        v_template=None,
+        **params):
         params = self.check_params(params)
         poses, shapes = params['poses'], params['shapes']
         poses = self.extend_poses(pose2rot=pose2rot, **params)
@@ -187,7 +190,8 @@ class SMPLModel(Model):
             Rh = batch_rodrigues(Rh)
         Th = Th.unsqueeze(dim=1)
         if return_verts or not self.use_joints:
-            v_template = self.v_template
+            if v_template is None:
+                v_template = self.v_template
             if 'scale' in params.keys():
                 v_template = v_template * params['scale'][0]
             vertices, joints, T_joints, T_vertices = self.lbs(shapes, poses, v_template,
@@ -199,7 +203,8 @@ class SMPLModel(Model):
                 vertices = joints
         else:
             # only forward joints
-            v_template = self.j_v_template
+            if v_template is None:
+                v_template = self.j_v_template
             if 'scale' in params.keys():
                 v_template = v_template * params['scale'][0]
             vertices, joints, _, _ = self.lbs(shapes, poses, v_template,
@@ -236,6 +241,39 @@ class SMPLModel(Model):
         return Params.merge(params, **kwargs)
 
 
+    def convert_to_standard_smpl(self, params):
+        params = self.check_params(params)
+        poses, shapes = params['poses'], params['shapes']
+        Th = params['Th']
+        vertices, joints, _, _ = lbs(shapes, poses, self.v_template,
+                                self.shapedirs, self.posedirs,
+                                self.J_regressor, self.parents,
+                                self.weights, pose2rot=True, dtype=self.dtype, only_shape=True)
+        # N x 3
+        j0 = joints[:, 0, :]
+        Rh = params['Rh']
+        # N x 3 x 3
+        rot = batch_rodrigues(Rh)
+        # change the rotate center
+        min_xyz, _ = self.v_template.min(dim=0, keepdim=True)
+        # X' = X + delta_center
+        delta_center = torch.tensor([0., -min_xyz[0, 1], 0.]).reshape(1, 3).to(j0.device)
+        # J' = J + delta_center
+        j0new = j0 + delta_center
+        # Tnew = T - (R(d - J0) + J0)
+        Tnew = Th - (torch.einsum('bij,bj->bi', rot, delta_center-j0new) + j0new)
+        if poses.shape[1] == 69:
+            poses = torch.cat([Rh, poses], dim=1)
+        elif poses.shape[1] == 72:
+            poses[:, :3] = Rh
+        else:
+            import ipdb;ipdb.set_trace()
+        res = dict(poses=poses.detach().cpu().numpy(),
+            shapes=shapes.detach().cpu().numpy(),
+            Th=Tnew.detach().cpu().numpy()
+            )
+        return res
+    
     def convert_from_standard_smpl(self, params):
         params = self.check_params(params)
         poses, shapes = params['poses'], params['shapes']
