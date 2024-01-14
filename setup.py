@@ -16,6 +16,7 @@ setup(
     # test_suite='setup.test_all',
     packages=[
         'easymocap',
+        'easymocap.config',
         'easymocap.dataset',
         'easymocap.smplmodel',
         'easymocap.pyfitting',

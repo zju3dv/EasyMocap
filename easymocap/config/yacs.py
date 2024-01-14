@@ -171,7 +171,10 @@ class CfgNode(dict):
             return "{}"
         for k, v in self.items():
             seperator = "\n" if isinstance(v, CfgNode) and len(v.keys()) > 0 else " "
-            attr_str = "{}:{}{}".format(str(k), seperator, str(v))
+            if isinstance(v, float):
+                attr_str = "{}:{}{:f}".format(str(k), seperator, v)
+            else:
+                attr_str = "{}:{}{}".format(str(k), seperator, str(v))
             attr_str = _indent(attr_str, 4)
             s.append(attr_str)
         r += "\n".join(s)
