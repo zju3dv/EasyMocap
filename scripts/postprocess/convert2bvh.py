@@ -44,14 +44,14 @@ def init_scene(scene, params, gender='male', angle=0):
 
     # delete the default cube (which held the material)
     bpy.ops.object.select_all(action='DESELECT')
-    bpy.data.objects['Cube'].select = True
+    bpy.data.objects['Cube'].select_set(True)
     bpy.ops.object.delete(use_global=False)
 
     # set camera properties and initial position
     bpy.ops.object.select_all(action='DESELECT')
     cam_ob = bpy.data.objects['Camera']
     scn = bpy.context.scene
-    scn.objects.active = cam_ob
+    bpy.context.view_layer.objects.active = cam_ob
 
     th = deg2rad(angle)
     # cam_ob = init_location(cam_ob, th, params['camera_distance'])
@@ -70,11 +70,11 @@ def init_scene(scene, params, gender='male', angle=0):
     # setup an empty object in the center which will be the parent of the Camera
     # this allows to easily rotate an object around the origin
     scn.cycles.film_transparent = True
-    scn.render.layers["RenderLayer"].use_pass_vector = True
-    scn.render.layers["RenderLayer"].use_pass_normal = True
-    scene.render.layers['RenderLayer'].use_pass_emit = True
-    scene.render.layers['RenderLayer'].use_pass_emit = True
-    scene.render.layers['RenderLayer'].use_pass_material_index = True
+    bpy.context.view_layer.use_pass_vector = True
+    bpy.context.view_layer.use_pass_normal = True
+    bpy.context.view_layer.use_pass_emit = True
+    bpy.context.view_layer.use_pass_material_index = True
+
 
     # set render size
     # scn.render.resolution_x = params['resy']
@@ -91,8 +91,8 @@ def init_scene(scene, params, gender='male', angle=0):
 
 def setState0():
     for ob in bpy.data.objects.values():
-        ob.select = False
-    bpy.context.scene.objects.active = None
+       ob.select_set(False)
+    bpy.context.view_layer.objects.active = None
 
 def Rodrigues(rotvec):
     theta = np.linalg.norm(rotvec)
@@ -198,15 +198,15 @@ def main(params):
 
     ob, obname, arm_ob, cam_ob = init_scene(scene, params, params['gender'])
     setState0()
-    ob.select = True
-    bpy.context.scene.objects.active = ob
+    ob.select_set(True)
+    bpy.context.view_layer.objects.active = ob
 
     # unblocking both the pose and the blendshape limits
     for k in ob.data.shape_keys.key_blocks.keys():
         bpy.data.shape_keys["Key"].key_blocks[k].slider_min = -10
         bpy.data.shape_keys["Key"].key_blocks[k].slider_max = 10
     
-    scene.objects.active = arm_ob
+    bpy.context.view_layer.objects.active = arm_ob
 
     motions = load_smpl_params(params['path'])
     for pid, data in motions.items():
@@ -224,7 +224,7 @@ def main(params):
             pose = data['poses'][frame]
             apply_trans_pose_shape(Vector(trans), pose, shape, ob,
                                 arm_ob, obname, scene, cam_ob, frame)
-            scene.update()
+            bpy.context.view_layer.update()
         bpy.ops.export_anim.bvh(filepath=join(params['out'], '{}.bvh'.format(pid)), frame_start=0, frame_end=nFrames-1)
     return 0
 
