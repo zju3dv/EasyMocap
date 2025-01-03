@@ -12,7 +12,7 @@ import cv2
 
 def try_to_download():
     model_dir = os.path.join(os.path.dirname(__file__), '..', '..', 'models', 'pare')
-    cmd = 'wget https://www.dropbox.com/s/aeulffqzb3zmh8x/pare-github-data.zip'
+    cmd = 'gdown 1qIq0CBBj-O6wVc9nJXG-JDEtWPzRQ4KC'
     os.system(cmd)
     os.makedirs(model_dir, exist_ok=True)
     cmd = 'unzip pare-github-data.zip -d {}'.format(model_dir)
