@@ -255,13 +255,14 @@ class SMPLModel(Model):
         # N x 3 x 3
         rot = batch_rodrigues(Rh)
         # change the rotate center
-        min_xyz, _ = self.v_template.min(dim=0, keepdim=True)
+        # min_xyz, _ = self.v_template.min(dim=0, keepdim=True)
         # X' = X + delta_center
-        delta_center = torch.tensor([0., -min_xyz[0, 1], 0.]).reshape(1, 3).to(j0.device)
+        # delta_center = torch.tensor([0., -min_xyz[0, 1], 0.]).reshape(1, 3).to(j0.device)
         # J' = J + delta_center
         j0new = j0 + delta_center
         # Tnew = T - (R(d - J0) + J0)
-        Tnew = Th - (torch.einsum('bij,bj->bi', rot, delta_center-j0new) + j0new)
+        # Tnew = Th - (torch.einsum('bij,bj->bi', rot, delta_center-j0new) + j0new)
+        Tnew = Th - (torch.einsum('bij,bj->bi', rot, j0) + j0new)
         if poses.shape[1] == 69:
             poses = torch.cat([Rh, poses], dim=1)
         elif poses.shape[1] == 72:
